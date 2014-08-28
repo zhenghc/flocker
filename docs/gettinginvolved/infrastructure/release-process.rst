@@ -106,7 +106,6 @@ Preparing for a release
    - If this is a major or minor release then create the branch for the minor version:
 
      .. code-block:: console
-         # TODO different bash expansions for pre-releases
 
         git checkout -b release/flocker-${VERSION%.*} origin/master
         git push origin --set-upstream release/flocker-${VERSION%.*}
@@ -116,6 +115,8 @@ Preparing for a release
      .. code-block:: console
 
         $ git checkout -b release/flocker-${VERSION%.*} origin/release/flocker-"${VERSION%.*}"
+
+        # TODO: Changes since the last pre-release need to be merged into the release branch?
 
 #. Update the version number in the download in ``docs/gettingstarted/linux-install.sh``, as well as the two RPMs in ``docs/gettingstarted/tutorial/Vagrantfile``, and the Homebrew recipe in the `homebrew-tap`_ repository (a total of 4 locations).
    # TODO: how to do the homebrew tap repository? Can we add a pre-release one
