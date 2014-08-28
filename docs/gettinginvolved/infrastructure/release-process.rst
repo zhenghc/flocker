@@ -91,19 +91,14 @@ Preparing for a release
         export VERSION=0.0.3
 
    - Sanity check the proposed version number by checking the last version.
-     Check the ClusterHQ website for the last released version.
-     You might also double check the current version by running the following commands:
+     Run the following command in the Flocker repository:
 
      .. code-block:: console
 
-        # TODO remove one of these commands
-
+        $ git checkout master
+        $ git pull
         $ python setup.py --version
         0.0.1-576-ge15c6be
-
-        $ git tag
-        ...
-        0.0.6
 
 #. In a clean, local working copy of Flocker with no modifications, checkout the branch for the release:
 
