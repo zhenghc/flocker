@@ -8,6 +8,7 @@ By the end of the release process we will have:
 
 - a tag in version control
 - a Python wheel in the `ClusterHQ package index <http://archive.clusterhq.com>`__
+- TODO: We also probably need a python source package on the same server, for use in Homebrew recipes.
 - Fedora 20 RPMs for software on the node and client
 
 If this is not a pre-release, we will also have:
