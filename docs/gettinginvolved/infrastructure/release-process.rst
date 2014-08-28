@@ -83,8 +83,7 @@ Preparing for a release
 
 #. Choose a version number:
 
-   # TODO how to choose a pre-release version number?
-   - Release numbers should be of the form x.y.z e.g.:
+   - Release numbers should be of the form x.y.z, or use the 'preN' suffix if this is a pre-release e.g.:
 
      .. code-block:: console
 
