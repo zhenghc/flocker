@@ -1,8 +1,6 @@
 Release Process
 ===============
 
-# TODO all releases must have a pre-release
-
 Outcomes
 --------
 
@@ -55,6 +53,16 @@ Access
 - Access to `Google Cloud Storage`_ using `gsutil`_.
 
 
+Overview
+~~~~~~~~
+
+Every flocker release shall follow these steps:
+
+#. Prepare for a release
+#. Release N pre-releases
+#. Release the final release
+
+
 Preliminary Step: Pre-populating RPM Repository
 -----------------------------------------------
 
@@ -94,15 +102,11 @@ Preparing for a release
 
         export VERSION=0.0.3
 
-   - Sanity check the proposed version number by checking the last version.
-     Run the following command in the Flocker repository:
+#. File a ticket
 
-     .. code-block:: console
-
-        $ git checkout master
-        $ git pull
-        $ python setup.py --version
-        0.0.1-576-ge15c6be
+   #. Assign it to the upcoming release milestone
+   #. Assign it to yourself
+   #. Call it "Release $RELEASE"
 
 #. In a clean, local working copy of Flocker with no modifications, checkout the branch for the release:
 
