@@ -214,7 +214,7 @@ Release
 Announcing Releases
 ~~~~~~~~~~~~~~~~~~~
 
-# TODO: At discretion for pre-relases
+Pre-releases do not need to be announced.
 
 - Announcement
 
