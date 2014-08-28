@@ -202,7 +202,7 @@ Release
 
    #. Go to the Read the Docs `dashboard <https://readthedocs.org/dashboard/flocker/versions/>`_.
    #. Enable the version being released.
-   #. Set the default version to that version. # TODO: Not in pre-release
+   #. Set the default version to that version (not for pre-releases).
    #. Force Read the Docs to reload the repository, in case the GitHub webhook fails, by running:
 
       .. code-block:: console
