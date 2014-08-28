@@ -8,6 +8,8 @@ By the end of the release process we will have:
 
 - a tag in version control
 - a Python wheel in the `ClusterHQ package index <http://archive.clusterhq.com>`__
+- TODO: Will the pre-release wheel files be uploaded to the same archive or do we want to keep them separate (in the same way that we want to keep pre-release RPMs separate - https://github.com/ClusterHQ/flocker/issues/506)
+- TODO: We also probably need a python source package on the same server, for use in Homebrew recipes.
 - Fedora 20 RPMs for software on the node and client
 
 If this is not a pre-release, we will also have:
@@ -102,7 +104,11 @@ Preparing for a release
 
         export VERSION=0.0.3
 
+TODO: Was the version sanity check worth having? I don't think so. If we keep it we should explain what to look for in the reported version.
+
 #. File a ticket
+
+TODO: Do we file a separate ticket for the pre-releases? Twisted doesn't and I don't think we should either?
 
    #. Assign it to the upcoming release milestone
    #. Assign it to yourself
@@ -125,7 +131,9 @@ Preparing for a release
 
         $ git checkout -b release/flocker-${VERSION%.*} origin/release/flocker-"${VERSION%.*}"
 
-        # TODO: Changes since the last pre-release need to be merged into the release branch?
+        # TODO: Changes since the last pre-release need to be merged into the release branch? eg
+
+        # TODO: For patch releases, document how the bug fixes in that release are chosen and merged to the release branch.
 
 #. Update the version number in the download in ``docs/gettingstarted/linux-install.sh``, as well as the two RPMs in ``docs/gettingstarted/tutorial/Vagrantfile``, and the Homebrew recipe in the `homebrew-tap`_ repository (a total of 4 locations).
    # We could copy https://github.com/Homebrew/homebrew-versions and have a different `.rb` file for each release and pre-release e.g. flocker010.rb (eurgh)
