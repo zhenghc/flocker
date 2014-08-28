@@ -105,7 +105,7 @@ TODO: Was the version sanity check worth having? I don't think so. If we keep it
 
 #. File a ticket
 
-TODO: Do we file a separate ticket for the pre-releases? Twisted doesn't and I don't think we should either? 
+TODO: Do we file a separate ticket for the pre-releases? Twisted doesn't and I don't think we should either?
 
    #. Assign it to the upcoming release milestone
    #. Assign it to yourself
@@ -128,7 +128,9 @@ TODO: Do we file a separate ticket for the pre-releases? Twisted doesn't and I d
 
         $ git checkout -b release/flocker-${VERSION%.*} origin/release/flocker-"${VERSION%.*}"
 
-        # TODO: Changes since the last pre-release need to be merged into the release branch?
+        # TODO: Changes since the last pre-release need to be merged into the release branch? eg
+
+        # TODO: For patch releases, document how the bug fixes in that release are chosen and merged to the release branch.
 
 #. Update the version number in the download in ``docs/gettingstarted/linux-install.sh``, as well as the two RPMs in ``docs/gettingstarted/tutorial/Vagrantfile``, and the Homebrew recipe in the `homebrew-tap`_ repository (a total of 4 locations).
    # TODO: how to do the homebrew tap repository? Can we add a pre-release one
