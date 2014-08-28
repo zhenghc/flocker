@@ -8,6 +8,7 @@ By the end of the release process we will have:
 
 - a tag in version control
 - a Python wheel in the `ClusterHQ package index <http://archive.clusterhq.com>`__
+- TODO: Will the pre-release wheel files be uploaded to the same archive or do we want to keep them separate (in the same way that we want to keep pre-release RPMs separate - https://github.com/ClusterHQ/flocker/issues/506)
 - TODO: We also probably need a python source package on the same server, for use in Homebrew recipes.
 - Fedora 20 RPMs for software on the node and client
 
