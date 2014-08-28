@@ -101,16 +101,6 @@ Preparing for a release
 
         export VERSION=0.0.3
 
-   - Sanity check the proposed version number by checking the last version.
-     Run the following command in the Flocker repository:
-
-     .. code-block:: console
-
-        $ git checkout master
-        $ git pull
-        $ python setup.py --version
-        0.0.1-576-ge15c6be
-
 #. File a ticket
 
    #. Assign it to the upcoming release milestone
