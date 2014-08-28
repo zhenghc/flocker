@@ -202,6 +202,8 @@ Release
 
    #. Go to the Read the Docs `dashboard <https://readthedocs.org/dashboard/flocker/versions/>`_.
    #. Enable the version being released.
+   #. Wait for the documentation to build.
+      The documentation will be visible at http://docs.clusterhq.com/en/${VERSION} when it has been built.
    #. Set the default version to that version (not for pre-releases).
    #. Force Read the Docs to reload the repository, in case the GitHub webhook fails, by running:
 
