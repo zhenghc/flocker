@@ -101,7 +101,11 @@ Preparing for a release
 
         export VERSION=0.0.3
 
+TODO: Was the version sanity check worth having? I don't think so. If we keep it we should explain what to look for in the reported version.
+
 #. File a ticket
+
+TODO: Do we file a separate ticket for the pre-releases? Twisted doesn't and I don't think we should either? 
 
    #. Assign it to the upcoming release milestone
    #. Assign it to yourself
