@@ -252,3 +252,5 @@ Pre-releases do not need to be announced.
 .. _wheel: https://pypi.python.org/pypi/wheel
 .. _Google cloud storage: https://console.developers.google.com/project/apps~hybridcluster-docker/storage/archive.clusterhq.com/
 .. _homebrew-tap: https://github.com/ClusterHQ/homebrew-tap
+
+# TODO - what is acceptance testing? The whole tutorial / all examples? With pre-releases or just released software?
