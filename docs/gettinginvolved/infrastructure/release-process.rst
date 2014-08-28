@@ -1,8 +1,12 @@
 Release Process
 ===============
 
+# TODO all releases must have a pre-release
+
 Outcomes
 --------
+
+# TODO what will we have for pre-releases?
 
 By the end of the release process we will have:
 
