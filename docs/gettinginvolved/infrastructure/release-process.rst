@@ -6,15 +6,16 @@ Release Process
 Outcomes
 --------
 
-# TODO what will we have for pre-releases?
-
 By the end of the release process we will have:
 
 - a tag in version control
 - a Python wheel in the `ClusterHQ package index <http://archive.clusterhq.com>`__
 - Fedora 20 RPMs for software on the node and client
+
+If this is not a pre-release, we will also have:
+
 - documentation on `docs.clusterhq.com <https://docs.clusterhq.com>`__
-- announcement on mailing list, blog, IRC (others?)
+- an announcement on the mailing list, blog, IRC (others?)
 - download links on https://clusterhq.com
 
 
