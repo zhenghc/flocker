@@ -123,8 +123,7 @@ Preparing for a release
         # TODO: Changes since the last pre-release need to be merged into the release branch?
 
 #. Update the version number in the download in ``docs/gettingstarted/linux-install.sh``, as well as the two RPMs in ``docs/gettingstarted/tutorial/Vagrantfile``, and the Homebrew recipe in the `homebrew-tap`_ repository (a total of 4 locations).
-   # TODO: how to do the homebrew tap repository? Can we add a pre-release one
-   # TODO: even for non pre-releases, how do we keep the old one available e.g. --version in brew install
+   # We could copy https://github.com/Homebrew/homebrew-versions and have a different `.rb` file for each release and pre-release e.g. flocker010.rb (eurgh)
 
 #. Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
 
