@@ -1,8 +1,6 @@
 Release Process
 ===============
 
-# TODO all releases must have a pre-release
-
 Outcomes
 --------
 
@@ -53,6 +51,15 @@ Access
 
 - Access to `Google Cloud Storage`_ using `gsutil`_.
 
+
+Overview
+~~~~~~~~
+
+Every flocker release shall follow these steps:
+
+#. Prepare for a release
+#. Release N pre-releases
+#. Release the final release
 
 Preliminary Step: Pre-populating RPM Repository
 -----------------------------------------------
