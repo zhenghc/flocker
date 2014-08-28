@@ -53,6 +53,8 @@ Access
 Preliminary Step: Pre-populating RPM Repository
 -----------------------------------------------
 
+# TODO : Do this for the testing repo specifically?
+
 This only needs to be done if the dependency packages for Flocker (i.e. ``geard`` and Python libraries) change; it should *not* be done every release.
 If you do run this you need to do it *before* running the release process above as it removes the ``flocker-cli`` etc. packages from the repository!
 
@@ -81,6 +83,7 @@ Preparing for a release
 
 #. Choose a version number:
 
+   # TODO how to choose a pre-release version number?
    - Release numbers should be of the form x.y.z e.g.:
 
      .. code-block:: console
@@ -92,6 +95,8 @@ Preparing for a release
      You might also double check the current version by running the following commands:
 
      .. code-block:: console
+
+        # TODO remove one of these commands
 
         $ python setup.py --version
         0.0.1-576-ge15c6be
@@ -107,6 +112,7 @@ Preparing for a release
    - If this is a major or minor release then create the branch for the minor version:
 
      .. code-block:: console
+         # TODO different bash expansions for pre-releases
 
         git checkout -b release/flocker-${VERSION%.*} origin/master
         git push origin --set-upstream release/flocker-${VERSION%.*}
@@ -118,6 +124,8 @@ Preparing for a release
         $ git checkout -b release/flocker-${VERSION%.*} origin/release/flocker-"${VERSION%.*}"
 
 #. Update the version number in the download in ``docs/gettingstarted/linux-install.sh``, as well as the two RPMs in ``docs/gettingstarted/tutorial/Vagrantfile``, and the Homebrew recipe in the `homebrew-tap`_ repository (a total of 4 locations).
+   # TODO: how to do the homebrew tap repository? Can we add a pre-release one
+   # TODO: even for non pre-releases, how do we keep the old one available e.g. --version in brew install
 
 #. Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
 
@@ -188,6 +196,8 @@ Release
 
 #. Build python packages for upload, and upload them to ``archive.clusterhq.com``, as well as uploading the RPMs:
 
+   # TODO: RPMs will be somewhere else (the other issue)
+
    .. code-block:: console
 
       python setup.py bdist_wheel
@@ -198,7 +208,7 @@ Release
 
    #. Go to the Read the Docs `dashboard <https://readthedocs.org/dashboard/flocker/versions/>`_.
    #. Enable the version being released.
-   #. Set the default version to that version.
+   #. Set the default version to that version. # TODO: Not in pre-release
    #. Force Read the Docs to reload the repository, in case the GitHub webhook fails, by running:
 
       .. code-block:: console
@@ -209,6 +219,8 @@ Release
 
 Announcing Releases
 ~~~~~~~~~~~~~~~~~~~
+
+# TODO: At discretion for pre-relases
 
 - Announcement
 
