@@ -4,15 +4,16 @@ Release Process
 Outcomes
 --------
 
-# TODO what will we have for pre-releases?
-
 By the end of the release process we will have:
 
 - a tag in version control
 - a Python wheel in the `ClusterHQ package index <http://archive.clusterhq.com>`__
 - Fedora 20 RPMs for software on the node and client
+
+If this is not a pre-release, we will also have:
+
 - documentation on `docs.clusterhq.com <https://docs.clusterhq.com>`__
-- announcement on mailing list, blog, IRC (others?)
+- an announcement on the mailing list, blog, IRC (others?)
 - download links on https://clusterhq.com
 
 
@@ -24,7 +25,7 @@ Software
 
 - Fedora 20 (``rpmbuild``, ``createrepo``, ``yumdownloader``) - might be possible to install these on Ubuntu though
 
-  You are advised to perform the release from a :doc:`flocker development machine <vagrant>`\ , which will have all the requisite software pre-installed.
+  You are advised to perform the release from a :doc:`Flocker development machine <vagrant>`\ , which will have all the requisite software pre-installed.
 
 - a web browser
 
@@ -55,7 +56,7 @@ Access
 Overview
 ~~~~~~~~
 
-Every flocker release shall follow these steps:
+Every Flocker release shall follow these steps:
 
 #. Prepare for a release
 #. Release N pre-releases
@@ -133,8 +134,7 @@ TODO: Do we file a separate ticket for the pre-releases? Twisted doesn't and I d
         # TODO: For patch releases, document how the bug fixes in that release are chosen and merged to the release branch.
 
 #. Update the version number in the download in ``docs/gettingstarted/linux-install.sh``, as well as the two RPMs in ``docs/gettingstarted/tutorial/Vagrantfile``, and the Homebrew recipe in the `homebrew-tap`_ repository (a total of 4 locations).
-   # TODO: how to do the homebrew tap repository? Can we add a pre-release one
-   # TODO: even for non pre-releases, how do we keep the old one available e.g. --version in brew install
+   # We could copy https://github.com/Homebrew/homebrew-versions and have a different `.rb` file for each release and pre-release e.g. flocker010.rb (eurgh)
 
 #. Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
 
