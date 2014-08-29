@@ -1,5 +1,6 @@
 # Copyright Hybrid Logic Ltd.  See LICENSE file for details.
 
+from twisted.python.usage import UsageError
 from twisted.python.versions import Version
 from twisted.trial.unittest import TestCase
 
@@ -44,6 +45,18 @@ class ReleaseOptionsTests(TestCase):
         options = ReleaseOptions()
         options.parseOptions([expected_version_string])
         self.assertEqual(expected_version, options['version'])
+        
+    def test_version_non_int(self):
+        """
+        ``UsageError`` is raised if the supplied version components cannot be
+        cast to ``int``.
+        """
+        options = ReleaseOptions()
+        
+        error = self.assertRaises(UsageError, options.parseOptions, ['x.y.z'])
+        self.assertEqual(
+            'Version components must be integers. Found x.y.z', str(error))
+        
 
     def test_prerelease(self):
         """

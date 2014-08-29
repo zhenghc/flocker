@@ -31,7 +31,11 @@ class ReleaseOptions(Options):
     def parseArgs(self, version):
         """
         """
-        major, minor, micro = [int(v) for v in version.split('.', 2)]
+        try:
+            major, minor, micro = [int(v) for v in version.split('.', 2)]
+        except ValueError:
+            raise UsageError(
+                'Version components must be integers. Found {}'.format(version))
 
         self['major'] = major
         self['minor'] = minor
