@@ -57,7 +57,6 @@ class ReleaseOptionsTests(TestCase):
         self.assertEqual(
             'Version components must be integers. Found x.y.z', str(error))
         
-
     def test_prerelease(self):
         """
         ``flocker-release`` accepts a *pre-release* option whose value is the
@@ -69,6 +68,19 @@ class ReleaseOptionsTests(TestCase):
             [b'--pre-release=1', b'0.2.0']
         )
         self.assertEqual(expected_version, options['version'])
+
+    def test_prerelease_non_int(self):
+        """
+        ``UsageError`` is raised if the supplied prerelease cannot be cast to
+        ``int``.
+        """
+        options = ReleaseOptions()
+        
+        error = self.assertRaises(
+            UsageError, 
+            options.parseOptions, [b'--pre-release=x', '0.0.0'])
+        self.assertEqual(
+            'Pre-release must be an integer. Found x', str(error))
 
     def test_structured_version(self):
         """

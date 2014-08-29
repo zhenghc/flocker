@@ -23,10 +23,15 @@ class ReleaseOptions(Options):
     """
     synopsis = b'Usage: flocker-release [options] <version>'
 
-    def opt_pre_release(self, version):
+    def opt_pre_release(self, prerelease):
         """
         """
-        self['prerelease'] = int(version)
+        try:
+            self['prerelease'] = int(prerelease)
+        except ValueError:
+            raise UsageError(
+                'Pre-release must be an integer. Found {}'.format(prerelease))
+            
 
     def parseArgs(self, version):
         """
