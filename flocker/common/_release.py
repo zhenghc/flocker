@@ -5,7 +5,7 @@
 Tools for releasing Flocker.
 """
 
-from twisted.python.usage import Options
+from twisted.python.usage import Options, UsageError
 from twisted.python.versions import Version
 
 PACKAGE_NAME = 'Flocker'
@@ -26,14 +26,37 @@ class ReleaseOptions(Options):
     def opt_pre_release(self, version):
         """
         """
-        self['prerelease_version'] = version
+        self['prerelease'] = int(version)
 
     def parseArgs(self, version):
         """
         """
-        self['version'] = version
+        major, minor, micro = [int(v) for v in version.split('.', 2)]
+
+        self['major'] = major
+        self['minor'] = minor
+        self['micro'] = micro
+
+    def postOptions(self):
+        """
+        Combine the version components into a ``Version`` instance.
+        """
+        self['version'] = flocker_version(
+            self['major'], self['minor'], self['micro'], self.get('prerelease'))
 
 
+class ReleaseScript(object):
+    """
+    Automate the release of Flocker.
+    """
 
+    options = ReleaseOptions()
 
-
+    def main(self, args):
+        """
+        Parse options and take action.
+        """
+        # try:
+        #     self.options.parseOptions(args)
+        # except UsageError as e:
+        #     raise SystemExit(e)

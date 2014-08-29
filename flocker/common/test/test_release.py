@@ -26,13 +26,12 @@ class ReleaseOptionsTests(TestCase):
     """
     Tests for ``ReleaseOptions``.
     """
-
     def test_synopsis(self):
         """
         """
         options = ReleaseOptions()
         self.assertEqual(
-            b'Usage: flocker-release [options] <version>', 
+            b'Usage: flocker-release [options] <version>',
             str(options).splitlines()[0])
 
     def test_version(self):
@@ -40,9 +39,10 @@ class ReleaseOptionsTests(TestCase):
         ``flocker-release`` requires a *version* as the first positional
         argument and stores this as ``version``.
         """
-        expected_version = b'0.2.0'
+        expected_version = flocker_version(0, 2, 0)
+        expected_version_string = b'0.2.0'
         options = ReleaseOptions()
-        options.parseOptions([expected_version])
+        options.parseOptions([expected_version_string])
         self.assertEqual(expected_version, options['version'])
 
     def test_prerelease(self):
@@ -50,14 +50,13 @@ class ReleaseOptionsTests(TestCase):
         ``flocker-release`` accepts a *pre-release* option whose value is the
         pre-release number stored as ``prerelease_version``.
         """
-        expected_prerelease_version = '1'
+        expected_version = flocker_version(0, 2, 0, prerelease=1)
         options = ReleaseOptions()
         options.parseOptions(
-            [b'--pre-release=%s' % (expected_prerelease_version,), b'0.2.0']
+            [b'--pre-release=1', b'0.2.0']
         )
-        self.assertEqual(expected_prerelease_version, options['prerelease_version'])
+        self.assertEqual(expected_version, options['version'])
 
     def test_structured_version(self):
         """
         """
-        
