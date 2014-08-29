@@ -207,7 +207,8 @@ Release
 
 #. Build python packages for upload, and upload them to ``archive.clusterhq.com``, as well as uploading the RPMs:
 
-   # TODO: RPMs will be somewhere else (the other issue)
+   XXX Pre-releases should not be uploaded to the canonical RPM repository.
+   See https://github.com/ClusterHQ/flocker/issues/506
 
    .. code-block:: console
 
@@ -251,3 +252,5 @@ Pre-releases do not need to be announced.
 .. _wheel: https://pypi.python.org/pypi/wheel
 .. _Google cloud storage: https://console.developers.google.com/project/apps~hybridcluster-docker/storage/archive.clusterhq.com/
 .. _homebrew-tap: https://github.com/ClusterHQ/homebrew-tap
+
+# TODO - what is acceptance testing? The whole tutorial / all examples? With pre-releases or just released software?
