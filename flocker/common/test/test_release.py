@@ -1,5 +1,7 @@
 # Copyright Hybrid Logic Ltd.  See LICENSE file for details.
 
+from subprocess import check_call
+
 from twisted.python.filepath import FilePath
 from twisted.python.usage import UsageError
 from twisted.python.versions import Version
@@ -135,7 +137,6 @@ class FakeVersionControlTests(
     Tests for ``FakeVersionControl``.
     """
 
-from subprocess import check_call
 
 def git_working_directory(root, api, uncommitted):
     """
