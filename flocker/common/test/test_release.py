@@ -4,7 +4,11 @@ from twisted.python.usage import UsageError
 from twisted.python.versions import Version
 from twisted.trial.unittest import TestCase
 
-from .._release import flocker_version, ReleaseOptions
+from zope.interface.verify import verifyObject
+
+from .._release import (
+    flocker_version, ReleaseOptions, FakeVersionControl, IVersionControl)
+
 
 class FlockerVersionTests(TestCase):
     """
@@ -82,6 +86,24 @@ class ReleaseOptionsTests(TestCase):
         self.assertEqual(
             'Pre-release must be an integer. Found x', str(error))
 
-    def test_structured_version(self):
+
+def make_version_control_tests(api):
+    """
+    """
+    class VersionControlTests(TestCase):
         """
+        Tests for the supplied ``api``.
         """
+        def test_interface(self):
+            """
+            ``api`` provides ``IVersionControl``.
+            """
+            self.assertTrue(verifyObject(IVersionControl, api))
+
+    return VersionControlTests
+
+
+class FakeVersionControlTests(make_version_control_tests(FakeVersionControl())):
+    """
+    Tests for ``FakeVersionControl``.
+    """

@@ -8,6 +8,8 @@ Tools for releasing Flocker.
 from twisted.python.usage import Options, UsageError
 from twisted.python.versions import Version
 
+from zope.interface import Interface, implementer
+
 PACKAGE_NAME = 'Flocker'
 
 def flocker_version(major, minor, micro, prerelease=None):
@@ -31,7 +33,7 @@ class ReleaseOptions(Options):
         except ValueError:
             raise UsageError(
                 'Pre-release must be an integer. Found {}'.format(prerelease))
-            
+
 
     def parseArgs(self, version):
         """
@@ -54,11 +56,33 @@ class ReleaseOptions(Options):
             self['major'], self['minor'], self['micro'], self.get('prerelease'))
 
 
+class IVersionControl(Interface):
+    """
+    """
+    def uncommitted():
+        """
+        Return a list of uncommitted changes.
+        """
+
+@implementer(IVersionControl)
+class FakeVersionControl(object):
+    """
+    A fake version control API for use in tests.
+    """
+    def __init__(self, uncommitted=None):
+        self._uncommitted = None
+
+    def uncommitted(self):
+        """
+        Return a list of uncommitted changes.
+        """
+        return self._uncommitted
+
+
 class ReleaseScript(object):
     """
     Automate the release of Flocker.
     """
-
     options = ReleaseOptions()
 
     def main(self, args):
