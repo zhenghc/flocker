@@ -4,6 +4,7 @@
 """
 Tools for releasing Flocker.
 """
+from subprocess import check_output
 
 from twisted.python.usage import Options, UsageError
 from twisted.python.versions import Version
@@ -64,19 +65,47 @@ class IVersionControl(Interface):
         Return a list of uncommitted changes.
         """
 
+
 @implementer(IVersionControl)
 class FakeVersionControl(object):
     """
     A fake version control API for use in tests.
     """
-    def __init__(self, uncommitted=None):
-        self._uncommitted = None
+    _uncommitted = ()
+
+    def __init__(self, root):
+        self._root = root
 
     def uncommitted(self):
         """
         Return a list of uncommitted changes.
         """
-        return self._uncommitted
+        return [self._root.child(f) for f in self._uncommitted]
+
+
+@implementer(IVersionControl)
+class VersionControl(object):
+    """
+    A fake version control API for use in tests.
+    """
+    def __init__(self, root):
+        self._root = root
+
+    def uncommitted(self):
+        """
+        Return a list of uncommitted changes.
+        """
+        output = check_output(
+            ['git', 'status', '--porcelain', self._root.path],
+            cwd=self._root.path)
+        uncommitted = []
+        for line in output.splitlines():
+            line = line.strip()
+            if line.startswith(('??', 'M')):
+                relative_path = line.split()[-1]
+                f = self._root.child(relative_path)
+                uncommitted.append(f)
+        return uncommitted
 
 
 class ReleaseScript(object):
