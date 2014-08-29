@@ -1,5 +1,10 @@
 # Copyright Hybrid Logic Ltd.  See LICENSE file for details.
 
+"""
+Tests for release tools.
+"""
+
+from os import devnull
 from subprocess import check_call
 
 from twisted.python.filepath import FilePath
@@ -10,9 +15,11 @@ from twisted.trial.unittest import TestCase
 from zope.interface.verify import verifyObject
 
 from .._release import (
-    flocker_version, ReleaseOptions, FakeVersionControl, IVersionControl,
-    VersionControl
+    flocker_version, ReleaseScript, ReleaseOptions, FakeVersionControl,
+    IVersionControl, VersionControl, ReleaseError
 )
+
+DEBUG = False
 
 
 class FlockerVersionTests(TestCase):
@@ -102,8 +109,17 @@ def make_version_control_tests(make_api, setup_environment):
         def setUp(self):
             self.root = FilePath(self.mktemp())
             self.api = make_api(root=self.root)
-            self.uncommitted = [b'foo']
-            setup_environment(self.root, self.api, uncommitted=self.uncommitted)
+            self.uncommitted = [b'uncommitted_file']
+            self.local_branches = [
+                b'master', b'local_branch1', b'local_branch2']
+            self.origin_branches = [
+                b'HEAD', b'master', b'origin_branch1', b'origin_branch2']
+            setup_environment(
+                self, self.root, self.api,
+                uncommitted=self.uncommitted,
+                local_branches=self.local_branches,
+                origin_branches=self.origin_branches
+            )
 
         def test_interface(self):
             """
@@ -120,11 +136,81 @@ def make_version_control_tests(make_api, setup_environment):
                 self.api.uncommitted()
             )
 
+        def test_branch(self):
+            """
+            ``branch`` creates a new branch from origin master with the
+            supplied name.
+            """
+            expected_branch = b'release/0.2'
+            self.api.branch(expected_branch)
+            self.assertIn(expected_branch, self.api.branches())
+
+        def test_branches(self):
+            """
+            ``branches`` without an argument returns a list of local branch
+            names.
+            """
+            expected_branches = set(self.local_branches)
+            actual_branches = set(self.api.branches())
+            self.assertEqual(expected_branches, actual_branches)
+
+        def test_branches_remote(self):
+            """
+            ``branches`` with a remote argument returns a list of local branch
+            names in the remote repository.
+            """
+            expected_branches = set(self.origin_branches)
+            actual_branches = set(self.api.branches(remote='origin'))
+            self.assertEqual(expected_branches, actual_branches)
+
+        def test_branches_remote_unknown(self):
+            """
+            ``branches`` with an unknown remote argument raises an exception.
+            """
+            error = self.assertRaises(
+                ReleaseError, self.api.branches, remote='foobar')
+            self.assertEqual('Unknown remote foobar', str(error))
+
+        def test_push_remote_unknown(self):
+            """
+            ``push`` with an unknown remote argument raises an exception.
+            """
+            self.api.branch('known_branch')
+            error = self.assertRaises(
+                ReleaseError,
+                self.api.push, 'known_branch', remote='unknown_remote')
+            self.assertEqual('Unknown remote unknown_remote', str(error))
+
+        def test_push_branch_unknown(self):
+            """
+            ``push`` with an unknown remote argument raises an exception.
+            """
+            error = self.assertRaises(
+                ReleaseError,
+                self.api.push, 'unknown_branch', remote='origin')
+            self.assertEqual('Unknown branch unknown_branch', str(error))
+
+        def test_push(self):
+            """
+            ``push`` creates a remote branch from a local branch.
+            """
+            expected_branch = b'release/0.2'
+            remote = 'origin'
+            self.api.branch(expected_branch)
+            self.api.push(expected_branch, remote)
+            self.assertIn(expected_branch, self.api.branches(remote=remote))
+
     return VersionControlTests
 
 
-def fake_environment(root, api, uncommitted):
+def fake_environment(test, root, api, uncommitted, local_branches,
+                     origin_branches):
+    """
+    Populate a ``FakeVersionControl`` so that it can be tested.
+    """
     api._uncommitted = uncommitted
+    api._branches['local'] = local_branches
+    api._branches['origin'] = origin_branches
 
 
 class FakeVersionControlTests(
@@ -138,10 +224,52 @@ class FakeVersionControlTests(
     """
 
 
-def git_working_directory(root, api, uncommitted):
+def git(args, cwd=None):
+    with open(devnull, 'w') as discard:
+        stdout, stderr = discard, discard
+        if DEBUG:
+            stdout, stderr = None, None
+
+        check_call(
+            [b'git'] + args, cwd=cwd,
+            stdout=stdout, stderr=stderr)
+
+
+def git_working_directory(test, root, api, uncommitted, local_branches,
+                          origin_branches):
     """
+    Create a git repo and a clone for use in functional tests.
     """
-    check_call('git init --quiet {}'.format(root.path).split())
+    server_root = FilePath(test.mktemp())
+    server_root.createDirectory()
+
+    # Use a local repo to simulate a remote
+    git('init --quiet .'.split(), cwd=server_root.path)
+
+    # Create a file and commit it
+    server_root.child('README').setContent('README')
+
+    git('add README'.split(), cwd=server_root.path)
+    git(['commit', '-m', 'add README'], cwd=server_root.path)
+
+    # Create some branches
+    for b in origin_branches:
+        if b in (b'HEAD', b'master'):
+            continue
+        git('branch {}'.format(b).split(), cwd=server_root.path)
+
+    # Checkout the remote to root
+    git('clone {} {}'.format(server_root.path, root.path).split())
+
+    # Create some local branches
+    for b in local_branches:
+        if b in (b'HEAD', b'master'):
+            continue
+        git('branch {}'.format(b).split(), cwd=root.path)
+
+    # Switch back to master
+    git('checkout master'.split(), cwd=root.path)
+
     for f in uncommitted:
         root.child(f).create()
 
@@ -155,3 +283,117 @@ class VersionControlTests(
     """
     Tests for ``VersionControl``.
     """
+
+
+class ReleaseScriptTests(TestCase):
+    """
+    Tests for default attributes of ``ReleaseScript``.
+    """
+    def test_options_default(self):
+        """
+        ``ReleaseScript._options`` is an instance of ``ReleaseOptions`` by
+        default.
+        """
+        self.assertIsInstance(ReleaseScript().options, ReleaseOptions)
+
+    def test_vc_default(self):
+        """
+        ``ReleaseScript._vc`` is ``VersionControl`` by default.
+        """
+        self.assertIsInstance(ReleaseScript().vc, VersionControl)
+
+
+class ReleaseScriptBranchNameTests(TestCase):
+    """
+    Tests for ``ReleaseScript._branchname``.
+    """
+    def test_major(self):
+        """
+        The branchname for a major release includes the major and minor
+        components only.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'1.0.0'])
+        self.assertEqual('release/1.0', script._branchname())
+
+    def test_minor(self):
+        """
+        The branchname for a minor release includes the major and minor
+        components only.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'1.1.0'])
+        self.assertEqual('release/1.1', script._branchname())
+
+    def test_patch(self):
+        """
+        The branchname for a patch release includes the major and minor
+        components only.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'1.1.1'])
+        self.assertEqual('release/1.1', script._branchname())
+
+
+class ReleaseScriptCheckoutTests(TestCase):
+    """
+    Tests for ``ReleaseScript._checkout``.
+    """
+    def test_non_patch_release_existing_branch(self):
+        """
+        An error is raised if an existing branch is found when a major or minor
+        release is requested.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        script.vc = FakeVersionControl('.')
+        script.vc.branch(script._branchname())
+        error = self.assertRaises(ReleaseError, script._checkout)
+        self.assertEqual(
+            'Existing branch release/0.2 found '
+            'but major or minor release 0.2.0 requested.',
+            str(error)
+        )
+
+    def test_non_patch_release_branch_created(self):
+        """
+        A major or minor release will result in the creation of a new release
+        branch.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        script.vc = FakeVersionControl('.')
+        script._checkout()
+        self.assertEqual([script._branchname()], script.vc.branches())
+
+    def test_non_patch_release_branch_pushed(self):
+        """
+        The new branch will be pushed to origin.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        script.vc = FakeVersionControl('.')
+        script._checkout()
+        self.assertIn(
+            script._branchname(), script.vc.branches(remote='origin'))
+
+    def test_patch_release_missing_branch(self):
+        """
+        An error is raised if a patch release is requested, but an existing
+        branch is not found.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.1'])
+        script.vc = FakeVersionControl('.')
+        error = self.assertRaises(ReleaseError, script._checkout)
+        self.assertEqual(
+            'Existing branch release/0.2 not found '
+            'for patch release 0.2.1',
+            str(error)
+        )
+
+    def test_patch_release_existing_branch(self):
+        """
+        An existing branch is checked out for a patch release.
+        """
+        self.fail()
