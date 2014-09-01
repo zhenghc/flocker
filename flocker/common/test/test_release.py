@@ -143,7 +143,7 @@ def make_version_control_tests(make_api, setup_environment):
             ``branch`` creates a new branch from origin master with the
             supplied name.
             """
-            expected_branch = b'release/0.2'
+            expected_branch = b'release/flocker-0.2'
             self.api.branch(expected_branch)
             self.assertIn(expected_branch, self.api.branches())
 
@@ -151,7 +151,7 @@ def make_version_control_tests(make_api, setup_environment):
             """
             ``branch`` returns the name of the current checked out branch.
             """
-            expected_branch = b'release/0.2'
+            expected_branch = b'release/flocker-0.2'
             self.api.branch(expected_branch)
             self.assertIn(expected_branch, self.api.branches())
 
@@ -204,7 +204,7 @@ def make_version_control_tests(make_api, setup_environment):
             """
             ``push`` creates a remote branch from a local branch.
             """
-            expected_branch = b'release/0.2'
+            expected_branch = b'release/flocker-0.2'
             remote = 'origin'
             self.api.branch(expected_branch)
             self.api.push(expected_branch, remote)
@@ -214,7 +214,7 @@ def make_version_control_tests(make_api, setup_environment):
             """
             ``checkout`` checks out the branch with the given ``name``.
             """
-            expected_branch = b'release/0.2'
+            expected_branch = b'release/flocker-0.2'
             self.api.branch(name=expected_branch)
             self.api.checkout(name=expected_branch)
             self.assertEqual(expected_branch, self.api.branch())
@@ -224,10 +224,11 @@ def make_version_control_tests(make_api, setup_environment):
             ``checkout`` raises ``ReleaseError`` if there is no branch with the
             given ``name``.
             """
-            expected_branch = b'release/0.2'
+            expected_branch = b'release/flocker-0.2'
             exception = self.assertRaises(
                 ReleaseError, self.api.checkout, name=expected_branch)
-            self.assertEqual('Unknown branch release/0.2', str(exception))
+            self.assertEqual(
+                'Unknown branch release/flocker-0.2', str(exception))
 
 
     return VersionControlTests
@@ -344,7 +345,7 @@ class ReleaseScriptBranchNameTests(TestCase):
         """
         script = ReleaseScript()
         script.options.parseOptions([b'1.0.0'])
-        self.assertEqual('release/1.0', script._branchname())
+        self.assertEqual('release/flocker-1.0', script._branchname())
 
     def test_minor(self):
         """
@@ -353,7 +354,7 @@ class ReleaseScriptBranchNameTests(TestCase):
         """
         script = ReleaseScript()
         script.options.parseOptions([b'1.1.0'])
-        self.assertEqual('release/1.1', script._branchname())
+        self.assertEqual('release/flocker-1.1', script._branchname())
 
     def test_patch(self):
         """
@@ -362,7 +363,7 @@ class ReleaseScriptBranchNameTests(TestCase):
         """
         script = ReleaseScript()
         script.options.parseOptions([b'1.1.1'])
-        self.assertEqual('release/1.1', script._branchname())
+        self.assertEqual('release/flocker-1.1', script._branchname())
 
 
 class ReleaseScriptCheckoutTests(TestCase):
@@ -378,9 +379,10 @@ class ReleaseScriptCheckoutTests(TestCase):
         script.options.parseOptions([b'0.2.0'])
         script.vc = FakeVersionControl('.')
         script.vc.branch(script._branchname())
+        script.vc.push(script._branchname(), 'origin')
         error = self.assertRaises(ReleaseError, script._checkout)
         self.assertEqual(
-            'Existing branch release/0.2 found '
+            'Existing branch release/flocker-0.2 found '
             'but major or minor release 0.2.0 requested.',
             str(error)
         )
@@ -417,7 +419,7 @@ class ReleaseScriptCheckoutTests(TestCase):
         script.vc = FakeVersionControl('.')
         error = self.assertRaises(ReleaseError, script._checkout)
         self.assertEqual(
-            'Existing branch release/0.2 not found '
+            'Existing branch release/flocker-0.2 not found '
             'for patch release 0.2.1',
             str(error)
         )
@@ -429,7 +431,9 @@ class ReleaseScriptCheckoutTests(TestCase):
         script = ReleaseScript()
         script.options.parseOptions([b'0.2.1'])
         script.vc = FakeVersionControl('.')
-        script.vc.branch(name='release/0.2')
+        branch_name = 'release/flocker-0.2'
+        script.vc.branch(name=branch_name)
+        script.vc.push(branch_name, 'origin')
         script._checkout()
         self.assertEqual(script._branchname(), script.vc.branch())
 
@@ -474,6 +478,37 @@ class ReleaseScriptMainTests(TestCase):
             script, 'prepare', lambda *a, **kw: prepare_calls.append((a, kw)))
         script.main([b'0.1.0'])
         self.assertEqual([((), {} )], prepare_calls)
+
+    def test_release_error_status(self):
+        """
+        ``ReleaseScript.main`` raises ``SystemExit`` if the prepare method
+        raises ``ReleaseError``.
+        """
+        # Supply a bad
+        script = ReleaseScript()
+        def failing_prepare():
+            raise ReleaseError('fake release failure')
+        self.patch(script, 'prepare', failing_prepare)
+        exception = self.assertRaises(
+            SystemExit, script.main, [b'0.0.1'])
+        self.assertEqual(1, exception.code)
+
+    def test_release_error_message(self):
+        """
+        ``ReleaseScript.main`` raises ``SystemExit`` if the prepare method
+        raises ``ReleaseError``.
+        """
+        # Supply a bad
+        script = ReleaseScript()
+        sys_module = FakeSysModule()
+        script._sys_module = sys_module
+        def failing_prepare():
+            raise ReleaseError('fake release failure')
+        self.patch(script, 'prepare', failing_prepare)
+        self.assertRaises(
+            SystemExit, script.main, [b'0.0.1'])
+        self.assertEqual(
+            b'ERROR: fake release failure\n', sys_module.stderr.getvalue())
 
 
 class ReleaseScriptPrepareTests(TestCase):

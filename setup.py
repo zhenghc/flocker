@@ -2,7 +2,7 @@
 #
 # Generate a Flocker package that can be deployed onto cluster nodes.
 #
-
+import sys
 import os
 from setuptools import setup, find_packages
 
@@ -30,8 +30,27 @@ class cmd_generate_spec(Command):
             destination.write(version)
             destination.write(spec)
 
+class flocker_release(Command):
+    description = "Release Flocker"
+    user_options = [
+        ('version=', "v", 'The version [default: None]'),
+    ]
+    boolean_options = []
+    def initialize_options(self):
+        self.version = None
+    def finalize_options(self):
+        if self.version is None:
+            sys.stderr.write('ERROR: --version is a required argument\n')
+            raise SystemExit(1)
+    def run(self):
+        from flocker.common._release import flocker_release_main
+        flocker_release_main([self.version])
 
-cmdclass = {'generate_spec': cmd_generate_spec}
+
+cmdclass = {
+    'generate_spec': cmd_generate_spec,
+    'flocker_release': flocker_release,
+}
 # Let versioneer hook into the various distutils commands so it can rewrite
 # certain data at appropriate times.
 cmdclass.update(versioneer.get_cmdclass())

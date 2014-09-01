@@ -128,7 +128,7 @@ class FakeVersionControl(object):
         self._branches[remote].append(name)
 
     def checkout(self, name):
-        if name not in self.branches():
+        if name not in self.branches() + self.branches(remote='origin'):
             raise ReleaseError('Unknown branch {}'.format(name))
         self._current_branch = name
 
@@ -192,7 +192,7 @@ class VersionControl(object):
     def push(self, name, remote):
         if remote not in self._remotes():
             raise ReleaseError('Unknown remote {}'.format(remote))
-        if name not in self.branches():
+        if name not in self.branches(remote=remote):
             raise ReleaseError('Unknown branch {}'.format(name))
 
         check_output(
@@ -201,8 +201,10 @@ class VersionControl(object):
         )
 
     def checkout(self, name):
-        if name not in self.branches():
-            raise ReleaseError('Unknown branch {}'.format(name))
+        if name not in self.branches() + self.branches(remote='origin'):
+            raise ReleaseError('Checkout: Unknown branch {}'.format(name))
+        if self.uncommitted():
+            raise ReleaseError('Checkout: uncommitted changes {}'.format(name))
         check_output(
             'git checkout --quiet {}'.format(name).split(),
             cwd=self._root.path
@@ -229,7 +231,7 @@ class ReleaseScript(object):
         Return the branchname for the given release.
         """
         version = self.options['version']
-        return 'release/%s.%s' % (version.major, version.minor)
+        return 'release/flocker-%s.%s' % (version.major, version.minor)
 
     def _checkout(self):
         """
@@ -239,7 +241,7 @@ class ReleaseScript(object):
         version = self.options['version']
         branchname = self._branchname()
         if version.micro == 0:
-            if branchname in self.vc.branches():
+            if branchname in self.vc.branches(remote='origin'):
                 raise ReleaseError(
                     'Existing branch {} found '
                     'but major or minor release {} requested.'.format(
@@ -248,7 +250,7 @@ class ReleaseScript(object):
             self.vc.push(branchname, 'origin')
 
         else:
-            if branchname not in self.vc.branches():
+            if branchname not in self.vc.branches(remote='origin'):
                 raise ReleaseError(
                     'Existing branch {} not found '
                     'for patch release {}'.format(
@@ -285,14 +287,22 @@ class ReleaseScript(object):
         self._update_versions()
         self._force_build()
 
-    def main(self, args):
+    def main(self, argv):
         """
         Parse options and take action.
         """
         try:
-            self.options.parseOptions(args)
+            self.options.parseOptions(argv)
         except UsageError as e:
             self._sys_module.stderr.write(
                 b'ERROR: %s\n' % (unicode(e).encode('utf8'),))
             raise SystemExit(1)
-        self.prepare()
+        try:
+            self.prepare()
+        except ReleaseError as e:
+            self._sys_module.stderr.write(
+                b'ERROR: %s\n' % (unicode(e).encode('utf8'),))
+            raise SystemExit(1)
+
+
+flocker_release_main = ReleaseScript().main
