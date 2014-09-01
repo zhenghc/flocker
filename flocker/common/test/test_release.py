@@ -111,7 +111,8 @@ def make_version_control_tests(make_api, setup_environment):
         def setUp(self):
             self.root = FilePath(self.mktemp())
             self.api = make_api(root=self.root)
-            self.uncommitted = [b'uncommitted_file']
+            self.uncommitted = [
+                b'uncommitted_file', b'uncommitted_dir/another_file']
             self.local_branches = [
                 b'master', b'local_branch1', b'local_branch2']
             self.origin_branches = [
@@ -134,8 +135,8 @@ def make_version_control_tests(make_api, setup_environment):
             ``uncommitted`` returns a list of uncommitted files.
             """
             self.assertEqual(
-                [self.root.child(f) for f in self.uncommitted],
-                self.api.uncommitted()
+                set([self.root.preauthChild(f) for f in self.uncommitted]),
+                set(self.api.uncommitted())
             )
 
         def test_branch_new(self):
@@ -302,7 +303,17 @@ def git_working_directory(test, root, api, uncommitted, local_branches,
     git('checkout master'.split(), cwd=root.path)
 
     for f in uncommitted:
-        root.child(f).create()
+        child = root.preauthChild(f)
+        if '/' in f:
+            parent = child.parent()
+            # Git doesn't track empty directories so add a file.
+            parent.makedirs()
+            parent.child('first_file_in_directory').create()
+            git('add {}'.format(parent.path).split(), cwd=root.path)
+            git(
+                ['commit', '-am', 'add uncommitted file directories'],
+                cwd=root.path)
+        child.create()
 
 
 class VersionControlTests(

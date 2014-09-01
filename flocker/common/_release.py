@@ -105,7 +105,7 @@ class FakeVersionControl(object):
         self._current_branch = 'master'
 
     def uncommitted(self):
-        return [self._root.child(f) for f in self._uncommitted]
+        return [self._root.preauthChild(f) for f in self._uncommitted]
 
     def branch(self, name=None):
         if name is not None:
@@ -153,7 +153,7 @@ class VersionControl(object):
             line = line.strip()
             if line.startswith(('??', 'M')):
                 relative_path = line.split()[-1]
-                f = self._root.child(relative_path)
+                f = self._root.preauthChild(relative_path)
                 uncommitted.append(f)
         return uncommitted
 
@@ -202,9 +202,7 @@ class VersionControl(object):
 
     def checkout(self, name):
         if name not in self.branches() + self.branches(remote='origin'):
-            raise ReleaseError('Checkout: Unknown branch {}'.format(name))
-        if self.uncommitted():
-            raise ReleaseError('Checkout: uncommitted changes {}'.format(name))
+            raise ReleaseError('Unknown branch {}'.format(name))
         check_output(
             'git checkout --quiet {}'.format(name).split(),
             cwd=self._root.path
@@ -238,6 +236,7 @@ class ReleaseScript(object):
         Checkout a new release branch for major versions or an existing branch
         for patch versions.
         """
+#        self.vc.uncommitted()
         version = self.options['version']
         branchname = self._branchname()
         if version.micro == 0:
