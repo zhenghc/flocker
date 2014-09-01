@@ -4,6 +4,7 @@
 """
 Tools for releasing Flocker.
 """
+import sys
 from subprocess import check_output
 
 from twisted.python.filepath import FilePath
@@ -221,6 +222,7 @@ class ReleaseScript(object):
     def __init__(self):
         self.options = ReleaseOptions()
         self.vc = VersionControl(FilePath('.'))
+        self._sys_module = sys
 
     def _branchname(self):
         """
@@ -287,8 +289,10 @@ class ReleaseScript(object):
         """
         Parse options and take action.
         """
-        # try:
-        #     self.options.parseOptions(args)
-        # except UsageError as e:
-        #     raise SystemExit(e)
+        try:
+            self.options.parseOptions(args)
+        except UsageError as e:
+            self._sys_module.stderr.write(
+                b'ERROR: %s\n' % (unicode(e).encode('utf8'),))
+            raise SystemExit(1)
         self.prepare()

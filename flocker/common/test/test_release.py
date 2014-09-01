@@ -14,6 +14,8 @@ from twisted.trial.unittest import TestCase
 
 from zope.interface.verify import verifyObject
 
+from ...testtools import FakeSysModule
+
 from .._release import (
     flocker_version, ReleaseScript, ReleaseOptions, FakeVersionControl,
     IVersionControl, VersionControl, ReleaseError
@@ -430,3 +432,34 @@ class ReleaseScriptCheckoutTests(TestCase):
         script.vc.branch(name='release/0.2')
         script._checkout()
         self.assertEqual(script._branchname(), script.vc.branch())
+
+
+class ReleaseScriptMainTests(TestCase):
+    """
+    Tests for ``ReleaseScript.main``.
+    """
+    def test_usage_error_status(self):
+        """
+        ``ReleaseScript.main`` raises ``SystemExit`` if the supplied options
+        result in a ``UsageError``.
+        """
+        # Supply an invalid version string to trigger a usage error
+        exception = self.assertRaises(
+            SystemExit, ReleaseScript().main, [b'x.y.z'])
+        self.assertEqual(1, exception.code)
+
+
+    def test_usage_error_message(self):
+        """
+        ``ReleaseScript.main`` prints ``UsageError``s to stderr.
+        """
+        script = ReleaseScript()
+        sys_module = FakeSysModule()
+        script._sys_module = sys_module
+        # Supply an invalid version string to trigger a usage error
+        self.assertRaises(
+            SystemExit, script.main, [b'x.y.z'])
+        self.assertEqual(
+            b'ERROR: Version components must be integers. Found x.y.z\n',
+            sys_module.stderr.getvalue()
+        )
