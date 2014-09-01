@@ -474,3 +474,22 @@ class ReleaseScriptMainTests(TestCase):
             script, 'prepare', lambda *a, **kw: prepare_calls.append((a, kw)))
         script.main([b'0.1.0'])
         self.assertEqual([((), {} )], prepare_calls)
+
+
+class ReleaseScriptPrepareTests(TestCase):
+    """
+    Tests for ``ReleaseScript.prepare``.
+    """
+    def test_order_of_operations(self):
+        """
+        ``ReleaseScript.prepare`` calls ``_checkout`` without any arguments.
+        """
+        script = ReleaseScript()
+        calls = []
+        self.patch(
+            script, '_checkout', lambda *a, **kw: calls.append(('_checkout', a, kw)))
+        script.prepare()
+        self.assertEqual(
+            [('_checkout', (), {} )],
+            calls
+        )
