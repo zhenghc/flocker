@@ -463,3 +463,14 @@ class ReleaseScriptMainTests(TestCase):
             b'ERROR: Version components must be integers. Found x.y.z\n',
             sys_module.stderr.getvalue()
         )
+
+    def test_prepare(self):
+        """
+        ``ReleaseScript.main`` calls ``prepare`` without any arguments.
+        """
+        script = ReleaseScript()
+        prepare_calls = []
+        self.patch(
+            script, 'prepare', lambda *a, **kw: prepare_calls.append((a, kw)))
+        script.main([b'0.1.0'])
+        self.assertEqual([((), {} )], prepare_calls)
