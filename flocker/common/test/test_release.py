@@ -136,7 +136,7 @@ def make_version_control_tests(make_api, setup_environment):
                 self.api.uncommitted()
             )
 
-        def test_branch(self):
+        def test_branch_new(self):
             """
             ``branch`` creates a new branch from origin master with the
             supplied name.
@@ -144,6 +144,14 @@ def make_version_control_tests(make_api, setup_environment):
             expected_branch = b'release/0.2'
             self.api.branch(expected_branch)
             self.assertIn(expected_branch, self.api.branches())
+
+        def test_branch_current(self):
+            """
+            ``branch`` returns the name of the current checked out branch.
+            """
+            expected_branch = b'release/0.2'
+            self.api.branch(expected_branch)
+            self.assertEqual(expected_branch, self.api.branch())
 
         def test_branches(self):
             """

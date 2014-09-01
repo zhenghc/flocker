@@ -70,9 +70,10 @@ class IVersionControl(Interface):
         Return a list of uncommitted changes.
         """
 
-    def branch(name):
+    def branch(name=None):
         """
-        Create a new branch named ``name``.
+        Return the current branch name or create a new branch if ``name`` is
+        supplied.
         """
 
     def branches():
@@ -96,12 +97,16 @@ class FakeVersionControl(object):
         self._uncommitted = []
         self._branches = {'local': [], 'origin': []}
         self._remote_branches = []
+        self._current_branch = 'master'
 
     def uncommitted(self):
         return [self._root.child(f) for f in self._uncommitted]
 
-    def branch(self, name):
-        self._branches['local'].append(name)
+    def branch(self, name=None):
+        if name is not None:
+            self._branches['local'].append(name)
+            self._current_branch = name
+        return self._current_branch
 
     def branches(self, remote=None):
         key = 'local'
@@ -143,10 +148,15 @@ class VersionControl(object):
                 uncommitted.append(f)
         return uncommitted
 
-    def branch(self, name):
-        check_output(
-            ['git', 'checkout', '--quiet', '-b', name, 'origin/master'],
-            cwd=self._root.path)
+    def branch(self, name=None):
+        if name is not None:
+            check_output(
+                ['git', 'checkout', '--quiet', '-b', name, 'origin/master'],
+                cwd=self._root.path)
+        output = check_output('git branch --list'.split(), cwd=self._root.path)
+        for line in output.splitlines():
+            if line.startswith('*'):
+                return line.lstrip('* ')
 
     def _remotes(self):
         """
