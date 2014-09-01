@@ -4,6 +4,10 @@
 """
 Tools for releasing Flocker.
 """
+if __name__ == '__main__':
+    from flocker.common._release import flocker_release_main
+    flocker_release_main()
+
 import sys
 from subprocess import check_output
 
@@ -192,7 +196,7 @@ class VersionControl(object):
     def push(self, name, remote):
         if remote not in self._remotes():
             raise ReleaseError('Unknown remote {}'.format(remote))
-        if name not in self.branches(remote=remote):
+        if name not in self.branches():
             raise ReleaseError('Unknown branch {}'.format(name))
 
         check_output(
@@ -286,7 +290,7 @@ class ReleaseScript(object):
         self._update_versions()
         self._force_build()
 
-    def main(self, argv):
+    def main(self, argv=None):
         """
         Parse options and take action.
         """
