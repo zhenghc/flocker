@@ -487,7 +487,8 @@ class ReleaseScriptPrepareTests(TestCase):
         script = ReleaseScript()
         calls = []
         self.patch(
-            script, '_checkout', lambda *a, **kw: calls.append(('_checkout', a, kw)))
+            script, '_checkout',
+            lambda *a, **kw: calls.append(('_checkout', a, kw)))
         script.prepare()
         self.assertEqual(
             [('_checkout', (), {} )],
