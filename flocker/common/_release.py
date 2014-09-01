@@ -86,6 +86,10 @@ class IVersionControl(Interface):
         Push the named branch to remote.
         """
 
+    def checkout(name):
+        """
+        Checkout the branch with ``name``.
+        """
 
 @implementer(IVersionControl)
 class FakeVersionControl(object):
@@ -105,7 +109,6 @@ class FakeVersionControl(object):
     def branch(self, name=None):
         if name is not None:
             self._branches['local'].append(name)
-            self._current_branch = name
         return self._current_branch
 
     def branches(self, remote=None):
@@ -122,6 +125,11 @@ class FakeVersionControl(object):
         if name not in self.branches():
             raise ReleaseError('Unknown branch {}'.format(name))
         self._branches[remote].append(name)
+
+    def checkout(self, name):
+        if name not in self.branches():
+            raise ReleaseError('Unknown branch {}'.format(name))
+        self._current_branch = name
 
 
 @implementer(IVersionControl)
@@ -151,7 +159,7 @@ class VersionControl(object):
     def branch(self, name=None):
         if name is not None:
             check_output(
-                ['git', 'checkout', '--quiet', '-b', name, 'origin/master'],
+                ['git', 'branch', '--quiet', name, 'origin/master'],
                 cwd=self._root.path)
         output = check_output('git branch --list'.split(), cwd=self._root.path)
         for line in output.splitlines():
@@ -188,6 +196,14 @@ class VersionControl(object):
 
         check_output(
             'git push --quiet {} {}'.format(remote, name).split(),
+            cwd=self._root.path
+        )
+
+    def checkout(self, name):
+        if name not in self.branches():
+            raise ReleaseError('Unknown branch {}'.format(name))
+        check_output(
+            'git checkout --quiet {}'.format(name).split(),
             cwd=self._root.path
         )
 
@@ -235,6 +251,7 @@ class ReleaseScript(object):
                     'Existing branch {} not found '
                     'for patch release {}'.format(
                         branchname, version.base()))
+        self.vc.checkout(branchname)
 
     def _check_release_notes(self):
         """

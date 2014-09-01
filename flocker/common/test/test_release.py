@@ -151,7 +151,7 @@ def make_version_control_tests(make_api, setup_environment):
             """
             expected_branch = b'release/0.2'
             self.api.branch(expected_branch)
-            self.assertEqual(expected_branch, self.api.branch())
+            self.assertIn(expected_branch, self.api.branches())
 
         def test_branches(self):
             """
@@ -207,6 +207,26 @@ def make_version_control_tests(make_api, setup_environment):
             self.api.branch(expected_branch)
             self.api.push(expected_branch, remote)
             self.assertIn(expected_branch, self.api.branches(remote=remote))
+
+        def test_checkout(self):
+            """
+            ``checkout`` checks out the branch with the given ``name``.
+            """
+            expected_branch = b'release/0.2'
+            self.api.branch(name=expected_branch)
+            self.api.checkout(name=expected_branch)
+            self.assertEqual(expected_branch, self.api.branch())
+
+        def test_checkout_unknown_branch(self):
+            """
+            ``checkout`` raises ``ReleaseError`` if there is no branch with the
+            given ``name``.
+            """
+            expected_branch = b'release/0.2'
+            exception = self.assertRaises(
+                ReleaseError, self.api.checkout, name=expected_branch)
+            self.assertEqual('Unknown branch release/0.2', str(exception))
+
 
     return VersionControlTests
 
@@ -372,7 +392,7 @@ class ReleaseScriptCheckoutTests(TestCase):
         script.options.parseOptions([b'0.2.0'])
         script.vc = FakeVersionControl('.')
         script._checkout()
-        self.assertEqual([script._branchname()], script.vc.branches())
+        self.assertEqual(script._branchname(), script.vc.branch())
 
     def test_non_patch_release_branch_pushed(self):
         """
@@ -404,4 +424,9 @@ class ReleaseScriptCheckoutTests(TestCase):
         """
         An existing branch is checked out for a patch release.
         """
-        self.fail()
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.1'])
+        script.vc = FakeVersionControl('.')
+        script.vc.branch(name='release/0.2')
+        script._checkout()
+        self.assertEqual(script._branchname(), script.vc.branch())
