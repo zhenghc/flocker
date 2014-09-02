@@ -241,7 +241,6 @@ def make_version_control_tests(make_api, setup_environment):
             self.assertEqual(
                 'Unknown branch release/flocker-0.2', str(exception))
 
-
     return VersionControlTests
 
 
@@ -489,7 +488,6 @@ class ReleaseScriptMainTests(TestCase):
             SystemExit, ReleaseScript().main, [b'x.y.z'])
         self.assertEqual(1, exception.code)
 
-
     def test_usage_error_message(self):
         """
         ``ReleaseScript.main`` prints ``UsageError``s to stderr.
@@ -514,7 +512,7 @@ class ReleaseScriptMainTests(TestCase):
         self.patch(
             script, 'prepare', lambda *a, **kw: prepare_calls.append((a, kw)))
         script.main([b'0.1.0'])
-        self.assertEqual([((), {} )], prepare_calls)
+        self.assertEqual([((), {})], prepare_calls)
 
     def test_release_error_status(self):
         """
@@ -523,6 +521,7 @@ class ReleaseScriptMainTests(TestCase):
         """
         # Supply a bad
         script = ReleaseScript()
+
         def failing_prepare():
             raise ReleaseError('fake release failure')
         self.patch(script, 'prepare', failing_prepare)
@@ -539,6 +538,7 @@ class ReleaseScriptMainTests(TestCase):
         script = ReleaseScript()
         sys_module = FakeSysModule()
         script._sys_module = sys_module
+
         def failing_prepare():
             raise ReleaseError('fake release failure')
         self.patch(script, 'prepare', failing_prepare)
@@ -563,7 +563,7 @@ class ReleaseScriptPrepareTests(TestCase):
             lambda *a, **kw: calls.append(('_checkout', a, kw)))
         script.prepare()
         self.assertEqual(
-            [('_checkout', (), {} )],
+            [('_checkout', (), {})],
             calls
         )
 

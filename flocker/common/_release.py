@@ -99,6 +99,7 @@ class IVersionControl(Interface):
         Checkout the branch with ``name``.
         """
 
+
 @implementer(IVersionControl)
 class FakeVersionControl(object):
     """
