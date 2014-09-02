@@ -391,6 +391,22 @@ class ReleaseScriptCheckoutTests(TestCase):
     """
     Tests for ``ReleaseScript._checkout``.
     """
+    def test_error_if_uncommitted_changes(self):
+        """
+        An error is raised if the working directory contains uncommitted
+        changes.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        root = FilePath('.')
+        script.vc = FakeVersionControl(root)
+        script.vc._uncommitted.append('SRPMS')
+        error = self.assertRaises(ReleaseError, script._checkout)
+        self.assertEqual(
+            'Uncommitted changes found: {}'.format(root.child('SRPMS').path),
+            str(error)
+        )
+
     def test_non_patch_release_existing_branch(self):
         """
         An error is raised if an existing branch is found when a major or minor

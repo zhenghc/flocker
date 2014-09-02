@@ -243,7 +243,11 @@ class ReleaseScript(object):
         Checkout a new release branch for major versions or an existing branch
         for patch versions.
         """
-#        self.vc.uncommitted()
+        uncommitted = self.vc.uncommitted()
+        if uncommitted:
+            raise ReleaseError(
+                'Uncommitted changes found: {}'.format(
+                    ','.join(f.path for f in uncommitted)))
         version = self.options['version']
         branchname = self._branchname()
         if version.micro == 0:
