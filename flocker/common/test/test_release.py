@@ -579,6 +579,27 @@ class ReleaseScriptFunctionalTests(TestCase):
         output = check_output(['flocker-release', '--version'])
         self.assertEqual(b"%s\n" % (__version__,), output)
 
+    def test_error_if_uncommitted_changes(self):
+        """
+        An error is raised if the working directory contains uncommitted
+        changes.
+        """
+        root = FilePath(self.mktemp())
+        git_working_directory(
+            test=self, root=root, api=None,
+            uncommitted=['SRPMS'], local_branches=[], origin_branches=[])
+        exception = self.assertRaises(
+            CalledProcessError,
+            check_output,
+            ['flocker-release', '0.3.0'],
+            cwd=root.path, stderr=STDOUT
+        )
+        self.assertEqual(
+            'ERROR: Uncommitted changes found: {}\n'.format(
+                root.child('SRPMS').path),
+            exception.output
+        )
+
     def test_patch_release_missing_branch(self):
         """
         ``flocker-release`` prints an error message if there isn't an existing
