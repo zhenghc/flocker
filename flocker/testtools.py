@@ -305,6 +305,7 @@ class StandardOptionsTestsMixin(object):
         # See https://github.com/ClusterHQ/flocker/issues/184 about a solution
         # which does not involve patching.
         self.patch(options, "parseArgs", lambda: None)
+        self.patch(options, "postOptions", lambda: None)
         options.parseOptions(['--verbose'])
         self.assertEqual(1, options['verbosity'])
 
@@ -319,6 +320,7 @@ class StandardOptionsTestsMixin(object):
         # See https://github.com/ClusterHQ/flocker/issues/184 about a solution
         # which does not involve patching.
         self.patch(options, "parseArgs", lambda: None)
+        self.patch(options, "postOptions", lambda: None)
         options.parseOptions(['-v'])
         self.assertEqual(1, options['verbosity'])
 
@@ -332,6 +334,7 @@ class StandardOptionsTestsMixin(object):
         # See https://github.com/ClusterHQ/flocker/issues/184 about a solution
         # which does not involve patching.
         self.patch(options, "parseArgs", lambda: None)
+        self.patch(options, "postOptions", lambda: None)
         options.parseOptions(['-v', '--verbose'])
         self.assertEqual(2, options['verbosity'])
 

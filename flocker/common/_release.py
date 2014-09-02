@@ -17,6 +17,8 @@ from twisted.python.versions import Version
 
 from zope.interface import Interface, implementer
 
+from flocker.common.script import flocker_standard_options
+
 PACKAGE_NAME = 'Flocker'
 
 
@@ -27,6 +29,7 @@ def flocker_version(major, minor, micro, prerelease=None):
     return Version(PACKAGE_NAME, major, minor, micro, prerelease)
 
 
+@flocker_standard_options
 class ReleaseOptions(Options):
     """
     Command line options for the flocker-release tool.

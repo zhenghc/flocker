@@ -5,7 +5,7 @@ Tests for release tools.
 """
 
 from os import devnull
-from subprocess import check_call
+from subprocess import check_call, check_output
 
 from twisted.python.filepath import FilePath
 from twisted.python.usage import UsageError
@@ -14,7 +14,9 @@ from twisted.trial.unittest import TestCase
 
 from zope.interface.verify import verifyObject
 
-from ...testtools import FakeSysModule
+from ... import __version__
+
+from ...testtools import FakeSysModule, StandardOptionsTestsMixin
 
 from .._release import (
     flocker_version, ReleaseScript, ReleaseOptions, FakeVersionControl,
@@ -39,6 +41,14 @@ class FlockerVersionTests(TestCase):
         The returned version has a package name of *Flocker*.
         """
         self.assertEqual('Flocker', flocker_version(0, 0, 0).package)
+
+
+class StandardOptionsTests(StandardOptionsTestsMixin, TestCase):
+    """
+    Test that ``ReleaseOptions`` is decorated with
+    ``flocker_standard_options``.
+    """
+    options = ReleaseOptions
 
 
 class ReleaseOptionsTests(TestCase):
@@ -540,3 +550,14 @@ class ReleaseScriptPrepareTests(TestCase):
             [('_checkout', (), {} )],
             calls
         )
+
+
+class ReleaseScriptFunctionalTests(TestCase):
+    """
+    Tests for ``flocker-release``.
+    """
+    def test_version(self):
+        """
+        """
+        output = check_output(['flocker-release', '--version'])
+        self.assertEqual(b"%s\n" % (__version__,), output)
