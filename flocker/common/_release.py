@@ -8,8 +8,10 @@ if __name__ == '__main__':
     from flocker.common._release import flocker_release_main
     flocker_release_main()
 
+import re
 import sys
 from subprocess import check_output
+from urlparse import urlparse
 
 from twisted.python.filepath import FilePath
 from twisted.python.usage import Options, UsageError
@@ -20,6 +22,15 @@ from zope.interface import Interface, implementer
 from flocker.common.script import flocker_standard_options
 
 PACKAGE_NAME = 'Flocker'
+
+# URLs are assumed to not contain spaces
+URL_PATTERN = r'(?:http|https)://[^\s]+'
+
+def extract_urls(text):
+    urls = []
+    for match in re.findall(URL_PATTERN, text):
+        urls.append(urlparse(match))
+    return urls
 
 
 def flocker_version(major, minor, micro, prerelease=None):

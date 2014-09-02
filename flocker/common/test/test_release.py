@@ -7,6 +7,7 @@ Tests for release tools.
 from os import devnull
 from subprocess import check_call, check_output, STDOUT, CalledProcessError
 from unittest import skipUnless
+from urlparse import ParseResult
 
 from twisted.python.filepath import FilePath
 from twisted.python.procutils import which
@@ -23,7 +24,7 @@ from ...testtools import FakeSysModule, StandardOptionsTestsMixin
 from .._release import (
     flocker_version, flocker_version_from_string, VersionError, ReleaseScript,
     ReleaseOptions, FakeVersionControl, IVersionControl, VersionControl,
-    ReleaseError
+    ReleaseError, extract_urls,
 )
 
 DEBUG = False
@@ -815,3 +816,39 @@ class ReleaseScriptFunctionalTests(TestCase):
 
         self.assertEqual(expected_branch, api.branch())
         self.assertIn(expected_branch, api.branches(remote='origin'))
+
+
+class ExtractUrlsTests(TestCase):
+    """
+    Tests for ``extract_urls``.
+    """
+    def test_none(self):
+        """
+        Only strings matching ``URL_PATTERN`` are matched.
+        """
+        self.assertEqual(
+            [],
+            extract_urls("www.example.com/foo/bar")
+        )
+
+    def test_parseresult(self):
+        """
+        A list of ``ParseResult``\ s is returned.
+        """
+        self.assertEqual(
+            [ParseResult('https', 'www.example.com', '/foo/bar', *('',)*3)],
+            extract_urls("https://www.example.com/foo/bar")
+        )
+
+    def test_multiple(self):
+        """
+        All urls in the supplied text are parsed.
+        """
+        self.assertEqual(
+            [ParseResult('https', 'foo.example.com', '/foo/bar', *('',)*3),
+             ParseResult('https', 'bar.example.com', '/baz/qux', *('',)*3)],
+            extract_urls(
+                "https://foo.example.com/foo/bar "
+                "https://bar.example.com/baz/qux"
+            )
+        )
