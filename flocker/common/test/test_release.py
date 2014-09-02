@@ -5,7 +5,7 @@ Tests for release tools.
 """
 
 from os import devnull
-from subprocess import check_call, check_output
+from subprocess import check_call, check_output, STDOUT, CalledProcessError
 
 from twisted.python.filepath import FilePath
 from twisted.python.usage import UsageError
@@ -558,6 +558,87 @@ class ReleaseScriptFunctionalTests(TestCase):
     """
     def test_version(self):
         """
+        ``flocker-release`` command is installed on the system path.
         """
         output = check_output(['flocker-release', '--version'])
         self.assertEqual(b"%s\n" % (__version__,), output)
+
+    def test_patch_release_missing_branch(self):
+        """
+        ``flocker-release`` prints an error message if there isn't an existing
+        release branch.
+        """
+        root = FilePath(self.mktemp())
+        api = VersionControl(root=root)
+        git_working_directory(
+            test=self, root=root, api=api,
+            uncommitted=[], local_branches=[], origin_branches=[])
+        exception = self.assertRaises(
+            CalledProcessError,
+            check_output,
+            ['flocker-release', '0.3.1'],
+            cwd=root.path, stderr=STDOUT
+        )
+        self.assertEqual(
+            b'ERROR: Existing branch release/flocker-0.3 not found '
+            b'for patch release 0.3.1\n',
+            exception.output)
+
+    def test_patch_release_existing_branch(self):
+        """
+        ``flocker-release`` checks out an existing release branch.
+        """
+        root = FilePath(self.mktemp())
+        api = VersionControl(root=root)
+        expected_branch = 'release/flocker-0.3'
+        git_working_directory(
+            test=self, root=root, api=api,
+            uncommitted=[], local_branches=[],
+            origin_branches=[expected_branch])
+
+        check_call(['flocker-release', '0.3.1'], cwd=root.path)
+
+        self.assertEqual('release/flocker-0.3', api.branch())
+
+    def test_major_release_existing_branch(self):
+        """
+        ``flocker-release`` exits with an error message if supplied with a
+        major version number and an existing release branch is found.
+        """
+        root = FilePath(self.mktemp())
+        api = VersionControl(root=root)
+        expected_branch = 'release/flocker-0.3'
+        git_working_directory(
+            test=self, root=root, api=api,
+            uncommitted=[], local_branches=[],
+            origin_branches=[expected_branch])
+
+        exception = self.assertRaises(
+            CalledProcessError,
+            check_output,
+            ['flocker-release', '0.3.0'],
+            cwd=root.path, stderr=STDOUT
+        )
+
+        self.assertEqual(
+            b'ERROR: Existing branch release/flocker-0.3 found '
+            b'but major or minor release 0.3.0 requested.\n',
+            exception.output
+        )
+
+    def test_major_release_create_and_push_branch(self):
+        """
+        ``flocker-release`` creates a release branch and pushes it.
+        """
+        root = FilePath(self.mktemp())
+        api = VersionControl(root=root)
+        expected_branch = 'release/flocker-0.3'
+        git_working_directory(
+            test=self, root=root, api=api,
+            uncommitted=[], local_branches=[],
+            origin_branches=[])
+
+        check_call(['flocker-release', '0.3.0'], cwd=root.path)
+
+        self.assertEqual(expected_branch, api.branch())
+        self.assertIn(expected_branch, api.branches(remote='origin'))
