@@ -38,6 +38,7 @@ class ReleaseOptions(Options):
 
     def opt_pre_release(self, prerelease):
         """
+        Specify the pre-release version.
         """
         try:
             self['prerelease'] = int(prerelease)
@@ -47,9 +48,15 @@ class ReleaseOptions(Options):
 
     def parseArgs(self, version):
         """
+        Parse the version string.
         """
+        parts = version.split('.', 2)
+        if len(parts) != 3:
+            raise UsageError(
+                'Version must be of the form x.y.z. '
+                'Found {}'.format(version))
         try:
-            major, minor, micro = [int(v) for v in version.split('.', 2)]
+            major, minor, micro = [int(v) for v in parts]
         except ValueError:
             raise UsageError(
                 'Version components must be integers. '

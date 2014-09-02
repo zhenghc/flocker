@@ -74,6 +74,17 @@ class ReleaseOptionsTests(TestCase):
         options.parseOptions([expected_version_string])
         self.assertEqual(expected_version, options['version'])
 
+    def test_version_non_missing_component(self):
+        """
+        ``UsageError`` is raised if the supplied version is not of the form
+        x.y.z.
+        """
+        options = ReleaseOptions()
+
+        error = self.assertRaises(UsageError, options.parseOptions, ['0.50'])
+        self.assertEqual(
+            'Version must be of the form x.y.z. Found 0.50', str(error))
+
     def test_version_non_int(self):
         """
         ``UsageError`` is raised if the supplied version components cannot be
