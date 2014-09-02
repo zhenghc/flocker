@@ -406,40 +406,40 @@ class ReleaseScriptCheckoutTests(TestCase):
             str(error)
         )
 
-    def test_non_patch_release_existing_branch(self):
+    def test_first_non_patch_prerelease_existing_branch(self):
         """
         An error is raised if an existing branch is found when a major or minor
-        release is requested.
+        pre-release1 is requested.
         """
         script = ReleaseScript()
-        script.options.parseOptions([b'0.2.0'])
+        script.options.parseOptions(['--pre-release=1', b'0.2.0'])
         script.vc = FakeVersionControl('.')
         script.vc.branch(script._branchname())
         script.vc.push(script._branchname(), 'origin')
         error = self.assertRaises(ReleaseError, script._checkout)
         self.assertEqual(
             'Existing branch release/flocker-0.2 found '
-            'but major or minor release 0.2.0 requested.',
+            'but major or minor first pre-release, 0.2.0pre1 requested.',
             str(error)
         )
 
-    def test_non_patch_release_branch_created(self):
+    def test_first_non_patch_prerelease_branch_created(self):
         """
-        A major or minor release will result in the creation of a new release
-        branch.
+        A major or minor first pre-release will result in the creation of a new
+        release branch.
         """
         script = ReleaseScript()
-        script.options.parseOptions([b'0.2.0'])
+        script.options.parseOptions([b'--pre-release=1', b'0.2.0'])
         script.vc = FakeVersionControl('.')
         script._checkout()
         self.assertEqual(script._branchname(), script.vc.branch())
 
-    def test_non_patch_release_branch_pushed(self):
+    def test_first_non_patch_prerelease_branch_pushed(self):
         """
         The new branch will be pushed to origin.
         """
         script = ReleaseScript()
-        script.options.parseOptions([b'0.2.0'])
+        script.options.parseOptions([b'--pre-release=1', b'0.2.0'])
         script.vc = FakeVersionControl('.')
         script._checkout()
         self.assertIn(
@@ -456,7 +456,7 @@ class ReleaseScriptCheckoutTests(TestCase):
         error = self.assertRaises(ReleaseError, script._checkout)
         self.assertEqual(
             'Existing branch release/flocker-0.2 not found '
-            'for patch release 0.2.1',
+            'for release 0.2.1',
             str(error)
         )
 
@@ -466,6 +466,34 @@ class ReleaseScriptCheckoutTests(TestCase):
         """
         script = ReleaseScript()
         script.options.parseOptions([b'0.2.1'])
+        script.vc = FakeVersionControl('.')
+        branch_name = 'release/flocker-0.2'
+        script.vc.branch(name=branch_name)
+        script.vc.push(branch_name, 'origin')
+        script._checkout()
+        self.assertEqual(script._branchname(), script.vc.branch())
+
+    def test_subsequent_prerelease_missing_branch(self):
+        """
+        An error is raised if a followup pre-release is requested, but an
+        existing branch is not found.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'--pre-release=2', b'0.2.0'])
+        script.vc = FakeVersionControl('.')
+        error = self.assertRaises(ReleaseError, script._checkout)
+        self.assertEqual(
+            'Existing branch release/flocker-0.2 not found '
+            'for release 0.2.0pre2',
+            str(error)
+        )
+
+    def test_subsequent_prerelease_existing_branch(self):
+        """
+        An existing branch is checked out for a subsequent pre-release.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'--pre-release=2', b'0.2.0'])
         script.vc = FakeVersionControl('.')
         branch_name = 'release/flocker-0.2'
         script.vc.branch(name=branch_name)
@@ -618,7 +646,7 @@ class ReleaseScriptFunctionalTests(TestCase):
         )
         self.assertEqual(
             b'ERROR: Existing branch release/flocker-0.3 not found '
-            b'for patch release 0.3.1\n',
+            b'for release 0.3.1\n',
             exception.output)
 
     def test_patch_release_existing_branch(self):
@@ -637,10 +665,11 @@ class ReleaseScriptFunctionalTests(TestCase):
 
         self.assertEqual('release/flocker-0.3', api.branch())
 
-    def test_major_release_existing_branch(self):
+    def test_major_prerelease1_existing_branch(self):
         """
         ``flocker-release`` exits with an error message if supplied with a
-        major version number and an existing release branch is found.
+        major version number and pre-release version 1 and an existing release
+        branch is found.
         """
         root = FilePath(self.mktemp())
         api = VersionControl(root=root)
@@ -653,17 +682,17 @@ class ReleaseScriptFunctionalTests(TestCase):
         exception = self.assertRaises(
             CalledProcessError,
             check_output,
-            ['flocker-release', '0.3.0'],
+            ['flocker-release', '--pre-release=1', '0.3.0'],
             cwd=root.path, stderr=STDOUT
         )
 
         self.assertEqual(
             b'ERROR: Existing branch release/flocker-0.3 found '
-            b'but major or minor release 0.3.0 requested.\n',
+            b'but major or minor first pre-release, 0.3.0pre1 requested.\n',
             exception.output
         )
 
-    def test_major_release_create_and_push_branch(self):
+    def test_major_prerelease1_create_and_push_branch(self):
         """
         ``flocker-release`` creates a release branch and pushes it.
         """
@@ -675,7 +704,10 @@ class ReleaseScriptFunctionalTests(TestCase):
             uncommitted=[], local_branches=[],
             origin_branches=[])
 
-        check_call(['flocker-release', '0.3.0'], cwd=root.path)
+        check_call(
+            ['flocker-release', '--pre-release=1', '0.3.0'],
+            cwd=root.path
+        )
 
         self.assertEqual(expected_branch, api.branch())
         self.assertIn(expected_branch, api.branches(remote='origin'))

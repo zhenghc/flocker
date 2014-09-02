@@ -251,20 +251,23 @@ class ReleaseScript(object):
                     ','.join(f.path for f in uncommitted)))
         version = self.options['version']
         branchname = self._branchname()
-        if version.micro == 0:
+        if version.micro == 0 and version.prerelease == 1:
+            # Only create and push a release branch if this is the first
+            # pre-release of a major or minor release. Fail if an existing
+            # branch is found.
             if branchname in self.vc.branches(remote='origin'):
                 raise ReleaseError(
                     'Existing branch {} found '
-                    'but major or minor release {} requested.'.format(
+                    'but major or minor first pre-release, '
+                    '{} requested.'.format(
                         branchname, version.base()))
             self.vc.branch(branchname)
             self.vc.push(branchname, 'origin')
-
         else:
             if branchname not in self.vc.branches(remote='origin'):
                 raise ReleaseError(
                     'Existing branch {} not found '
-                    'for patch release {}'.format(
+                    'for release {}'.format(
                         branchname, version.base()))
         self.vc.checkout(branchname)
 
