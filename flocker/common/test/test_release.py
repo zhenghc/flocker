@@ -478,7 +478,7 @@ class ReleaseScriptCheckoutTests(TestCase):
         pre-release1 is requested.
         """
         script = ReleaseScript()
-        script.options.parseOptions(['--pre-release=1', b'0.2.0'])
+        script.options.parseOptions([b'0.2.0pre1'])
         script.vc = FakeVersionControl('.')
         script.vc.branch(script._branchname())
         script.vc.push(script._branchname(), 'origin')
@@ -495,7 +495,7 @@ class ReleaseScriptCheckoutTests(TestCase):
         release branch.
         """
         script = ReleaseScript()
-        script.options.parseOptions([b'--pre-release=1', b'0.2.0'])
+        script.options.parseOptions([b'0.2.0pre1'])
         script.vc = FakeVersionControl('.')
         script._checkout()
         self.assertEqual(script._branchname(), script.vc.branch())
@@ -505,7 +505,7 @@ class ReleaseScriptCheckoutTests(TestCase):
         The new branch will be pushed to origin.
         """
         script = ReleaseScript()
-        script.options.parseOptions([b'--pre-release=1', b'0.2.0'])
+        script.options.parseOptions([b'0.2.0pre1'])
         script.vc = FakeVersionControl('.')
         script._checkout()
         self.assertIn(
@@ -545,7 +545,7 @@ class ReleaseScriptCheckoutTests(TestCase):
         existing branch is not found.
         """
         script = ReleaseScript()
-        script.options.parseOptions([b'--pre-release=2', b'0.2.0'])
+        script.options.parseOptions([b'0.2.0pre2'])
         script.vc = FakeVersionControl('.')
         error = self.assertRaises(ReleaseError, script._checkout)
         self.assertEqual(
@@ -559,7 +559,7 @@ class ReleaseScriptCheckoutTests(TestCase):
         An existing branch is checked out for a subsequent pre-release.
         """
         script = ReleaseScript()
-        script.options.parseOptions([b'--pre-release=2', b'0.2.0'])
+        script.options.parseOptions([b'0.2.0pre2'])
         script.vc = FakeVersionControl('.')
         branch_name = 'release/flocker-0.2'
         script.vc.branch(name=branch_name)
@@ -780,7 +780,7 @@ class ReleaseScriptFunctionalTests(TestCase):
         exception = self.assertRaises(
             CalledProcessError,
             check_output,
-            ['flocker-release', '--pre-release=1', '0.3.0'],
+            ['flocker-release', '0.3.0pre1'],
             cwd=root.path, stderr=STDOUT
         )
 
@@ -803,7 +803,7 @@ class ReleaseScriptFunctionalTests(TestCase):
             origin_branches=[])
 
         check_call(
-            ['flocker-release', '--pre-release=1', '0.3.0'],
+            ['flocker-release', '0.3.0pre1'],
             cwd=root.path
         )
 

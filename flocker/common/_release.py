@@ -64,7 +64,7 @@ def flocker_version_from_string(version_string):
             'Found {}'.format(raw_version_string))
 
     return flocker_version(major, minor, micro, prerelease=prerelease)
-    
+
 
 @flocker_standard_options
 class ReleaseOptions(Options):
@@ -72,16 +72,6 @@ class ReleaseOptions(Options):
     Command line options for the flocker-release tool.
     """
     synopsis = b'Usage: flocker-release [options] <version>'
-
-    def opt_pre_release(self, prerelease):
-        """
-        Specify the pre-release version.
-        """
-        try:
-            self['prerelease'] = int(prerelease)
-        except ValueError:
-            raise UsageError(
-                'Pre-release must be an integer. Found {}'.format(prerelease))
 
     def parseArgs(self, version_string):
         """
