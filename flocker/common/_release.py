@@ -317,10 +317,10 @@ class ReleaseScript(object):
         Prepare for a release.
         """
         self._checkout()
-        self._check_release_notes()
-        self._check_copyright()
         self._update_versions()
-        self._force_build()
+        # self._check_release_notes()
+        # self._check_copyright()
+        # self._force_build()
 
     def main(self, argv=None):
         """

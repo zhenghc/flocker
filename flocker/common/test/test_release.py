@@ -680,12 +680,18 @@ class ReleaseScriptPrepareTests(TestCase):
         """
         script = ReleaseScript()
         calls = []
-        self.patch(
-            script, '_checkout',
-            lambda *a, **kw: calls.append(('_checkout', a, kw)))
+        def recorder(subroutine):
+            return lambda *a, **kw: calls.append((subroutine, a, kw))
+        for subroutine in ('_checkout', '_update_versions'):
+            self.patch(
+                script, subroutine,
+                recorder(subroutine))
         script.prepare()
         self.assertEqual(
-            [('_checkout', (), {})],
+            [
+                ('_checkout', (), {}),
+                ('_update_versions', (), {})
+            ],
             calls
         )
 
