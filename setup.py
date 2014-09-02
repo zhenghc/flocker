@@ -2,6 +2,7 @@
 #
 # Generate a Flocker package that can be deployed onto cluster nodes.
 #
+
 import os
 from setuptools import setup, find_packages
 
@@ -29,9 +30,7 @@ class cmd_generate_spec(Command):
             destination.write(version)
             destination.write(spec)
 
-cmdclass = {
-    'generate_spec': cmd_generate_spec,
-}
+cmdclass = {'generate_spec': cmd_generate_spec}
 # Let versioneer hook into the various distutils commands so it can rewrite
 # certain data at appropriate times.
 cmdclass.update(versioneer.get_cmdclass())
