@@ -518,6 +518,34 @@ class ReleaseScriptCheckoutTests(TestCase):
         script._checkout()
         self.assertEqual(script._branchname(), script.vc.branch())
 
+    def test_release_missing_branch(self):
+        """
+        An error is raised if a final release is requested, but an
+        existing branch is not found.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        script.vc = FakeVersionControl('.')
+        error = self.assertRaises(ReleaseError, script._checkout)
+        self.assertEqual(
+            'Existing branch release/flocker-0.2 not found '
+            'for release 0.2.0',
+            str(error)
+        )
+
+    def test_release_existing_branch(self):
+        """
+        An existing branch is checked out for a final release.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        script.vc = FakeVersionControl('.')
+        branch_name = 'release/flocker-0.2'
+        script.vc.branch(name=branch_name)
+        script.vc.push(branch_name, 'origin')
+        script._checkout()
+        self.assertEqual(script._branchname(), script.vc.branch())
+
 
 class ReleaseScriptMainTests(TestCase):
     """
