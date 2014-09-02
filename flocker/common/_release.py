@@ -29,6 +29,43 @@ def flocker_version(major, minor, micro, prerelease=None):
     return Version(PACKAGE_NAME, major, minor, micro, prerelease)
 
 
+class VersionError(Exception):
+    """
+    Raised when version parsing fails.
+    """
+
+
+def flocker_version_from_string(version_string):
+    """
+    Parse a version string into a structured ``Version`` object.
+    """
+    raw_version_string = version_string
+    prerelease = None
+    parts = version_string.split('pre', 1)
+    if len(parts) == 2:
+        version_string, prerelease_version_string = parts
+        try:
+            prerelease = int(prerelease_version_string)
+        except ValueError:
+            raise VersionError(
+                'Pre-release must be an integer. '
+                'Found {}'.format(raw_version_string))
+
+    parts = version_string.split('.', 2)
+    if len(parts) != 3:
+        raise VersionError(
+            'Version must be of the form x.y.z. '
+            'Found {}'.format(raw_version_string))
+    try:
+        major, minor, micro = [int(v) for v in parts]
+    except ValueError:
+        raise VersionError(
+            'Version components must be integers. '
+            'Found {}'.format(raw_version_string))
+
+    return flocker_version(major, minor, micro, prerelease=prerelease)
+    
+
 @flocker_standard_options
 class ReleaseOptions(Options):
     """
@@ -46,34 +83,21 @@ class ReleaseOptions(Options):
             raise UsageError(
                 'Pre-release must be an integer. Found {}'.format(prerelease))
 
-    def parseArgs(self, version):
+    def parseArgs(self, version_string):
         """
         Parse the version string.
         """
-        parts = version.split('.', 2)
-        if len(parts) != 3:
-            raise UsageError(
-                'Version must be of the form x.y.z. '
-                'Found {}'.format(version))
-        try:
-            major, minor, micro = [int(v) for v in parts]
-        except ValueError:
-            raise UsageError(
-                'Version components must be integers. '
-                'Found {}'.format(version))
-
-        self['major'] = major
-        self['minor'] = minor
-        self['micro'] = micro
+        self['version_string'] = version_string
 
     def postOptions(self):
         """
         Combine the version components into a ``Version`` instance.
         """
-        self['version'] = flocker_version(
-            self['major'], self['minor'], self['micro'],
-            self.get('prerelease')
-        )
+        try:
+            self['version'] = flocker_version_from_string(
+                self['version_string'])
+        except VersionError as e:
+            raise UsageError(str(e))
 
 
 class IVersionControl(Interface):

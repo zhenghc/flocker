@@ -21,8 +21,9 @@ from ... import __version__
 from ...testtools import FakeSysModule, StandardOptionsTestsMixin
 
 from .._release import (
-    flocker_version, ReleaseScript, ReleaseOptions, FakeVersionControl,
-    IVersionControl, VersionControl, ReleaseError
+    flocker_version, flocker_version_from_string, VersionError, ReleaseScript,
+    ReleaseOptions, FakeVersionControl, IVersionControl, VersionControl,
+    ReleaseError
 )
 
 DEBUG = False
@@ -47,6 +48,57 @@ class FlockerVersionTests(TestCase):
         The returned version has a package name of *Flocker*.
         """
         self.assertEqual('Flocker', flocker_version(0, 0, 0).package)
+
+
+class FlockerVersionFromStringTests(TestCase):
+    """
+    Tests for ``flocker_version_from_string``.
+    """
+    def test_version(self):
+        """
+        ``flocker_version_from_string`` returns a ``Version`` object.
+        """
+        self.assertIsInstance(flocker_version_from_string(b'0.1.2'), Version)
+
+    def test_version_non_missing_component(self):
+        """
+        ``VersionError`` is raised if the supplied version is not of the form
+        x.y.z.
+        """
+        error = self.assertRaises(
+            VersionError, flocker_version_from_string, b'0.50')
+        self.assertEqual(
+            'Version must be of the form x.y.z. Found 0.50', str(error))
+
+    def test_version_non_int(self):
+        """
+        ``VersionError`` is raised if the supplied version components cannot be
+        cast to ``int``.
+        """
+        error = self.assertRaises(
+            VersionError, flocker_version_from_string, b'x.y.z')
+        self.assertEqual(
+            'Version components must be integers. Found x.y.z', str(error))
+
+    def test_prerelease(self):
+        """
+        ``flocker_version_from_string`` accepts a version with a pre-release
+        suffix with a pre-release version number.
+        """
+        self.assertEqual(
+            flocker_version(0, 1, 2, prerelease=3),
+            flocker_version_from_string(b'0.1.2pre3')
+        )
+
+    def test_prerelease_non_int(self):
+        """
+        ``VersionError`` is raised if the supplied pre-release number is not an
+        integer.
+        """
+        error = self.assertRaises(
+            VersionError, flocker_version_from_string, b'0.1.2preX')
+        self.assertEqual(
+            'Pre-release must be an integer. Found 0.1.2preX', str(error))
 
 
 class StandardOptionsTests(StandardOptionsTestsMixin, TestCase):
@@ -104,14 +156,11 @@ class ReleaseOptionsTests(TestCase):
 
     def test_prerelease(self):
         """
-        ``flocker-release`` accepts a *pre-release* option whose value is the
-        pre-release number stored as ``prerelease_version``.
+        ``flocker-release`` accepts version with a pre-release suffix.
         """
         expected_version = flocker_version(0, 2, 0, prerelease=1)
         options = ReleaseOptions()
-        options.parseOptions(
-            [b'--pre-release=1', b'0.2.0']
-        )
+        options.parseOptions([b'0.2.0pre1'])
         self.assertEqual(expected_version, options['version'])
 
     def test_prerelease_non_int(self):
@@ -123,9 +172,9 @@ class ReleaseOptionsTests(TestCase):
 
         error = self.assertRaises(
             UsageError,
-            options.parseOptions, [b'--pre-release=x', '0.0.0'])
+            options.parseOptions, [b'0.0.0preX'])
         self.assertEqual(
-            'Pre-release must be an integer. Found x', str(error))
+            'Pre-release must be an integer. Found 0.0.0preX', str(error))
 
 
 def make_version_control_tests(make_api, setup_environment):
