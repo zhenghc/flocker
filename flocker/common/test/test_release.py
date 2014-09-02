@@ -6,8 +6,10 @@ Tests for release tools.
 
 from os import devnull
 from subprocess import check_call, check_output, STDOUT, CalledProcessError
+from unittest import skipUnless
 
 from twisted.python.filepath import FilePath
+from twisted.python.procutils import which
 from twisted.python.usage import UsageError
 from twisted.python.versions import Version
 from twisted.trial.unittest import TestCase
@@ -24,6 +26,10 @@ from .._release import (
 )
 
 DEBUG = False
+
+
+_require_installed = skipUnless(which("flocker-release"),
+                                "flocker-release not installed")
 
 
 class FlockerVersionTests(TestCase):
@@ -611,6 +617,10 @@ class ReleaseScriptFunctionalTests(TestCase):
     """
     Tests for ``flocker-release``.
     """
+    @_require_installed
+    def setUp(self):
+        pass
+
     def test_version(self):
         """
         ``flocker-release`` command is installed on the system path.
