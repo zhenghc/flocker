@@ -8,7 +8,12 @@ By the end of the release process we will have:
 
 - a tag in version control
 - a Python wheel in the `ClusterHQ package index <http://archive.clusterhq.com>`__
+- TODO: Will the pre-release wheel files be uploaded to the same archive or do we want to keep them separate (in the same way that we want to keep pre-release RPMs separate - https://github.com/ClusterHQ/flocker/issues/506)
+- TODO: We also probably need a python source package on the same server, for use in Homebrew recipes.
 - Fedora 20 RPMs for software on the node and client
+
+If this is not a pre-release, we will also have:
+
 - documentation on `docs.clusterhq.com <https://docs.clusterhq.com>`__
 - download links on https://clusterhq.com
 
@@ -21,7 +26,7 @@ Software
 
 - Fedora 20 (``rpmbuild``, ``createrepo``, ``yumdownloader``) - might be possible to install these on Ubuntu though
 
-  You are advised to perform the release from a :doc:`flocker development machine <vagrant>`\ , which will have all the requisite software pre-installed.
+  You are advised to perform the release from a :doc:`Flocker development machine <vagrant>`\ , which will have all the requisite software pre-installed.
 
 - a web browser
 
@@ -38,8 +43,20 @@ Access
 - Access to `Google Cloud Storage`_ using `gsutil`_.
 
 
+Overview
+~~~~~~~~
+
+Every Flocker release shall follow these steps:
+
+#. Prepare for a release
+#. Release N pre-releases
+#. Release the final release
+
+
 Preliminary Step: Pre-populating RPM Repository
 -----------------------------------------------
+
+# TODO : Do this for the testing repo specifically?
 
 This only needs to be done if the dependency packages for Flocker (i.e. ``geard`` and Python libraries) change; it should *not* be done every release.
 If you do run this you need to do it *before* running the release process above as it removes the ``flocker-cli`` etc. packages from the repository!
@@ -69,24 +86,21 @@ Preparing for a release
 
 #. Choose a version number:
 
-   - Release numbers should be of the form x.y.z e.g.:
+   - Release numbers should be of the form x.y.z, or use the 'preN' suffix if this is a pre-release e.g.:
 
      .. code-block:: console
 
         export VERSION=0.0.3
 
-   - Sanity check the proposed version number by checking the last version.
-     Check the ClusterHQ website for the last released version.
-     You might also double check the current version by running the following commands:
+TODO: Was the version sanity check worth having? I don't think so. If we keep it we should explain what to look for in the reported version.
 
-     .. code-block:: console
+#. File a ticket
 
-        $ python setup.py --version
-        0.0.1-576-ge15c6be
+TODO: Do we file a separate ticket for the pre-releases? Twisted doesn't and I don't think we should either?
 
-        $ git tag
-        ...
-        0.0.6
+   #. Assign it to the upcoming release milestone
+   #. Assign it to yourself
+   #. Call it "Release $RELEASE"
 
 #. In a clean, local working copy of Flocker with no modifications, checkout the branch for the release:
 
@@ -105,7 +119,12 @@ Preparing for a release
 
         $ git checkout -b release/flocker-${VERSION%.*} origin/release/flocker-"${VERSION%.*}"
 
+        # TODO: Changes since the last pre-release need to be merged into the release branch? eg
+
+        # TODO: For patch releases, document how the bug fixes in that release are chosen and merged to the release branch.
+
 #. Update the version number in the download in ``docs/gettingstarted/linux-install.sh``, as well as the two RPMs in ``docs/gettingstarted/tutorial/Vagrantfile``, and the Homebrew recipe in the `homebrew-tap`_ repository (a total of 4 locations).
+   # We could copy https://github.com/Homebrew/homebrew-versions and have a different `.rb` file for each release and pre-release e.g. flocker010.rb (eurgh)
 
 #. Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
 
@@ -176,6 +195,9 @@ Release
 
 #. Build python packages for upload, and upload them to ``archive.clusterhq.com``, as well as uploading the RPMs:
 
+   XXX Pre-releases should not be uploaded to the canonical RPM repository.
+   See https://github.com/ClusterHQ/flocker/issues/506
+
    .. code-block:: console
 
       python setup.py bdist_wheel
@@ -186,7 +208,9 @@ Release
 
    #. Go to the Read the Docs `dashboard <https://readthedocs.org/dashboard/flocker/versions/>`_.
    #. Enable the version being released.
-   #. Set the default version to that version.
+   #. Wait for the documentation to build.
+      The documentation will be visible at http://docs.clusterhq.com/en/${VERSION} when it has been built.
+   #. Set the default version to that version (not for pre-releases).
    #. Force Read the Docs to reload the repository, in case the GitHub webhook fails, by running:
 
       .. code-block:: console
@@ -194,6 +218,11 @@ Release
          curl -X POST http://readthedocs.org/build/flocker
 
 #. Make a Pull Request on GitHub for the release branch against ``master``, with a ``Fixes #123`` line in the description referring to the release issue that it resolves.
+
+Announcing Releases
+~~~~~~~~~~~~~~~~~~~
+
+Pre-releases do not need to be announced.
 
 Update Download Links
 ~~~~~~~~~~~~~~~~~~~~~
@@ -211,3 +240,5 @@ See:
 .. _wheel: https://pypi.python.org/pypi/wheel
 .. _Google cloud storage: https://console.developers.google.com/project/apps~hybridcluster-docker/storage/archive.clusterhq.com/
 .. _homebrew-tap: https://github.com/ClusterHQ/homebrew-tap
+
+# TODO - what is acceptance testing? The whole tutorial / all examples? With pre-releases or just released software?
