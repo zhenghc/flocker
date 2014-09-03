@@ -27,10 +27,24 @@ PACKAGE_NAME = 'Flocker'
 URL_PATTERN = r'(?:http|https)://[^\s]+'
 
 def extract_urls(text):
+    """
+    Return a ``list`` of ``urlparse.ParseResult`` objects for each http or
+    https url found in ``text``.
+
+    :param text: The input text
+    :return: ``list`` of ``urlparse.ParseResult``
+    """
     urls = []
     for match in re.findall(URL_PATTERN, text):
         urls.append(urlparse(match))
     return urls
+
+
+def filename_from_url(url):
+    """
+    """
+    return None
+    return url.path
 
 
 def flocker_version(major, minor, micro, prerelease=None):
@@ -313,6 +327,12 @@ class ReleaseScript(object):
         Check that the LICENSE file contains the correct copyright date.
         """
 
+    def _check_last_version(self):
+        """
+        Check that the last version in the branch is previous to the requested
+        version.
+        """
+
     def _update_versions(self):
         """
         Update versions in various scripts and commit the changes.
@@ -328,7 +348,8 @@ class ReleaseScript(object):
         Prepare for a release.
         """
         self._checkout()
-        self._update_versions()
+        self._check_last_version()
+        # self._update_versions()
         # self._check_release_notes()
         # self._check_copyright()
         # self._force_build()

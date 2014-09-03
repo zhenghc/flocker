@@ -683,7 +683,7 @@ class ReleaseScriptPrepareTests(TestCase):
         calls = []
         def recorder(subroutine):
             return lambda *a, **kw: calls.append((subroutine, a, kw))
-        for subroutine in ('_checkout', '_update_versions'):
+        for subroutine in ('_checkout', '_check_last_version'):
             self.patch(
                 script, subroutine,
                 recorder(subroutine))
@@ -691,7 +691,7 @@ class ReleaseScriptPrepareTests(TestCase):
         self.assertEqual(
             [
                 ('_checkout', (), {}),
-                ('_update_versions', (), {})
+                ('_check_last_version', (), {})
             ],
             calls
         )
@@ -852,3 +852,14 @@ class ExtractUrlsTests(TestCase):
                 "https://bar.example.com/baz/qux"
             )
         )
+
+
+class UpdateVersionsTests(TestCase):
+    """
+    Tests for ``ReleaseScript._update_versions``.
+    """
+    def test_one(self):
+        """
+        """
+        script = ReleaseScript()
+        script
