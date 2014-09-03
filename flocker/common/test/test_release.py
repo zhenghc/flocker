@@ -944,3 +944,55 @@ class CheckLastVersionTests(TestCase):
         )
         self.assertEqual(
             'Newer version found: 0.3.0', str(exception))
+
+    def test_equal_version(self):
+        """
+        ``ReleaseError`` is raised if the requested version is the same as the
+        last version found in the source files.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        root = FilePath(self.mktemp())
+        script.cwd = root
+        vagrant_file = root.preauthChild(
+            'docs/gettingstarted/tutorial/Vagrantfile')
+        vagrant_file.parent().makedirs()
+        vagrant_file.create()
+        vagrant_file.setContent(
+            "yum install -y "
+            "https://example.com/python-flocker-0.2.0-1.fc20.noarch.rpm "
+            "https://example.com/flocker-node-0.2.0-1.fc20.noarch."
+        )
+
+        exception = self.assertRaises(
+            ReleaseError,
+            script._check_last_version
+        )
+        self.assertEqual(
+            'Same version found: 0.2.0', str(exception))
+
+    def test_non_sequential_prerelease(self):
+        """
+        ``ReleaseError`` is raised if the previous version is not the expected
+        prerelease.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.3.2'])
+        root = FilePath(self.mktemp())
+        script.cwd = root
+        vagrant_file = root.preauthChild(
+            'docs/gettingstarted/tutorial/Vagrantfile')
+        vagrant_file.parent().makedirs()
+        vagrant_file.create()
+        vagrant_file.setContent(
+            "yum install -y "
+            "https://example.com/python-flocker-0.3.0-1.fc20.noarch.rpm "
+            "https://example.com/flocker-node-0.3.0-1.fc20.noarch."
+        )
+
+        exception = self.assertRaises(
+            ReleaseError,
+            script._check_last_version
+        )
+        self.assertEqual(
+            'Unexpected version increment: 0.3.0 to 0.3.2', str(exception))

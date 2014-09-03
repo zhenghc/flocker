@@ -362,6 +362,10 @@ class ReleaseScript(object):
             raise ReleaseError('Newer version found: {}'.format(
                 last_version.base()))
 
+        if last_version == self.options['version']:
+            raise ReleaseError('Same version found: {}'.format(
+                last_version.base()))
+
         return last_version
 
     def _update_versions(self):
