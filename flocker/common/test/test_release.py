@@ -4,7 +4,9 @@
 Tests for release tools.
 """
 
+from collections import defaultdict
 from os import devnull
+import string
 from subprocess import check_call, check_output, STDOUT, CalledProcessError
 from unittest import skipUnless
 from urlparse import ParseResult
@@ -32,6 +34,26 @@ DEBUG = False
 
 _require_installed = skipUnless(which("flocker-release"),
                                 "flocker-release not installed")
+
+# Names and content templates for source files which contain versions.
+VERSIONED_SOURCE_FILE_TEMPLATES = (
+    (
+        'docs/gettingstarted/linux-install.sh',
+
+        'flocker-tutorial/bin/pip install --quiet '
+        'https://example.com'
+        '/Flocker-{flocker_wheel_version}-py2-none-any.whl'
+    ),
+    (
+        'docs/gettingstarted/tutorial/Vagrantfile',
+
+        'yum install -y '
+        'https://example.com'
+        '/python-flocker-{python_flocker_version}-1.fc20.noarch.rpm '
+        'https://example.com'
+        '/flocker-node-{flocker_node_version}-1.fc20.noarch.'
+    ),
+)
 
 
 class FlockerVersionTests(TestCase):
@@ -354,30 +376,25 @@ def git(args, cwd=None):
 
 
 def git_working_directory(test, root, api, uncommitted, local_branches,
-                          origin_branches, version=None):
+                          origin_branches, versions=None):
     """
     Create a git repo and a clone for use in functional tests.
     """
-    if version is None:
-        version = flocker_version_from_string('0.1.0')
+    if versions is None:
+        versions = defaultdict(lambda: '0.1.0')
     server_root = FilePath(test.mktemp())
     server_root.createDirectory()
 
     # Use a local repo to simulate a remote
     git('init --quiet .'.split(), cwd=server_root.path)
-    source_files = (
-        (
-            'docs/gettingstarted/tutorial/Vagrantfile',
-            "yum install -y "
-            "https://example.com/python-flocker-{version}-1.fc20.noarch.rpm "
-            "https://example.com/flocker-node-{version}-1.fc20.noarch.rpm"
-        ),
-    )
-    for f, content in source_files:
+    for f, content in VERSIONED_SOURCE_FILE_TEMPLATES:
         source_file = server_root.preauthChild(f)
         source_file.parent().makedirs()
         source_file.create()
-        source_file.setContent(content.format(version=version.base()))
+        # This allows a defaultdict to be used with format operations. See:
+        # http://stackoverflow.com/a/17215533
+        content = string.Formatter().vformat(content, (), versions)
+        source_file.setContent(content)
         git('add {}'.format(source_file.path).split(), cwd=server_root.path)
     git(['commit', '-am', 'add source files'], cwd=server_root.path)
 
@@ -889,14 +906,10 @@ class CheckLastVersionTests(TestCase):
         script.options.parseOptions([b'0.2.0pre2'])
         root = FilePath(self.mktemp())
         script.cwd = root
-        vagrant_file = root.preauthChild(
-            'docs/gettingstarted/tutorial/Vagrantfile')
-        vagrant_file.parent().makedirs()
-        vagrant_file.create()
-        vagrant_file.setContent(
-            "yum install -y "
-            "https://example.com/python-flocker-0.1.0-1.fc20.noarch.rpm "
-            "https://example.com/flocker-node-0.1.0-1.fc20.noarch.rpm"
+        git_working_directory(
+            self, root,
+            api=None, uncommitted=[], local_branches=[], origin_branches=[],
+            versions=defaultdict(lambda: '0.1.0')
         )
 
         self.assertEqual(
@@ -913,14 +926,10 @@ class CheckLastVersionTests(TestCase):
         script.options.parseOptions([b'0.2.0pre2'])
         root = FilePath(self.mktemp())
         script.cwd = root
-        vagrant_file = root.preauthChild(
-            'docs/gettingstarted/tutorial/Vagrantfile')
-        vagrant_file.parent().makedirs()
-        vagrant_file.create()
-        vagrant_file.setContent(
-            "yum install -y "
-            "https://example.com/python-flocker-0.1.0-1.fc20.noarch.rpm "
-            "https://example.com/flocker-node-0.1.1-1.fc20.noarch."
+        git_working_directory(
+            self, root,
+            api=None, uncommitted=[], local_branches=[], origin_branches=[],
+            versions=defaultdict(lambda: '0.1.0', flocker_node_version='0.1.1')
         )
 
         exception = self.assertRaises(
@@ -939,16 +948,11 @@ class CheckLastVersionTests(TestCase):
         script.options.parseOptions([b'0.2.0'])
         root = FilePath(self.mktemp())
         script.cwd = root
-        vagrant_file = root.preauthChild(
-            'docs/gettingstarted/tutorial/Vagrantfile')
-        vagrant_file.parent().makedirs()
-        vagrant_file.create()
-        vagrant_file.setContent(
-            "yum install -y "
-            "https://example.com/python-flocker-0.3.0-1.fc20.noarch.rpm "
-            "https://example.com/flocker-node-0.3.0-1.fc20.noarch."
+        git_working_directory(
+            self, root,
+            api=None, uncommitted=[], local_branches=[], origin_branches=[],
+            versions=defaultdict(lambda: '0.3.0')
         )
-
         exception = self.assertRaises(
             ReleaseError,
             script._check_last_version
@@ -965,14 +969,10 @@ class CheckLastVersionTests(TestCase):
         script.options.parseOptions([b'0.2.0'])
         root = FilePath(self.mktemp())
         script.cwd = root
-        vagrant_file = root.preauthChild(
-            'docs/gettingstarted/tutorial/Vagrantfile')
-        vagrant_file.parent().makedirs()
-        vagrant_file.create()
-        vagrant_file.setContent(
-            "yum install -y "
-            "https://example.com/python-flocker-0.2.0-1.fc20.noarch.rpm "
-            "https://example.com/flocker-node-0.2.0-1.fc20.noarch."
+        git_working_directory(
+            self, root,
+            api=None, uncommitted=[], local_branches=[], origin_branches=[],
+            versions=defaultdict(lambda: '0.2.0')
         )
 
         exception = self.assertRaises(

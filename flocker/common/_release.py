@@ -27,6 +27,11 @@ PACKAGE_NAME = 'Flocker'
 # URLs are assumed to not contain spaces
 URL_PATTERN = r'(?:http|https)://[^\s]+'
 
+VERSIONED_SOURCE_FILES = (
+    'docs/gettingstarted/linux-install.sh',
+    'docs/gettingstarted/tutorial/Vagrantfile',
+)
+
 
 def extract_urls(text):
     """
@@ -335,9 +340,8 @@ class ReleaseScript(object):
         Check that the last version in the branch is previous to the requested
         version.
         """
-        source_files = ('docs/gettingstarted/tutorial/Vagrantfile',)
         urls = []
-        for source_file in source_files:
+        for source_file in VERSIONED_SOURCE_FILES:
             source_file = self.cwd.preauthChild(source_file)
             with source_file.open() as f:
                 new_urls = extract_urls(f.read())
