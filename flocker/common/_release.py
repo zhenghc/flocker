@@ -343,6 +343,9 @@ class ReleaseScript(object):
         urls = []
         for source_file in VERSIONED_SOURCE_FILES:
             source_file = self.cwd.preauthChild(source_file)
+            if not source_file.exists():
+                raise ReleaseError('Missing source file: {}'.format(
+                    source_file.path))
             with source_file.open() as f:
                 new_urls = extract_urls(f.read())
             urls.extend(new_urls)

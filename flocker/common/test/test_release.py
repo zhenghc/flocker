@@ -897,6 +897,33 @@ class CheckLastVersionTests(TestCase):
     """
     Tests for ``ReleaseScript._check_last_version``.
     """
+    def test_error_if_missing_source_file(self):
+        """
+        ``ReleaseError`` is raised if any of the expected versioned source
+        files are missing.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        root = FilePath(self.mktemp())
+        script.cwd = root
+
+        git_working_directory(
+            self, root,
+            api=None, uncommitted=[], local_branches=[], origin_branches=[],
+            versions=defaultdict(lambda: '0.1.0')
+        )
+        missing_file = root.preauthChild(VERSIONED_SOURCE_FILE_TEMPLATES[0][0])
+        missing_file.remove()
+
+        exception = self.assertRaises(
+            ReleaseError,
+            script._check_last_version
+        )
+        self.assertEqual(
+            'Missing source file: {}'.format(missing_file.path),
+            str(exception)
+        )
+
     def test_correct_version(self):
         """
         The current version is returned if the requested version is an expected
