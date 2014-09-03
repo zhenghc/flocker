@@ -870,26 +870,50 @@ class CheckLastVersionTests(TestCase):
     """
     def test_correct_version(self):
         """
-        ``None`` is returned if the requested version is an expected next
-        version.
+        The current version is returned if the requested version is an expected
+        next version.
         """
         script = ReleaseScript()
         script.options.parseOptions([b'0.2.0pre2'])
-        root = FilePath('.')
+        root = FilePath(self.mktemp())
+        script.cwd = root
         vagrant_file = root.preauthChild(
             'docs/gettingstarted/tutorial/Vagrantfile')
         vagrant_file.parent().makedirs()
         vagrant_file.create()
-        vagrant_file.setContent("""
-        # For reasons I do not understand this doesn't work (https://github.com/ClusterHQ/flocker/issues/510):
-        # yum install -y flocker-node
-        # So instead do it the stupid way:
-        yum install -y https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/python-flocker-0.1.0-1.fc20.noarch.rpm https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/flocker-node-0.1.0-1.fc20.noarch.rpm
-        """)
-
-        script.vc = FakeVersionControl(root)
+        vagrant_file.setContent(
+            "yum install -y "
+            "https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/python-flocker-0.1.0-1.fc20.noarch.rpm "
+            "https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/flocker-node-0.1.0-1.fc20.noarch.rpm"
+        )
 
         self.assertEqual(
             flocker_version_from_string('0.1.0'),
             script._check_last_version()
         )
+
+    def test_inconsistent_versions(self):
+        """
+        ``None`` is returned if the requested version is an expected next
+        version.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0pre2'])
+        root = FilePath(self.mktemp())
+        script.cwd = root
+        vagrant_file = root.preauthChild(
+            'docs/gettingstarted/tutorial/Vagrantfile')
+        vagrant_file.parent().makedirs()
+        vagrant_file.create()
+        vagrant_file.setContent(
+            "yum install -y "
+            "https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/python-flocker-0.1.0-1.fc20.noarch.rpm "
+            "https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/flocker-node-0.1.1-1.fc20.noarch."
+        )
+
+        exception = self.assertRaises(
+            ReleaseError,
+            script._check_last_version
+        )
+        self.assertEqual(
+            'Multiple versions found: 0.1.0, 0.1.1', str(exception))

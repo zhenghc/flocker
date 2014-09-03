@@ -276,7 +276,8 @@ class ReleaseScript(object):
     """
     def __init__(self):
         self.options = ReleaseOptions()
-        self.vc = VersionControl(FilePath('.'))
+        self.cwd = FilePath('.')
+        self.vc = VersionControl(self.cwd)
         self._sys_module = sys
 
     def _branchname(self):
@@ -333,9 +334,10 @@ class ReleaseScript(object):
         Check that the last version in the branch is previous to the requested
         version.
         """
+        source_files = ('docs/gettingstarted/tutorial/Vagrantfile',)
         urls = []
-        for source_file in ('docs/gettingstarted/tutorial/Vagrantfile',):
-            source_file = FilePath(source_file)
+        for source_file in source_files:
+            source_file = self.cwd.preauthChild(source_file)
             with source_file.open() as f:
                 new_urls = extract_urls(f.read())
             urls.extend(new_urls)
@@ -351,7 +353,10 @@ class ReleaseScript(object):
             if match:
                 versions.append(flocker_version_from_string(match.group(0)))
 
-#        versions = set(v.base() for v in versions)
+        unique_versions = set(v.base() for v in versions)
+        if len(unique_versions) > 1:
+            raise ReleaseError('Multiple versions found: {}'.format(
+                ', '.join(unique_versions)))
         return list(versions)[0]
 
     def _update_versions(self):
