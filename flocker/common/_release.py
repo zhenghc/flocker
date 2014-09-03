@@ -385,6 +385,7 @@ class ReleaseScript(object):
         """
         self._checkout()
         self._check_last_version()
+        # TODO:
         # self._update_versions()
         # self._check_release_notes()
         # self._check_copyright()

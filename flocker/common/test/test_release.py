@@ -354,21 +354,32 @@ def git(args, cwd=None):
 
 
 def git_working_directory(test, root, api, uncommitted, local_branches,
-                          origin_branches):
+                          origin_branches, version=None):
     """
     Create a git repo and a clone for use in functional tests.
     """
+    if version is None:
+        version = flocker_version_from_string('0.1.0')
     server_root = FilePath(test.mktemp())
     server_root.createDirectory()
 
     # Use a local repo to simulate a remote
     git('init --quiet .'.split(), cwd=server_root.path)
-
-    # Create a file and commit it
-    server_root.child('README').setContent('README')
-
-    git('add README'.split(), cwd=server_root.path)
-    git(['commit', '-m', 'add README'], cwd=server_root.path)
+    source_files = (
+        (
+            'docs/gettingstarted/tutorial/Vagrantfile',
+            "yum install -y "
+            "https://example.com/python-flocker-{version}-1.fc20.noarch.rpm "
+            "https://example.com/flocker-node-{version}-1.fc20.noarch.rpm"
+        ),
+    )
+    for f, content in source_files:
+        source_file = server_root.preauthChild(f)
+        source_file.parent().makedirs()
+        source_file.create()
+        source_file.setContent(content.format(version=version.base()))
+        git('add {}'.format(source_file.path).split(), cwd=server_root.path)
+    git(['commit', '-am', 'add source files'], cwd=server_root.path)
 
     # Create some branches
     for b in origin_branches:
@@ -970,29 +981,3 @@ class CheckLastVersionTests(TestCase):
         )
         self.assertEqual(
             'Same version found: 0.2.0', str(exception))
-
-    def test_non_sequential_prerelease(self):
-        """
-        ``ReleaseError`` is raised if the previous version is not the expected
-        prerelease.
-        """
-        script = ReleaseScript()
-        script.options.parseOptions([b'0.3.2'])
-        root = FilePath(self.mktemp())
-        script.cwd = root
-        vagrant_file = root.preauthChild(
-            'docs/gettingstarted/tutorial/Vagrantfile')
-        vagrant_file.parent().makedirs()
-        vagrant_file.create()
-        vagrant_file.setContent(
-            "yum install -y "
-            "https://example.com/python-flocker-0.3.0-1.fc20.noarch.rpm "
-            "https://example.com/flocker-node-0.3.0-1.fc20.noarch."
-        )
-
-        exception = self.assertRaises(
-            ReleaseError,
-            script._check_last_version
-        )
-        self.assertEqual(
-            'Unexpected version increment: 0.3.0 to 0.3.2', str(exception))
