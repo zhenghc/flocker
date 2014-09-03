@@ -8,6 +8,7 @@ if __name__ == '__main__':
     from flocker.common._release import flocker_release_main
     flocker_release_main()
 
+import os
 import re
 import sys
 from subprocess import check_output
@@ -332,6 +333,26 @@ class ReleaseScript(object):
         Check that the last version in the branch is previous to the requested
         version.
         """
+        urls = []
+        for source_file in ('docs/gettingstarted/tutorial/Vagrantfile',):
+            source_file = FilePath(source_file)
+            with source_file.open() as f:
+                new_urls = extract_urls(f.read())
+            urls.extend(new_urls)
+
+        url_filenames = []
+        for url in urls:
+            url_filenames.append(os.path.basename(url.path))
+
+        version_pattern = r'\d+\.\d+\.\d+'
+        versions = []
+        for url_filename in url_filenames:
+            match = re.search(version_pattern, url_filename)
+            if match:
+                versions.append(flocker_version_from_string(match.group(0)))
+
+#        versions = set(v.base() for v in versions)
+        return list(versions)[0]
 
     def _update_versions(self):
         """

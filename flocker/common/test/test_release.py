@@ -50,6 +50,16 @@ class FlockerVersionTests(TestCase):
         """
         self.assertEqual('Flocker', flocker_version(0, 0, 0).package)
 
+    def test_hashing(self):
+        """
+        TODO: twisted.python.versions.Version doesn't implement
+        ``__hash__``. Raise a ticket about that.
+        """
+        version1 = flocker_version(0, 1, 2)
+        version2 = flocker_version(0, 1, 2)
+        self.assertEqual(set([version1]), set([version1, version2]))
+    test_hashing.skip = 'twisted.python.versions.Version cannot be hashed'
+
 
 class FlockerVersionFromStringTests(TestCase):
     """
@@ -854,12 +864,32 @@ class ExtractUrlsTests(TestCase):
         )
 
 
-class UpdateVersionsTests(TestCase):
+class CheckLastVersionTests(TestCase):
     """
-    Tests for ``ReleaseScript._update_versions``.
+    Tests for ``ReleaseScript._check_last_version``.
     """
-    def test_one(self):
+    def test_correct_version(self):
         """
+        ``None`` is returned if the requested version is an expected next
+        version.
         """
         script = ReleaseScript()
-        script
+        script.options.parseOptions([b'0.2.0pre2'])
+        root = FilePath('.')
+        vagrant_file = root.preauthChild(
+            'docs/gettingstarted/tutorial/Vagrantfile')
+        vagrant_file.parent().makedirs()
+        vagrant_file.create()
+        vagrant_file.setContent("""
+        # For reasons I do not understand this doesn't work (https://github.com/ClusterHQ/flocker/issues/510):
+        # yum install -y flocker-node
+        # So instead do it the stupid way:
+        yum install -y https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/python-flocker-0.1.0-1.fc20.noarch.rpm https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/flocker-node-0.1.0-1.fc20.noarch.rpm
+        """)
+
+        script.vc = FakeVersionControl(root)
+
+        self.assertEqual(
+            flocker_version_from_string('0.1.0'),
+            script._check_last_version()
+        )
