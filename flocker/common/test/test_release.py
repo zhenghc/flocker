@@ -883,8 +883,8 @@ class CheckLastVersionTests(TestCase):
         vagrant_file.create()
         vagrant_file.setContent(
             "yum install -y "
-            "https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/python-flocker-0.1.0-1.fc20.noarch.rpm "
-            "https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/flocker-node-0.1.0-1.fc20.noarch.rpm"
+            "https://example.com/python-flocker-0.1.0-1.fc20.noarch.rpm "
+            "https://example.com/flocker-node-0.1.0-1.fc20.noarch.rpm"
         )
 
         self.assertEqual(
@@ -894,8 +894,8 @@ class CheckLastVersionTests(TestCase):
 
     def test_inconsistent_versions(self):
         """
-        ``None`` is returned if the requested version is an expected next
-        version.
+        ``ReleaseError`` is raised if the source files contain multiple
+        versions.
         """
         script = ReleaseScript()
         script.options.parseOptions([b'0.2.0pre2'])
@@ -907,8 +907,8 @@ class CheckLastVersionTests(TestCase):
         vagrant_file.create()
         vagrant_file.setContent(
             "yum install -y "
-            "https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/python-flocker-0.1.0-1.fc20.noarch.rpm "
-            "https://storage.googleapis.com/archive.clusterhq.com/fedora/20/x86_64/flocker-node-0.1.1-1.fc20.noarch."
+            "https://example.com/python-flocker-0.1.0-1.fc20.noarch.rpm "
+            "https://example.com/flocker-node-0.1.1-1.fc20.noarch."
         )
 
         exception = self.assertRaises(
@@ -917,3 +917,30 @@ class CheckLastVersionTests(TestCase):
         )
         self.assertEqual(
             'Multiple versions found: 0.1.0, 0.1.1', str(exception))
+
+
+    def test_lower_version(self):
+        """
+        ``ReleaseError`` is raised if the requested version is lower than the
+        versions found in the source files.
+        """
+        script = ReleaseScript()
+        script.options.parseOptions([b'0.2.0'])
+        root = FilePath(self.mktemp())
+        script.cwd = root
+        vagrant_file = root.preauthChild(
+            'docs/gettingstarted/tutorial/Vagrantfile')
+        vagrant_file.parent().makedirs()
+        vagrant_file.create()
+        vagrant_file.setContent(
+            "yum install -y "
+            "https://example.com/python-flocker-0.3.0-1.fc20.noarch.rpm "
+            "https://example.com/flocker-node-0.3.0-1.fc20.noarch."
+        )
+
+        exception = self.assertRaises(
+            ReleaseError,
+            script._check_last_version
+        )
+        self.assertEqual(
+            'Newer version found: 0.3.0', str(exception))

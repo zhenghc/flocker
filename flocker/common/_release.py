@@ -357,7 +357,12 @@ class ReleaseScript(object):
         if len(unique_versions) > 1:
             raise ReleaseError('Multiple versions found: {}'.format(
                 ', '.join(unique_versions)))
-        return list(versions)[0]
+        last_version = list(versions)[0]
+        if last_version > self.options['version']:
+            raise ReleaseError('Newer version found: {}'.format(
+                last_version.base()))
+
+        return last_version
 
     def _update_versions(self):
         """
