@@ -30,7 +30,6 @@ class cmd_generate_spec(Command):
             destination.write(version)
             destination.write(spec)
 
-
 cmdclass = {'generate_spec': cmd_generate_spec}
 # Let versioneer hook into the various distutils commands so it can rewrite
 # certain data at appropriate times.
@@ -86,6 +85,9 @@ setup(
             'flocker-deploy = flocker.cli.script:flocker_deploy_main',
             'flocker-changestate = flocker.node.script:flocker_changestate_main',
             'flocker-reportstate = flocker.node.script:flocker_reportstate_main',
+            # XXX: Is there a way to make this only available when we do
+            # `pip install .[release]` ?
+            'flocker-release = flocker.common._release:flocker_release_main',
         ],
     },
 

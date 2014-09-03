@@ -115,6 +115,7 @@ trial flocker
 %{_bindir}/flocker-volume
 %{_bindir}/flocker-changestate
 %{_bindir}/flocker-reportstate
+%{_bindir}/flocker-release
 
 %changelog
 * Tue Jun 10 2014 Tom Prince - %{underscore_version}-1%{?dist}
