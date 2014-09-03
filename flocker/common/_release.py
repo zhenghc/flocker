@@ -27,6 +27,7 @@ PACKAGE_NAME = 'Flocker'
 # URLs are assumed to not contain spaces
 URL_PATTERN = r'(?:http|https)://[^\s]+'
 
+
 def extract_urls(text):
     """
     Return a ``list`` of ``urlparse.ParseResult`` objects for each http or

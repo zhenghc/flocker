@@ -691,6 +691,7 @@ class ReleaseScriptPrepareTests(TestCase):
         """
         script = ReleaseScript()
         calls = []
+
         def recorder(subroutine):
             return lambda *a, **kw: calls.append((subroutine, a, kw))
         for subroutine in ('_checkout', '_check_last_version'):
@@ -917,7 +918,6 @@ class CheckLastVersionTests(TestCase):
         )
         self.assertEqual(
             'Multiple versions found: 0.1.0, 0.1.1', str(exception))
-
 
     def test_lower_version(self):
         """
