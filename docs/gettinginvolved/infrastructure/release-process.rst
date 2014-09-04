@@ -242,8 +242,6 @@ Release
       gsutil cp -a public-read "dist/Flocker-${VERSION}*" gs://archive.clusterhq.com/downloads/flocker/
       admin/upload-rpms "${VERSION}"
 
-   XXX: Upload an SDIST package to archive.clusterhq.com
-
 #. Build tagged docs at Read the Docs:
 
    #. Go to the Read the Docs `dashboard <https://readthedocs.org/dashboard/flocker/versions/>`_.
