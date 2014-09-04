@@ -114,8 +114,6 @@ Preparing for a release
 
         # TODO: Changes since the last pre-release need to be merged into the release branch? eg
 
-        # TODO: For patch releases, document how the bug fixes in that release are chosen and merged to the release branch.
-
 #. Update the version number in the download in ``docs/gettingstarted/linux-install.sh``, as well as the two RPMs in ``docs/gettingstarted/tutorial/Vagrantfile``, and the Homebrew recipe in the `homebrew-tap`_ repository (a total of 4 locations).
    # We could copy https://github.com/Homebrew/homebrew-versions and have a different `.rb` file for each release and pre-release e.g. flocker010.rb (eurgh)
 
