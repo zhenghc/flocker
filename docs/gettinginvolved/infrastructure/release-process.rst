@@ -124,7 +124,7 @@ Preparing for a release
 
         $ git checkout -b release/flocker-${VERSION%pre*} origin/release/flocker-"${VERSION%pre*}"
 
-     ..note:: Bug fixes and minor changes introduced between pre-releases, should be merged to the release branch. Those changes will then be added to master when the release branch is eventually merged, during the final release.
+     .. note:: Bug fixes and minor changes introduced between pre-releases, should be merged to the release branch. Those changes will then be added to master when the release branch is eventually merged, during the final release.
 
 #. Update the version numbers in:
 
@@ -139,6 +139,25 @@ Preparing for a release
 
 #. Update the Homebrew recipe
 
+   - Checkout the `homebrew-tap`_ repository.
+
+     .. code-block:: console
+
+        git clone git@github.com:ClusterHQ/homebrew-tap.git
+
+   - Create a release branch
+
+     .. code-block:: console
+
+        git checkout -b release/flocker-${VERSION%pre*} origin/master
+        git push origin --set-upstream release/flocker-${VERSION%pre*}
+
+   - Create a new recipe file for this release
+
+     .. code-block:: console
+
+        cp flocker.rb flocker-0.1.1pre1.rb
+
    - Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
 
      With Homebrew on OS X you can get the ``sha1`` using ``brew fetch flocker`` if the latest ``flocker.rb`` is in ``/usr/local/Library/formula``.
@@ -150,7 +169,13 @@ Preparing for a release
       wget https://github.com/ClusterHQ/flocker/archive/${VERSION}.tar.gz
       sha1sum ${VERSION}.tar.gz
 
-   XXX: How do we handle homebrew pre-release versions? Maybe add a different `.rb` file to https://github.com/Homebrew/homebrew-versions for each release and pre-release e.g. flocker010.rb
+   - Test the brew by installing it directly from a GitHub link
+
+     .. code-block:: console
+
+        brew install https://raw.githubusercontent.com/ClusterHQ/homebrew-tap/release/flocker-0.1.1/flocker.rb
+
+     See      https://github.com/Homebrew/homebrew/wiki/FAQ#how-do-i-get-a-formula-from-someone-elses-branch
 
 
 #. Ensure the release notes in :file:`NEWS` are up-to-date.
@@ -212,6 +237,8 @@ Release
       python setup.py bdist_wheel
       gsutil cp -a public-read dist/Flocker-"${VERSION}"-py2-none-any.whl gs://archive.clusterhq.com/downloads/flocker/
       admin/upload-rpms "${VERSION}"
+
+   XXX: Upload an SDIST package to archive.clusterhq.com
 
 #. Build tagged docs at Read the Docs:
 
