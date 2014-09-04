@@ -130,15 +130,14 @@ Preparing for a release
 
    - ``docs/gettingstarted/linux-install.sh``
    - ``docs/gettingstarted/tutorial/Vagrantfile`` (two RPMs)
-   - `homebrew-tap`_ repository
 
-   (a total of 4 locations)
+   (a total of 3 locations)
 
-   XXX: How do we handle homebrew pre-release versions? Maybe add a different `.rb` file to https://github.com/Homebrew/homebrew-versions for each release and pre-release e.g. flocker010.rb
+#. Update the Homebrew recipe
 
-#. Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
+   - Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
 
-   With Homebrew on OS X you can get the ``sha1`` using ``brew fetch flocker`` if the latest ``flocker.rb`` is in ``/usr/local/Library/formula``.
+     With Homebrew on OS X you can get the ``sha1`` using ``brew fetch flocker`` if the latest ``flocker.rb`` is in ``/usr/local/Library/formula``.
 
    On Linux:
 
@@ -146,6 +145,9 @@ Preparing for a release
 
       wget https://github.com/ClusterHQ/flocker/archive/${VERSION}.tar.gz
       sha1sum ${VERSION}.tar.gz
+
+   XXX: How do we handle homebrew pre-release versions? Maybe add a different `.rb` file to https://github.com/Homebrew/homebrew-versions for each release and pre-release e.g. flocker010.rb
+
 
 #. Commit the changes:
 
