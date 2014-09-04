@@ -97,7 +97,13 @@ Preparing for a release
    #. Assign it to yourself
    #. Call it "Release $RELEASE"
 
-#. In a clean, local working copy of Flocker with no modifications, checkout the branch for the release:
+#. Create a clean, local working copy of Flocker with no modifications
+
+   .. code-block:: console
+
+   git clone git@github.com:ClusterHQ/flocker.git flocker-0.1.1
+
+#. Checkout the branch for the release:
 
    - If this is the first pre-release or a weekly release, make a branch and push it to Github:
 
