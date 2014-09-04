@@ -259,7 +259,9 @@ Release
 
      See https://github.com/Homebrew/homebrew/wiki/FAQ#how-do-i-get-a-formula-from-someone-elses-branch
 
-#. Make a Pull Request on GitHub for the release branch against ``master``, with a ``Fixes #123`` line in the description referring to the release issue that it resolves.
+   - Make a `homebrew-tap`_ pull request for the release branch against ``master``, with a ``Refs #123`` line in the description referring to the release issue that it resolves.
+
+#. Make a pull request on GitHub for the release branch against ``master``, with a ``Fixes #123`` line in the description referring to the release issue that it resolves.
 
 Announcing Releases
 ~~~~~~~~~~~~~~~~~~~
