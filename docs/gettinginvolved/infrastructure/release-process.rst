@@ -128,8 +128,8 @@ Preparing for a release
 
 #. Update the version numbers in:
 
-   - ``docs/gettingstarted/linux-install.sh`` and
-   - ``docs/gettingstarted/tutorial/Vagrantfile`` (two RPMs).
+   - :download:`docs/gettingstarted/linux-install.sh <../../gettingstarted/linux-install.sh>` and
+   - :download:`docs/gettingstarted/tutorial/Vagrantfile <../../gettingstarted/tutorial/Vagrantfile>` (two RPMs).
    - Then commit the changes:
 
      .. code-block:: console
