@@ -182,6 +182,8 @@ Preparing for a release
 
    XXX: Process to be decided. See https://github.com/ClusterHQ/flocker/issues/523
 
+   XXX: Probably not necessary for weekly releases, since features may be incomplete or untested.
+
 #. Ensure copyright dates in :file:`LICENSE` are up-to-date.
 
    XXX: Process to be decided.
