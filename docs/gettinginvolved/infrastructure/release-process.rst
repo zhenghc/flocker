@@ -90,7 +90,13 @@ Preparing for a release
 
      .. code-block:: console
 
-        export VERSION=0.1.1pre1
+        export VERSION=0.1.1
+
+     or
+
+     .. code-block:: console
+
+        export VERSION=0.2.0pre1
 
 #. File a ticket
 
@@ -101,7 +107,7 @@ Preparing for a release
 
    .. code-block:: console
 
-   git clone git@github.com:ClusterHQ/flocker.git flocker-0.1.1
+      git clone git@github.com:ClusterHQ/flocker.git flocker-0.1.1
 
 #. Checkout the branch for the release:
 
