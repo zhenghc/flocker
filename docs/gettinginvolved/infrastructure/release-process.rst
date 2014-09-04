@@ -229,13 +229,7 @@ Release
         git checkout -b release/flocker-${VERSION%pre*} origin/master
         git push origin --set-upstream release/flocker-${VERSION%pre*}
 
-   - Create a new recipe file for this release
-
-     .. code-block:: console
-
-        cp flocker.rb flocker-0.1.1pre1.rb
-
-   - Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
+   - Update recipe file with the new version number and new ``sha1`` checksum.
 
      With Homebrew on OS X you can get the ``sha1`` using ``brew fetch flocker`` if the latest ``flocker.rb`` is in ``/usr/local/Library/formula``.
 
