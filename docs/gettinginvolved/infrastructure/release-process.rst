@@ -239,7 +239,7 @@ Release
 
       python setup.py bdist_wheel
       python setup.py sdist
-      gsutil cp -a public-read dist/Flocker-"${VERSION}"-py2-none-any.whl gs://archive.clusterhq.com/downloads/flocker/
+      gsutil cp -a public-read "dist/Flocker-${VERSION}*" gs://archive.clusterhq.com/downloads/flocker/
       admin/upload-rpms "${VERSION}"
 
    XXX: Upload an SDIST package to archive.clusterhq.com
