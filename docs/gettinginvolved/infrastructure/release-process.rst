@@ -205,15 +205,16 @@ Release
 
    .. code-block:: console
 
-      virtualenv ~/Environments/flocker-release
-      . ~/Environments/flocker-release/bin/activate
+      mkvirtualenv flocker-release-0.1.1
       pip install --editable .[release]
+
+   .. note:: The example above uses `Virtualenvwrapper <https://pypi.python.org/pypi/virtualenvwrapper>`_ but you can use `VirtualEnv <https://pypi.python.org/pypi/virtualenv>`_ directly if you prefer.
 
 #. Tag the version being released:
 
    .. code-block:: console
 
-      git tag --annotate "${VERSION}" release/flocker-"${VERSION%.*}" -m "Tag version ${VERSION}"
+      git tag --annotate "${VERSION}" "release/flocker-${VERSION%pre*}" -m "Tag version ${VERSION}"
       git push origin "${VERSION}"
 
 #. Go to the `BuildBot web status <http://build.clusterhq.com/boxes-flocker>`_ and force a build on the tag.
