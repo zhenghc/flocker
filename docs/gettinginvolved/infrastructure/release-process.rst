@@ -137,47 +137,6 @@ Preparing for a release
         git commit -am"Bumped version number in installers and Vagrantfiles"
         git push
 
-#. Update the Homebrew recipe
-
-   - Checkout the `homebrew-tap`_ repository.
-
-     .. code-block:: console
-
-        git clone git@github.com:ClusterHQ/homebrew-tap.git
-
-   - Create a release branch
-
-     .. code-block:: console
-
-        git checkout -b release/flocker-${VERSION%pre*} origin/master
-        git push origin --set-upstream release/flocker-${VERSION%pre*}
-
-   - Create a new recipe file for this release
-
-     .. code-block:: console
-
-        cp flocker.rb flocker-0.1.1pre1.rb
-
-   - Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
-
-     With Homebrew on OS X you can get the ``sha1`` using ``brew fetch flocker`` if the latest ``flocker.rb`` is in ``/usr/local/Library/formula``.
-
-   On Linux:
-
-   .. code-block:: console
-
-      wget https://github.com/ClusterHQ/flocker/archive/${VERSION}.tar.gz
-      sha1sum ${VERSION}.tar.gz
-
-   - Test the brew by installing it directly from a GitHub link
-
-     .. code-block:: console
-
-        brew install https://raw.githubusercontent.com/ClusterHQ/homebrew-tap/release/flocker-0.1.1/flocker.rb
-
-     See      https://github.com/Homebrew/homebrew/wiki/FAQ#how-do-i-get-a-formula-from-someone-elses-branch
-
-
 #. Ensure the release notes in :file:`NEWS` are up-to-date.
 
    XXX: Process to be decided. See https://github.com/ClusterHQ/flocker/issues/523
@@ -254,6 +213,46 @@ Release
       .. code-block:: console
 
          curl -X POST http://readthedocs.org/build/flocker
+
+#. Update the Homebrew recipe
+
+   - Checkout the `homebrew-tap`_ repository.
+
+     .. code-block:: console
+
+        git clone git@github.com:ClusterHQ/homebrew-tap.git
+
+   - Create a release branch
+
+     .. code-block:: console
+
+        git checkout -b release/flocker-${VERSION%pre*} origin/master
+        git push origin --set-upstream release/flocker-${VERSION%pre*}
+
+   - Create a new recipe file for this release
+
+     .. code-block:: console
+
+        cp flocker.rb flocker-0.1.1pre1.rb
+
+   - Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
+
+     With Homebrew on OS X you can get the ``sha1`` using ``brew fetch flocker`` if the latest ``flocker.rb`` is in ``/usr/local/Library/formula``.
+
+   On Linux:
+
+   .. code-block:: console
+
+      wget https://github.com/ClusterHQ/flocker/archive/${VERSION}.tar.gz
+      sha1sum ${VERSION}.tar.gz
+
+   - Test the brew by installing it directly from a GitHub link
+
+     .. code-block:: console
+
+        brew install https://raw.githubusercontent.com/ClusterHQ/homebrew-tap/release/flocker-0.1.1/flocker.rb
+
+     See      https://github.com/Homebrew/homebrew/wiki/FAQ#how-do-i-get-a-formula-from-someone-elses-branch
 
 #. Make a Pull Request on GitHub for the release branch against ``master``, with a ``Fixes #123`` line in the description referring to the release issue that it resolves.
 
