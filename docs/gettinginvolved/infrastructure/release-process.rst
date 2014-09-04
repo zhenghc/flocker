@@ -94,8 +94,6 @@ Preparing for a release
 
 #. File a ticket
 
-TODO: Do we file a separate ticket for the pre-releases? Twisted doesn't and I don't think we should either?
-
    #. Assign it to the upcoming release milestone
    #. Assign it to yourself
    #. Call it "Release $RELEASE"
