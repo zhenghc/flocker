@@ -99,20 +99,18 @@ Preparing for a release
 
 #. In a clean, local working copy of Flocker with no modifications, checkout the branch for the release:
 
-   .. note:: All releases of the x.y series will be made from the ``releases/flocker-x.y`` branch.
-
-   - If this is a major or minor release then create the branch for the minor version:
+   - If this is the first pre-release or a weekly release, make a branch and push it to Github:
 
      .. code-block:: console
 
-        git checkout -b release/flocker-${VERSION%.*} origin/master
-        git push origin --set-upstream release/flocker-${VERSION%.*}
+        git checkout -b release/flocker-${VERSION%pre*} origin/master
+        git push origin --set-upstream release/flocker-${VERSION%pre*}
 
-   - If this is a patch release then there will already be a branch:
+   - If this is a follow up pre-release or a final release then there will already be a branch:
 
      .. code-block:: console
 
-        $ git checkout -b release/flocker-${VERSION%.*} origin/release/flocker-"${VERSION%.*}"
+        $ git checkout -b release/flocker-${VERSION%pre*} origin/release/flocker-"${VERSION%pre*}"
 
         # TODO: Changes since the last pre-release need to be merged into the release branch? eg
 
