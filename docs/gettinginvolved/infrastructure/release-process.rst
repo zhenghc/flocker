@@ -205,7 +205,7 @@ Release
 
    .. code-block:: console
 
-      mkvirtualenv flocker-release-0.1.1
+      mkvirtualenv flocker-release-${VERSION%pre*}
       pip install --editable .[release]
 
    .. note:: The example above uses `Virtualenvwrapper <https://pypi.python.org/pypi/virtualenvwrapper>`_ but you can use `VirtualEnv <https://pypi.python.org/pypi/virtualenv>`_ directly if you prefer.
@@ -238,6 +238,7 @@ Release
    .. code-block:: console
 
       python setup.py bdist_wheel
+      python setup.py sdist
       gsutil cp -a public-read dist/Flocker-"${VERSION}"-py2-none-any.whl gs://archive.clusterhq.com/downloads/flocker/
       admin/upload-rpms "${VERSION}"
 
