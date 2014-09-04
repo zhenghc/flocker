@@ -94,7 +94,6 @@ Preparing for a release
 
 #. File a ticket
 
-   #. Assign it to the upcoming release milestone
    #. Assign it to yourself
    #. Call it "Release $RELEASE"
 
