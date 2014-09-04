@@ -90,7 +90,7 @@ Preparing for a release
 
      .. code-block:: console
 
-        export VERSION=0.0.3
+        export VERSION=0.1.1pre1
 
 #. File a ticket
 
