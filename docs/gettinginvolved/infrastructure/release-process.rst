@@ -128,10 +128,14 @@ Preparing for a release
 
 #. Update the version numbers in:
 
-   - ``docs/gettingstarted/linux-install.sh``
-   - ``docs/gettingstarted/tutorial/Vagrantfile`` (two RPMs)
+   - ``docs/gettingstarted/linux-install.sh`` and
+   - ``docs/gettingstarted/tutorial/Vagrantfile`` (two RPMs).
+   - Then commit the changes:
 
-   (a total of 3 locations)
+     .. code-block:: console
+
+        git commit -am"Bumped version number in installers and Vagrantfiles"
+        git push
 
 #. Update the Homebrew recipe
 
@@ -148,13 +152,6 @@ Preparing for a release
 
    XXX: How do we handle homebrew pre-release versions? Maybe add a different `.rb` file to https://github.com/Homebrew/homebrew-versions for each release and pre-release e.g. flocker010.rb
 
-
-#. Commit the changes:
-
-   .. code-block:: console
-
-      git commit -am"Bumped version number in installers and Vagrantfiles"
-      git push
 
 #. Ensure the release notes in :file:`NEWS` are up-to-date.
 
