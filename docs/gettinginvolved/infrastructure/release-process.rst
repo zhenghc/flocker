@@ -231,22 +231,33 @@ Release
 
    - Update recipe file with the new version number and new ``sha1`` checksum.
 
-     With Homebrew on OS X you can get the ``sha1`` using ``brew fetch flocker`` if the latest ``flocker.rb`` is in ``/usr/local/Library/formula``.
+     On OS X, you can get the ``sha1`` using:
 
-   On Linux:
+     .. code-block:: console
+
+        brew fetch https://raw.githubusercontent.com/ClusterHQ/homebrew-tap/release/flocker-${VERSION}/flocker.rb
+
+     On Linux:
 
    .. code-block:: console
 
-      wget https://github.com/ClusterHQ/flocker/archive/${VERSION}.tar.gz
-      sha1sum ${VERSION}.tar.gz
+      wget "https://storage.googleapis.com/archive.clusterhq.com/downloads/flocker/Flocker-${VERSION}.tar.gz"
+      sha1sum "Flocker-${VERSION}.tar.gz"
+
+   - Commit the changes and push
+
+     .. code-block:: console
+
+        git commit -am "Bumped version number and checksum in homebrew recipe"
+        git push
 
    - Test the brew by installing it directly from a GitHub link
 
      .. code-block:: console
 
-        brew install https://raw.githubusercontent.com/ClusterHQ/homebrew-tap/release/flocker-0.1.1/flocker.rb
+        brew install https://raw.githubusercontent.com/ClusterHQ/homebrew-tap/release/flocker-${VERSION}/flocker.rb
 
-     See      https://github.com/Homebrew/homebrew/wiki/FAQ#how-do-i-get-a-formula-from-someone-elses-branch
+     See https://github.com/Homebrew/homebrew/wiki/FAQ#how-do-i-get-a-formula-from-someone-elses-branch
 
 #. Make a Pull Request on GitHub for the release branch against ``master``, with a ``Fixes #123`` line in the description referring to the release issue that it resolves.
 
