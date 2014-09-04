@@ -127,13 +127,14 @@ Preparing for a release
      ..note:: Bug fixes and minor changes introduced between pre-releases, should be merged to the release branch. Those changes will then be added to master when the release branch is eventually merged, during the final release.
 
 #. Update the version numbers in:
+
    - ``docs/gettingstarted/linux-install.sh``
    - ``docs/gettingstarted/tutorial/Vagrantfile`` (two RPMs)
    - `homebrew-tap`_ repository
 
-   (a total of 4 locations).
+   (a total of 4 locations)
 
-   # We could copy https://github.com/Homebrew/homebrew-versions and have a different `.rb` file for each release and pre-release e.g. flocker010.rb (eurgh)
+   XXX: How do we handle homebrew pre-release versions? Maybe add a different `.rb` file to https://github.com/Homebrew/homebrew-versions for each release and pre-release e.g. flocker010.rb
 
 #. Update the ``sha1`` in the Homebrew recipe in the `homebrew-tap`_.
 
