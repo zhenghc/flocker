@@ -118,7 +118,7 @@ Preparing for a release
 
         $ git checkout -b release/flocker-${VERSION%pre*} origin/release/flocker-"${VERSION%pre*}"
 
-        # TODO: Changes since the last pre-release need to be merged into the release branch? eg
+     ..note:: Bug fixes and minor changes introduced between pre-releases, should be merged to the release branch. Those changes will then be added to master when the release branch is eventually merged, during the final release.
 
 #. Update the version numbers in:
    - ``docs/gettingstarted/linux-install.sh``
