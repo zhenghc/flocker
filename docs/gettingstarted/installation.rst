@@ -27,15 +27,8 @@ On Fedora 20 you can install these by running:
 
 .. sourcecode:: sh
 
-   ~$ sudo yum install @buildsys-build python python-devel python-virtualenv   # Mmmh, insightful comment
+   ~$ sudo yum install @buildsys-build python python-devel python-virtualenv
       ...
-
-   ~$ echo "hello world"   # Mmmh, insightful comment
-      hello world
-
-.. code-block:: console
-
-   alice@mercury:~$ sudo yum install @buildsys-build python python-devel python-virtualenv
 
 On Ubuntu or Debian you can run:
 
@@ -52,11 +45,15 @@ Then run the following script to install ``flocker-cli``:
 
 Save the script to a file and then run it:
 
-.. code-block:: console
+.. sourcecode:: sh
 
-   alice@mercury:~$ sh linux-install.sh
+   ~$ wget linux-install.sh # TODO make this work with both v0.2 (for example) and /latest
+      ...
+
+   ~$ sh linux-install.sh
    ...
-   alice@mercury:~$
+
+   ~$
 
 The ``flocker-deploy`` command line program will now be available in ``flocker-tutorial/bin/``:
 
