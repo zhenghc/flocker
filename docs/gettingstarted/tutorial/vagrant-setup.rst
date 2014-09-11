@@ -41,7 +41,7 @@ Red Hat / Fedora
 
 .. sourcecode:: sh
 
-   ~$ sudo yum install mongodb
+   ~$ sudo yum -y install mongodb
    ...
 
 OS X
@@ -87,7 +87,7 @@ Note that you will need to make the same substitution in commands used throughou
 
    .. sourcecode:: sh
 
-      ~$ mkdir tutorial
+      ~$ mkdir -p tutorial
       ~$ cd tutorial
 
 #. Download the Vagrant configuration file by right clicking on the link below.
@@ -111,11 +111,7 @@ Note that you will need to make the same substitution in commands used throughou
    .. sourcecode:: sh
 
       ~$ vagrant up
-      Bringing machine 'node1' up with 'virtualbox' provider...
-      ==> node1: Importing base box 'clusterhq/flocker-dev'...
-      ... lots of output ...
-      ==> node2: ln -s '/usr/lib/systemd/system/docker.service' '/etc/systemd/system/multi-user.target.wants/docker.service'
-      ==> node2: ln -s '/usr/lib/systemd/system/geard.service' '/etc/systemd/system/multi-user.target.wants/geard.service'
+      ...
 
    This step may take several minutes or more as it downloads the Vagrant image, boots up two nodes and downloads the Docker image necessary to run the tutorial.
    Your network connectivity and CPU speed will affect how long this takes.
@@ -123,21 +119,20 @@ Note that you will need to make the same substitution in commands used throughou
 
 #. After ``vagrant up`` completes you may want to verify that the two VMs are really running and accepting SSH connections:
 
-   .. code-block:: console
+   .. sourcecode:: console
 
-      alice@mercury:~/flocker-tutorial$ vagrant status
+      ~$ vagrant status
       Current machine states:
 
       node1                     running (virtualbox)
       node2                     running (virtualbox)
       ...
-      alice@mercury:~/flocker-tutorial$ vagrant ssh -c hostname node1
+      ~$ vagrant ssh -c hostname node1
       node1
       Connection to 127.0.0.1 closed.
-      alice@mercury:~/flocker-tutorial$ vagrant ssh -c hostname node2
+      ~$ vagrant ssh -c hostname node2
       node2
       Connection to 127.0.0.1 closed.
-      alice@mercury:~/flocker-tutorial$
 
 #. If all goes well, the next step is to configure your SSH agent.
    This will allow Flocker to authenticate itself to the VM:
