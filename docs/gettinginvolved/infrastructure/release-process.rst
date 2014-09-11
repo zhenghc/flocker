@@ -151,6 +151,7 @@ Preparing for a release
 # TODO integrate with trial so we can have this as part of our suite
 # TODO not just copy, but also put some things in different directories, e.g. Vagrantfile in the flocker-tutorial directory
 # TODO change the name of the flocker-tutorial directory because it is confusing with the automatically created directory
+# TODO specify the order of "articles" - add this feature to wordish?
 
 Release
 -------
