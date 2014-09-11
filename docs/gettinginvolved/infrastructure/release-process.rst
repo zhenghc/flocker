@@ -140,6 +140,12 @@ Preparing for a release
    Go to the `BuildBot web status <http://build.clusterhq.com/boxes-flocker>`_ and force a build on the just-created branch.
 #. Do the acceptance tests. (https://github.com/ClusterHQ/flocker/issues/315)
 
+- Build the documentation
+- Create a new directory to run the acceptance tests from
+- Copy all the things from docs/_build/html/_downloads into this new directory
+- Start a new vagrant Ubuntu VM in this directory
+- Install wordish
+- Run the tests
 
 Release
 -------
