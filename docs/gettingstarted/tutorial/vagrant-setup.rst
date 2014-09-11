@@ -30,20 +30,19 @@ If you do not already have the client on your machine, you can install it by run
 Ubuntu
 ^^^^^^
 
-.. sourcecode:: sh
+.. code-block:: console
 
-   ~$ sudo apt-get install mongodb-clients
+   alice@mercury:~$ sudo apt-get install mongodb-clients
    ...
-   ~$
+   alice@mercury:~$
 
 Red Hat / Fedora
 ^^^^^^^^^^^^^^^^
 
-.. code-block:: console
+.. sourcecode:: sh
 
-   alice@mercury:~$ sudo yum install mongodb
+   ~$ sudo yum install mongodb
    ...
-   alice@mercury:~$
 
 OS X
 ^^^^
@@ -88,11 +87,11 @@ Note that you will need to make the same substitution in commands used throughou
 
    .. sourcecode:: sh
 
-      ~$ mkdir flocker-tutorial
-      ~$ cd flocker-tutorial
+      ~$ mkdir tutorial
+      ~$ cd tutorial
 
 #. Download the Vagrant configuration file by right clicking on the link below.
-   Save it in the *flocker-tutorial* directory and preserve its filename.
+   Save it in the *tutorial* directory and preserve its filename.
 
    :download:`Vagrantfile <Vagrantfile>`
 
@@ -101,28 +100,22 @@ Note that you will need to make the same substitution in commands used throughou
       :lines: 1-8
       :append: ...
 
-   .. sourcecode:: sh
-
-      ~$ ls
-      Vagrantfile
-
    .. code-block:: console
 
-      alice@mercury:~/flocker-tutorial$ ls
+      ~/tutorial$ ls
       Vagrantfile
-      alice@mercury:~/flocker-tutorial$
+      ~/tutorial$
 
 #. Use ``vagrant up`` to start and provision the VMs:
 
-   .. code-block:: console
+   .. sourcecode:: sh
 
-      alice@mercury:~/flocker-tutorial$ vagrant up
+      ~$ vagrant up
       Bringing machine 'node1' up with 'virtualbox' provider...
       ==> node1: Importing base box 'clusterhq/flocker-dev'...
       ... lots of output ...
       ==> node2: ln -s '/usr/lib/systemd/system/docker.service' '/etc/systemd/system/multi-user.target.wants/docker.service'
       ==> node2: ln -s '/usr/lib/systemd/system/geard.service' '/etc/systemd/system/multi-user.target.wants/geard.service'
-      alice@mercury:~/flocker-tutorial$
 
    This step may take several minutes or more as it downloads the Vagrant image, boots up two nodes and downloads the Docker image necessary to run the tutorial.
    Your network connectivity and CPU speed will affect how long this takes.
