@@ -39,10 +39,11 @@ Ubuntu
 Red Hat / Fedora
 ^^^^^^^^^^^^^^^^
 
-.. sourcecode:: sh
+.. code-block:: console
 
-   ~$ sudo yum -y install mongodb
+   alice@mercury:~$ sudo yum -y install mongodb
    ...
+   alice@mercury:~$
 
 OS X
 ^^^^
@@ -119,7 +120,7 @@ Note that you will need to make the same substitution in commands used throughou
 
 #. After ``vagrant up`` completes you may want to verify that the two VMs are really running and accepting SSH connections:
 
-   .. sourcecode:: console
+   .. sourcecode:: sh
 
       ~$ vagrant status
       Current machine states:

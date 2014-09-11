@@ -140,7 +140,10 @@ Preparing for a release
    Go to the `BuildBot web status <http://build.clusterhq.com/boxes-flocker>`_ and force a build on the just-created branch.
 #. Do the acceptance tests. (https://github.com/ClusterHQ/flocker/issues/315)
 
-- Start a new Ubuntu VM
+Acceptance Tests
+----------------
+- (Start a new Ubuntu VM) - maybe we can just not test the installation programatically, and say to install flocker-cli and mongo etc, meaning no VM needed.
+  I think we can't use a Vagrant VM because we need to create a Vagrant vm in the tests
 - Install Vagrant and Virtualbox latest versions
 - Clone flocker
 - Build the documentation
@@ -148,12 +151,18 @@ Preparing for a release
 - Copy all the things from docs/_build/html/_downloads into this new directory
 - Install wordish
 - Run the tests
-# TODO Can we have alice@mercury? If not, make Fedora / OS X instructions consistent
-# TODO integrate with trial so we can have this as part of our suite
-# TODO not just copy, but also put some things in different directories, e.g. Vagrantfile in the flocker-tutorial directory
-# TODO change the name of the flocker-tutorial directory because it is confusing with the automatically created directory
-# TODO specify the order of "articles" - add this feature to wordish?
-# TODO the problem is you use 'ls' and show "Vagrantfile" but you want all the files here. Prompt the user to move them after them after?
+
+Issues
+~~~~~~
+
+- Can we have alice@mercury? If not, make Fedora / OS X instructions consistent
+- integrate with trial so we can have this as part of our suite
+- change the name of the flocker-tutorial directory in the installer because it is confusing and conflicts with the docs
+- specify the order of "articles" - add this feature to wordish?
+- the problem is you use 'ls' and show "Vagrantfile" but you want all the files here. Prompt the user to move them after them after?
+- is sudo install -y ok or taking liberties - we may have to make the wordish feature in the roadmap which runs these commands but is hidden in output
+- wordish pattern matching is (seems?) awful. For example, the `vagrant up` output includes "..." which it thinks of as a regex *, can we override this somehow or do we just have ... and clobber the output
+- what about situations like ssh-add where it is an "if X, do Y" (this would be solved by using a VM)
 
 Release
 -------
