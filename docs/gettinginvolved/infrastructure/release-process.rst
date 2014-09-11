@@ -141,6 +141,7 @@ Preparing for a release
 #. Do the acceptance tests. (https://github.com/ClusterHQ/flocker/issues/315)
 
 - Start a new Ubuntu VM
+- Install Vagrant and Virtualbox latest versions
 - Clone flocker
 - Build the documentation
 - Create a new directory to run the acceptance tests from
@@ -152,6 +153,7 @@ Preparing for a release
 # TODO not just copy, but also put some things in different directories, e.g. Vagrantfile in the flocker-tutorial directory
 # TODO change the name of the flocker-tutorial directory because it is confusing with the automatically created directory
 # TODO specify the order of "articles" - add this feature to wordish?
+# TODO the problem is you use 'ls' and show "Vagrantfile" but you want all the files here. Prompt the user to move them after them after?
 
 Release
 -------
