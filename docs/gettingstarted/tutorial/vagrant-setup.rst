@@ -30,11 +30,11 @@ If you do not already have the client on your machine, you can install it by run
 Ubuntu
 ^^^^^^
 
-.. code-block:: console
+.. sourcecode:: sh
 
-   alice@mercury:~$ sudo apt-get install mongodb-clients
+   ~$ sudo apt-get install mongodb-clients
    ...
-   alice@mercury:~$
+   ~$
 
 Red Hat / Fedora
 ^^^^^^^^^^^^^^^^
@@ -86,11 +86,10 @@ Note that you will need to make the same substitution in commands used throughou
 
 #. Create a tutorial directory:
 
-   .. code-block:: console
+   .. sourcecode:: sh
 
-      alice@mercury:~/$ mkdir flocker-tutorial
-      alice@mercury:~/$ cd flocker-tutorial
-      alice@mercury:~/flocker-tutorial$
+      ~$ mkdir flocker-tutorial
+      ~$ cd flocker-tutorial
 
 #. Download the Vagrant configuration file by right clicking on the link below.
    Save it in the *flocker-tutorial* directory and preserve its filename.
@@ -101,6 +100,11 @@ Note that you will need to make the same substitution in commands used throughou
       :language: ruby
       :lines: 1-8
       :append: ...
+
+   .. sourcecode:: sh
+
+      ~$ ls
+      Vagrantfile
 
    .. code-block:: console
 

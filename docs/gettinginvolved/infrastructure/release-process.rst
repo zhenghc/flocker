@@ -140,12 +140,17 @@ Preparing for a release
    Go to the `BuildBot web status <http://build.clusterhq.com/boxes-flocker>`_ and force a build on the just-created branch.
 #. Do the acceptance tests. (https://github.com/ClusterHQ/flocker/issues/315)
 
+- Start a new Ubuntu VM
+- Clone flocker
 - Build the documentation
 - Create a new directory to run the acceptance tests from
 - Copy all the things from docs/_build/html/_downloads into this new directory
-- Start a new vagrant Ubuntu VM in this directory
 - Install wordish
 - Run the tests
+# TODO Can we have alice@mercury? If not, make Fedora / OS X instructions consistent
+# TODO integrate with trial so we can have this as part of our suite
+# TODO not just copy, but also put some things in different directories, e.g. Vagrantfile in the flocker-tutorial directory
+# TODO change the name of the flocker-tutorial directory because it is confusing with the automatically created directory
 
 Release
 -------
