@@ -47,13 +47,8 @@ Save the script to a file and then run it:
 
 .. sourcecode:: sh
 
-   ~$ wget linux-install.sh # TODO make this work with both v0.2 (for example) and /latest
-      ...
-
    ~$ sh linux-install.sh
    ...
-
-   ~$
 
 The ``flocker-deploy`` command line program will now be available in ``flocker-tutorial/bin/``:
 
