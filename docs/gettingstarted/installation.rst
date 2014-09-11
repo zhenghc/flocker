@@ -28,7 +28,7 @@ On Fedora 20 you can install these by running:
 .. sourcecode:: sh
 
    ~$ sudo yum install @buildsys-build python python-devel python-virtualenv
-      ...
+   ...
 
 On Ubuntu or Debian you can run:
 
@@ -52,22 +52,20 @@ Save the script to a file and then run it:
 
 The ``flocker-deploy`` command line program will now be available in ``flocker-tutorial/bin/``:
 
-.. code-block:: console
+.. sourcecode:: sh
 
-   alice@mercury:~$ cd flocker-tutorial
-   alice@mercury:~/flocker-tutorial$ bin/flocker-deploy --version
-   0.1.0
-   alice@mercury:~/flocker-tutorial$
+   ~$ cd flocker-tutorial
+   ~$ bin/flocker-deploy --version
+   0.1.1
 
 If you want to omit the prefix path you can add the appropriate directory to your ``$PATH``.
 You'll need to do this every time you start a new shell.
 
 .. code-block:: console
 
-   alice@mercury:~/flocker-tutorial$ export PATH="${PATH:+${PATH}:}${PWD}/bin"
-   alice@mercury:~/flocker-tutorial$ flocker-deploy --version
-   0.1.0
-   alice@mercury:~/flocker-tutorial$
+   ~$ export PATH="${PATH:+${PATH}:}${PWD}/bin"
+   ~$ flocker-deploy --version
+   0.1.1
 
 OS X
 ----
