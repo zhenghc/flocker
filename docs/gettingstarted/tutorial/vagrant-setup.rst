@@ -109,7 +109,7 @@ Note that you will need to make the same substitution in commands used throughou
 
 #. Use ``vagrant up`` to start and provision the VMs:
 
-   .. sourcecode:: sh
+   .. code-block:: console
 
       ~$ vagrant up
       ...
@@ -120,7 +120,7 @@ Note that you will need to make the same substitution in commands used throughou
 
 #. After ``vagrant up`` completes you may want to verify that the two VMs are really running and accepting SSH connections:
 
-   .. sourcecode:: sh
+   .. code-block:: console
 
       ~$ vagrant status
       Current machine states:
@@ -164,10 +164,9 @@ Note that you will need to make the same substitution in commands used throughou
 
 #. Finally, add the Vagrant key to your agent:
 
-   .. code-block:: console
+   .. sourcecode:: sh
 
-      alice@mercury:~/flocker-tutorial$ ssh-add ~/.vagrant.d/insecure_private_key
-      alice@mercury:~/flocker-tutorial$
+      ~$ ssh-add ~/.vagrant.d/insecure_private_key
 
 You now have two VMs running and easy SSH access to them.
 This completes the Vagrant-related setup.
