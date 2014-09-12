@@ -13,8 +13,13 @@ from twisted.trial.unittest import TestCase
 
 def assert_wordish(test_case, docfile):
     report = TestReporter()
-    filter = BlockSelector( directive='sourcecode', arg=['sh'])
-    session = iter( ShellSessionParser( filter( docfile.open() ) ))
+    filter = BlockSelector(directive='code-block', arg=['console'])
+    session = iter(
+        ShellSessionParser(
+            filter(docfile.open()),
+            prompts=['alice@mercury:~/flocker-tutorial$ ']
+        )
+    )
 
     with CommandRunner() as run:
         for cmd, expected in session:
