@@ -25,22 +25,20 @@ If we hadn't done that certain actions that might need to be taken on that node 
 Next take a look at what containers Docker is running on the VM you just created.
 The node IPs are those which were specified earlier in the ``Vagrantfile``:
 
-.. code-block:: console
+.. sourcecode:: sh
 
-   alice@mercury:~/flocker-tutorial$ ssh root@172.16.255.250 docker ps
-   CONTAINER ID    IMAGE    COMMAND    CREATED    STATUS     PORTS     NAMES
-   alice@mercury:~/flocker-tutorial$
+   ~$ ssh -n root@172.16.255.250 docker ps
+   CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 
 From this you can see that there are no running containers.
 To fix this, use ``flocker-deploy`` with the simple configuration files given above and then check again:
 
-.. code-block:: console
+.. sourcecode:: sh
 
-   alice@mercury:~/flocker-tutorial$ flocker-deploy minimal-deployment.yml minimal-application.yml
-   alice@mercury:~/flocker-tutorial$ ssh root@172.16.255.250 docker ps
+   ~$ flocker-deploy minimal-deployment.yml minimal-application.yml
+   ~$ ssh -n root@172.16.255.250 docker ps
    CONTAINER ID    IMAGE                       COMMAND    CREATED         STATUS         PORTS                  NAMES
    4d117c7e653e    clusterhq/mongodb:latest   mongod     2 seconds ago   Up 1 seconds   27017/tcp, 28017/tcp   mongodb-example
-   alice@mercury:~/flocker-tutorial$
 
 ``flocker-deploy`` has made the necessary changes to make your node match the state described in the configuration files you supplied.
 
