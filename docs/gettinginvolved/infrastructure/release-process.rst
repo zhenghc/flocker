@@ -175,6 +175,7 @@ Issues
   A crucial point of the tests is testing the output of ``docker ps``.
   With wordish's current system, you either have the rendered output be clobbered and replaced with "..."s, making the tutorial much worse, or you don't test.
 - We want paths in the prompt, but without modification wordish just has ``~$``.
+- ssh connections time out, we haven't really investigated this
 
 Release
 -------
