@@ -41,15 +41,32 @@ def assert_wordish(test_case, docfile):
                     print( "\n\t".join( remaining_cmds ))
 
 
-docs = FilePath(__file__).parent().parent().parent().child('docs')
+documentation_root = FilePath(__file__).parent().parent().parent().child('docs')
 
-class MovingApplicationsTests(TestCase):
-    """
-    """
+def make_documentation_test(document_relative_path):
 
-    def test_all(self):
+    document = documentation_root.preauthChild(document_relative_path)
+
+    class WordishTest(TestCase):
         """
         """
-        tutorial = docs.child('gettingstarted').child('tutorial').child('moving-applications.rst')
 
-        assert_wordish(self, tutorial)
+        def setUp(self):
+            """
+            """
+            if not document.exists():
+                self.fail('Document not found {}'.format(document.path))
+
+        def test_all(self):
+            """
+            """
+            assert_wordish(self, document)
+
+    return WordishTest
+
+class MovingApplicationsTests(
+        make_documentation_test(
+            'gettingstarted/tutorial/moving-applications.rst')):
+    """
+    Tests for ``gettingstarted/tutorial/moving-applications.rst``
+    """
