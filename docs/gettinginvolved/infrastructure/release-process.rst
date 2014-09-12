@@ -155,9 +155,13 @@ Acceptance Tests
 Issues
 ~~~~~~
 
-- We need to integrate wordish with trial so we can have this as part of our suite, and specify the order of "articles" (what wordish calls rst documents)
-- If you follow the installation instructions and without changing directory follow the MongoDB tutorial, you are making two `flocker-tutorial` directories.
-  I think that the CLI should not be put in a directory called `flocker-tutorial`.
+- If your expected output really does include "..." (like ``vagrant up``s) then wordish treats this as regex *, so the test is unobviously invalid.
+  Having multiple of these in one expected output breaks wordish.
+- We want better regex specification than "...".
+  A crucial point of the tests is testing the output of ``docker ps``.
+  With wordish's current system, you either have the rendered output be clobbered and replaced with "..."s, making the tutorial much worse, or you don't test.
+- We want paths in the prompt, but without modification wordish just has ``~$``.
+- ssh connections time out, we haven't really investigated this
 - How much of the setup should be done by hand?
   The setup is a time consuming part of the tutorial, and automating this would be nice.
   However, it is platform-specific, so we either have to run this in a VM or choose one platform.
@@ -169,13 +173,6 @@ Issues
    RSA key fingerprint is fc:79:5d:e0:50:98:ff:36:64:44:2a:7a:82:f2:9a:1b.
    Are you sure you want to continue connecting (yes/no)?".
   I think that this means that we either have do do ``ssh -o "StrictHostKeyChecking no" root@172.16.255.250 docker ps`` or have the first "docker ps" done by hand.
-- If your expected output really does include "..." (like ``vagrant up``s) then wordish treats this as regex *, so the test is unobviously invalid.
-  Having multiple of these in one expected output breaks wordish.
-- We want better regex specification than "...".
-  A crucial point of the tests is testing the output of ``docker ps``.
-  With wordish's current system, you either have the rendered output be clobbered and replaced with "..."s, making the tutorial much worse, or you don't test.
-- We want paths in the prompt, but without modification wordish just has ``~$``.
-- ssh connections time out, we haven't really investigated this
 
 Release
 -------
