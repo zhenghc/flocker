@@ -155,14 +155,27 @@ Acceptance Tests
 Issues
 ~~~~~~
 
-- Can we have alice@mercury? If not, make Fedora / OS X instructions consistent
-- integrate with trial so we can have this as part of our suite
-- change the name of the flocker-tutorial directory in the installer because it is confusing and conflicts with the docs
-- specify the order of "articles" - add this feature to wordish?
-- the problem is you use 'ls' and show "Vagrantfile" but you want all the files here. Prompt the user to move them after them after?
-- is sudo install -y ok or taking liberties - we may have to make the wordish feature in the roadmap which runs these commands but is hidden in output
-- wordish pattern matching is (seems?) awful. For example, the `vagrant up` output includes "..." which it thinks of as a regex *, can we override this somehow or do we just have ... and clobber the output
-- what about situations like ssh-add where it is an "if X, do Y" (this would be solved by using a VM)
+- We need to integrate wordish with trial so we can have this as part of our suite, and specify the order of "articles" (what wordish calls rst documents)
+- If you follow the installation instructions and without changing directory follow the MongoDB tutorial, you are making two `flocker-tutorial` directories.
+  I think that the CLI should not be put in a directory called `flocker-tutorial`.
+- How much of the setup should be done by hand?
+  The setup is a time consuming part of the tutorial, and automating this would be nice.
+  However, it is platform-specific, so we either have to run this in a VM or choose one platform.
+  We can't run this in Vagrant, I don't think, as it needs Virtualbox and Vagrant VMs.
+- Initial investigation shows that prompt interaction is not possible, at least without modifying wordish.
+  This means that if the setup is tested, we might have to use `sudo install -y` and other such nastiness.
+  The first time you ssh to a node to run `docker ps` you see:
+  "The authenticity of host '172.16.255.250 (172.16.255.250)' can't be established.
+   RSA key fingerprint is fc:79:5d:e0:50:98:ff:36:64:44:2a:7a:82:f2:9a:1b.
+   Are you sure you want to continue connecting (yes/no)?".
+  I think that this means that we either have do do ``ssh -o "StrictHostKeyChecking no" root@172.16.255.250 docker ps`` or have the first "docker ps" done by hand.
+- If your expected output really does include "..." (like ``vagrant up``s) then wordish treats this as regex *, so the test is unobviously invalid.
+  Having multiple of these in one expected output breaks wordish.
+- We want better regex specification than "...".
+  A crucial point of the tests is testing the output of ``docker ps``.
+  With wordish's current system, you either have the rendered output be clobbered and replaced with "..."s, making the tutorial much worse, or you don't test.
+- We want paths in the prompt, but without modification wordish just has ``~$``.
+- ssh connections time out, we haven't really investigated this
 
 Release
 -------
