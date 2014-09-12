@@ -43,7 +43,7 @@ def assert_wordish(test_case, docfile):
 
 documentation_root = FilePath(__file__).parent().parent().parent().child('docs')
 
-def make_documentation_test(document_relative_path):
+def make_documentation_test(document_relative_path, supporting_files=()):
 
     document = documentation_root.preauthChild(document_relative_path)
 
@@ -56,6 +56,10 @@ def make_documentation_test(document_relative_path):
             """
             if not document.exists():
                 self.fail('Document not found {}'.format(document.path))
+            here = FilePath('.')
+            for f in supporting_files:
+                f = documentation_root.preauthChild(f)
+                f.copyTo(here.child(f.basename()))
 
         def test_all(self):
             """
@@ -66,7 +70,9 @@ def make_documentation_test(document_relative_path):
 
 class MovingApplicationsTests(
         make_documentation_test(
-            'gettingstarted/tutorial/moving-applications.rst')):
+            'gettingstarted/tutorial/moving-applications.rst',
+            supporting_files=['gettingstarted/tutorial/minimal-deployment.yml',
+                              'gettingstarted/tutorial/minimal-application.yml'])):
     """
     Tests for ``gettingstarted/tutorial/moving-applications.rst``
     """
