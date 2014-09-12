@@ -135,6 +135,13 @@ setup(
 
             # The test suite uses network namespaces
             "nomenclature >= 0.1.0",
+
+            # Tutorial tests use wordish
+            "wordish",
+
+            # Wordish depends on docutils.
+            # See https://github.com/jdb/wordish/issues/1
+            "docutils",
             ],
 
         # This extra is for Flocker release engineers to set up their release
