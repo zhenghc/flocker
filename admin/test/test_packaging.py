@@ -7,6 +7,7 @@ Tests for ``admin.packaging``.
 from glob import glob
 import os
 from subprocess import check_output, CalledProcessError, check_call
+import sys
 from textwrap import dedent
 from unittest import skipIf
 
@@ -667,10 +668,10 @@ class OmnibusPackageBuilderTests(TestCase):
         """
         output_dir = FilePath(self.mktemp())
         check_call([
+            sys.executable,
             FLOCKER_PATH.descendant(['admin', 'build-package']).path,
             '--destination-path', output_dir.path,
             '--distribution', 'fedora-20',
-            FLOCKER_PATH.path
         ])
         python_version = __version__
         rpm_version = make_rpm_version(python_version)
