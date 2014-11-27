@@ -57,7 +57,8 @@ class DockerClientTests(TestCase):
         """
         self.client = Client(version="1.15", base_url=BASE_DOCKER_API_URL)
         name = random_name()
-        self.client.create_container(name=name, image=u"busybox")
+        self.client.create_container(
+            name=name, image=u"busybox", command="/bin/true")
         self.client.start(container=name)
         self.container_name = name
 
