@@ -51,13 +51,24 @@ def random_name():
 
 
 class DockerClientTests(TestCase):
-    def test_add_and_remove(self):
+    def setUp(self):
         """
-        An added container can be removed without an error.
+        Create and start a container.
         """
-        client = Client(version="1.15", base_url=BASE_DOCKER_API_URL)
+        self.client = Client(version="1.15", base_url=BASE_DOCKER_API_URL)
         name = random_name()
-        client.create_container(name=name, image=u"busybox")
-        client.start(container=name)
-        client.stop(container=name)
-        client.remove_container(container=name)
+        self.client.create_container(name=name, image=u"busybox")
+        self.client.start(container=name)
+        self.container_name = name
+
+    def test_add_and_stop(self):
+        """
+        A short lived container can stopped.
+        """
+        self.client.stop(container=self.container_name)
+
+    def test_add_and_remove_force(self):
+        """
+        A short lived container can be removed.
+        """
+        self.client.remove_container(container=self.container_name, force=True)
