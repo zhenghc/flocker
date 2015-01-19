@@ -16,7 +16,7 @@ git checkout stable/juno
 ./tools/create-stack-user.sh
 
 # This doesn't seem like a good idea.
-chown -R stack:stack
+chown -R stack:stack /opt/stack
 
 # Switch to stack user
 su - stack
