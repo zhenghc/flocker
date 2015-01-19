@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Checkout devstack
-sudo apt-get install git
+sudo apt-get -y install git
 git clone https://git.openstack.org/openstack-dev/devstack
 cd devstack
 
