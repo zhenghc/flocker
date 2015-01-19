@@ -15,7 +15,7 @@ echo MYSQL_PASSWORD=password >> local.conf
 echo RABBIT_PASSWORD=password >> local.conf
 echo SERVICE_PASSWORD=password >> local.conf
 echo SERVICE_TOKEN=tokentoken >> local.conf
-echo OFFLINE=True >> local.conf
+echo OFFLINE=False >> local.conf
 
 # Start OpenStack:
 ./stack.sh
