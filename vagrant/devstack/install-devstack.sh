@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # Checkout devstack
-sudo apt-get -y install git
+sudo apt-get -y install git python-dev
+
 git clone https://git.openstack.org/openstack-dev/devstack
 cd devstack
 
