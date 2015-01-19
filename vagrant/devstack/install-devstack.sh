@@ -20,8 +20,7 @@ git checkout stable/juno
 # This doesn't seem like a good idea.
 chown -R stack:stack /opt/stack
 
-# Switch to stack user
-su - stack
+cd  devstack
 
 # Create config file with default passwords:
 echo '[[local|localrc]]' > local.conf
@@ -33,4 +32,4 @@ echo SERVICE_TOKEN=tokentoken >> local.conf
 echo OFFLINE=False >> local.conf
 
 # Start OpenStack:
-.devstack/stack.sh
+su - stack ./stack.sh
