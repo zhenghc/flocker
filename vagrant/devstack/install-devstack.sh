@@ -8,6 +8,12 @@ cd devstack
 # Switch to stable Juno branch:
 git checkout stable/juno
 
+# Create a stack user:
+./tools/create-stack-user.sh
+
+# Switch to stack user
+su - stack
+
 # Create config file with default passwords:
 echo '[[local|localrc]]' > local.conf
 echo ADMIN_PASSWORD=password >> local.conf
