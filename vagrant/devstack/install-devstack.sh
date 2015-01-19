@@ -3,6 +3,9 @@
 # Checkout devstack
 sudo apt-get -y install git python-dev
 
+mkdir -p /opt/stack
+cd /opt/stack
+
 git clone https://git.openstack.org/openstack-dev/devstack
 cd devstack
 
@@ -11,6 +14,9 @@ git checkout stable/juno
 
 # Create a stack user:
 ./tools/create-stack-user.sh
+
+# This doesn't seem like a good idea.
+chown -R stack:stack
 
 # Switch to stack user
 su - stack
@@ -25,4 +31,4 @@ echo SERVICE_TOKEN=tokentoken >> local.conf
 echo OFFLINE=False >> local.conf
 
 # Start OpenStack:
-./stack.sh
+.devstack/stack.sh
