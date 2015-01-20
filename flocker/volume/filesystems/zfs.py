@@ -524,6 +524,19 @@ class StoragePool(Service):
         # create_volume(size, name, location=None, snapshot=None)
         volume = driver.create_volume(size=volume.size, name=filesystem.dataset)
         # Attach to this node.
+        # We need to know what the current node IP is here, or supply
+        # current node as an attribute of OpenstackStoragePool
+        current_ip = '104.130.172.132'
+        all_nodes = driver.list_nodes()
+        for node in all_nodes:
+            if current_ip in node.public_ips:
+                break
+        else:
+            raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
+        # Use the dataset name as the block device name inside the node
+        device_path = '/dev/{}'.format(filesystem.dataset)
+        if not driver.attach_volume(node=node, volume=volume, device=device_path):
+            raise Exception('Unable to attach volume. Volume: {}, Device: {}'.format(volume, device_path)
         # Format with ext4
         # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
         
