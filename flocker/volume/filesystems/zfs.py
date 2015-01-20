@@ -503,6 +503,7 @@ class StoragePool(Service):
         return Failure(MaximumSizeTooSmall())
 
     def create(self, volume):
+        import pdb; pdb.set_trace()
         filesystem = self.get(volume)
         mount_path = filesystem.get_path().path
         properties = [b"-o", b"mountpoint=" + mount_path]

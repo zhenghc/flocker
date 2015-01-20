@@ -1,0 +1,4 @@
+"version": 1
+"nodes":
+  "162.242.228.138": ["mongodb-volume-example"]
+  "104.130.172.132": []
