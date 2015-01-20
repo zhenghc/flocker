@@ -522,7 +522,9 @@ class StoragePool(Service):
         driver = driver_from_environment()
         # Create Openstack block
         # create_volume(size, name, location=None, snapshot=None)
-        volume = driver.create_volume(size=volume.size, name=filesystem.dataset)
+        # Figure out how to convert volume.size into a supported Rackspace disk size, in GB.
+        # Hard code it for now.
+        volume = driver.create_volume(size='75', name=filesystem.dataset)
         # Attach to this node.
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
