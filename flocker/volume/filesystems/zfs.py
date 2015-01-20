@@ -523,6 +523,7 @@ class StoragePool(Service):
         # Create Openstack block
         # create_volume(size, name, location=None, snapshot=None)
         volume = driver.create_volume(size=volume.size, name=filesystem.dataset)
+        # Attach to this node.
         # Format with ext4
         # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
         
