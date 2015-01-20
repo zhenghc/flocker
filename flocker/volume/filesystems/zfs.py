@@ -658,6 +658,8 @@ def _list_filesystems(reactor, pool):
     # Node on Rackspace, with Fedora 20
     # Volume added through UI, in region IAD
     # attached that volume to a node, inside server mounted it and created a file
+    # yum install docker-io on the Fedora node
+    # systemctl start docker
 
 
     api_key = environ.get('OPENSTACK_API_KEY')
