@@ -21,11 +21,17 @@ from eliot import Field, MessageType, Logger
 
 from twisted.python.failure import Failure
 from twisted.python.filepath import FilePath
+from twisted.internet.defer import succeed
 from twisted.internet.endpoints import ProcessEndpoint, connectProtocol
 from twisted.internet.protocol import Protocol
 from twisted.internet.defer import Deferred, succeed
 from twisted.internet.error import ConnectionDone, ProcessTerminated
 from twisted.application.service import Service
+
+from libcloud.compute.providers import get_driver
+from libcloud.compute.types import Provider
+
+from flocker.provision._libcloud import monkeypatch
 
 from .errors import MaximumSizeTooSmall
 from .interfaces import (
@@ -644,31 +650,60 @@ def _list_filesystems(reactor, pool):
         of which are ``tuples`` containing the name and mountpoint of each
         filesystem.
     """
-    listing = zfs_command(
-        reactor,
-        [b"list",
-         # Descend the hierarchy to a depth of one (ie, list the direct
-         # children of the pool)
-         b"-d", b"1",
-         # Omit the output header
-         b"-H",
-         # Output exact, machine-parseable values (eg 65536 instead of 64K)
-         b"-p",
-         # Output each dataset's name, mountpoint and refquota
-         b"-o", b"name,mountpoint,refquota",
-         # Look at this pool
-         pool])
+    # do this until Tom's patch is accepted
+    monkeypatch()
 
-    def listed(output, pool):
-        for line in output.splitlines():
-            name, mountpoint, refquota = line.split(b'\t')
-            name = name[len(pool) + 1:]
-            if name:
-                refquota = int(refquota.decode("ascii"))
-                if refquota == 0:
-                    refquota = None
-                yield _DatasetInfo(
-                    dataset=name, mountpoint=mountpoint, refquota=refquota)
+    # Set up:
+    # User on mycloud.rackspace.com
+    # Node on Rackspace, with Fedora 20
+    # Volume added through UI, in region IAD
+    # attached that volume to a node, inside server mounted it and created a file
+    # yum install docker-io on the Fedora node
+    # systemctl start docker
 
-    listing.addCallback(listed, pool)
-    return listing
+
+    # TODO how do we set this variable?
+    api_key = os.environ.get('OPENSTACK_API_KEY')
+    username = 'adam.dangoor'
+    cls = get_driver(Provider.RACKSPACE)
+    driver = cls(username, api_key, region='iad')
+    volumes = driver.list_volumes()
+
+    def listed():
+        for volume in volumes:
+            name = volume.name
+            mountpoint = volume.uuid
+            refquota = volume.size
+
+            yield _DatasetInfo(dataset=name, mountpoint=mountpoint, refquota=refquota)
+
+    return succeed(listed())
+
+    # listing = zfs_command(
+    #     reactor,
+    #     [b"list",
+    #      # Descend the hierarchy to a depth of one (ie, list the direct
+    #      # children of the pool)
+    #      b"-d", b"1",
+    #      # Omit the output header
+    #      b"-H",
+    #      # Output exact, machine-parseable values (eg 65536 instead of 64K)
+    #      b"-p",
+    #      # Output each dataset's name, mountpoint and refquota
+    #      b"-o", b"name,mountpoint,refquota",
+    #      # Look at this pool
+    #      pool])
+    #
+    # def listed(output, pool):
+    #     for line in output.splitlines():
+    #         name, mountpoint, refquota = line.split(b'\t')
+    #         name = name[len(pool) + 1:]
+    #         if name:
+    #             refquota = int(refquota.decode("ascii"))
+    #             if refquota == 0:
+    #                 refquota = None
+    #             yield _DatasetInfo(
+    #                 dataset=name, mountpoint=mountpoint, refquota=refquota)
+    #
+    # listing.addCallback(listed, pool)
+    # return listing
