@@ -29,8 +29,10 @@ from .filesystems.zfs import StoragePool
 from ._model import VolumeSize
 from ..common.script import ICommandLineScript
 
+# Add openstack API key here?
 DEFAULT_CONFIG_PATH = FilePath(b"/etc/flocker/volume.json")
 FLOCKER_MOUNTPOINT = FilePath(b"/flocker")
+# This is ZFS specific. Rename?
 FLOCKER_POOL = b"flocker"
 
 WAIT_FOR_VOLUME_INTERVAL = 0.1

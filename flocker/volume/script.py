@@ -43,6 +43,8 @@ def flocker_volume_options(cls):
          "This file will be created if it does not already exist."],
         # Maybe we can come up with something better in
         # https://clusterhq.atlassian.net/browse/FLOC-125
+        # Remove ZFS specific pool parameter below, or make it clear
+        # that it is ZFS specific.
         ["pool", None, FLOCKER_POOL,
          "The ZFS pool to use for volumes."],
         ["mountpoint", None, FLOCKER_MOUNTPOINT.path,
