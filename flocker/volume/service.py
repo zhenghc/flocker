@@ -227,6 +227,8 @@ class VolumeService(Service):
 
         Polls the storage pool for the specified volume to appear.
 
+        XXX: Poll Openstack  API until block is unattached.
+
         :param VolumeName name: The name of the volume.
 
         :return: A ``Deferred`` that fires with a :class:`Volume`.
