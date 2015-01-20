@@ -25,6 +25,7 @@ from twisted.internet.defer import fail
 # We might want to make these utilities shared, rather than in zfs
 # module... but in this case the usage is temporary and should go away as
 # part of https://clusterhq.atlassian.net/browse/FLOC-64
+# XXX understand StoragePool and see if it can be made less ZFS specific.
 from .filesystems.zfs import StoragePool
 from ._model import VolumeSize
 from ..common.script import ICommandLineScript
@@ -454,6 +455,7 @@ class VolumeScript(object):
 
         :return: The started ``VolumeService``.
         """
+        # Assign an OpenstackStoragePool here?
         pool = StoragePool(reactor, options["pool"],
                            FilePath(options["mountpoint"]))
         service = cls._service_factory(
