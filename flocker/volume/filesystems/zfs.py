@@ -676,6 +676,7 @@ def _list_filesystems(reactor, pool):
     # add your SSH keys so you can SSH in:
     # curl --silent https://github.com/adamtheturtle.keys >> ~/.ssh/authorized_keys
     # see all logs by:
+    # yum install multitail
     # ssh -A root@NODE, then multitail -Q 1 '/var/log/flocker/flocker-*'
     # Volume added through UI, in region IAD
     # attached that volume to a node, inside server mounted it and created a file
@@ -684,7 +685,8 @@ def _list_filesystems(reactor, pool):
     # on the client running flocker-deploy, set OPENSTACK_API_KEY and
     # OPENSTACK_API_USER
     # the first tutorial page works!
-    # Node on Rackspace, with Fedora 20
+    # Create and set up a new node on Rackspace, with Fedora 20, as above
+    # second tutorial page works!
 
 
 
