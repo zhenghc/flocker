@@ -543,6 +543,11 @@ class StoragePool(Service):
         check_call(command)
                             
         # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
+        command = ['mount', device_path, mount_path]
+        check_call(command)
+
+        # Return the filesystem
+        return succeed(filesystem)
         
         # properties = [b"-o", b"mountpoint=" + mount_path]
         # if volume.locally_owned():
@@ -555,8 +560,8 @@ class StoragePool(Service):
         # d = zfs_command(self._reactor,
         #                 [b"create"] + properties + [filesystem.name])
         # d.addErrback(self._check_for_out_of_space)
-        d.addCallback(lambda _: filesystem)
-        return d
+        # d.addCallback(lambda _: filesystem)
+        # return d
 
     def set_maximum_size(self, volume):
         filesystem = self.get(volume)
