@@ -149,6 +149,7 @@ class VolumeService(Service):
         d = self.pool.create(volume)
 
         def created(filesystem):
+            # XXX will _make_public be necessary for openstack volumes?
             self._make_public(filesystem)
             return volume
         d.addCallback(created)
