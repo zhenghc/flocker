@@ -30,7 +30,9 @@ from twisted.application.service import Service
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import Provider
 
+# do this until Tom's patch is accepted
 from flocker.provision._libcloud import monkeypatch
+monkeypatch()
 
 from .errors import MaximumSizeTooSmall
 from .interfaces import (
@@ -519,6 +521,30 @@ class StoragePool(Service):
 
         filesystem = self.get(volume)
         mount_path = filesystem.get_path().path
+        def next_device():
+            """
+            Can't just use the dataset name as the block device name
+            inside the node, nor volume.id nor random_name. You can't
+            even leave it blank; auto is not supported.
+
+             Exception: 400 Bad Request The supplied device path (/dev/3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example) is invalid.
+
+            (Pdb++) driver.attach_volume(node=node, volume=volume)
+            *** Exception: 400 Bad Request The supplied device path (auto) is invalid.
+
+            (Pdb++) driver.attach_volume(node=node, volume=volume, device='/dev/{}'.format(volume.id))
+            *** Exception: 400 Bad Request The supplied device path (/dev/3419c7f5-95ed-490b-9c0a-590992380130) is invalid.
+            """
+            import string
+            prefix = '/dev/xvd'
+            existing = [path for path in FilePath('/dev').children() 
+                        if path.path.startswith(prefix) 
+                        and len(path.basename()) == 4]
+            letters = string.ascii_lowercase
+            return prefix + letters[len(existing)]
+        
+        device_path = next_device()
+
         driver = driver_from_environment()
         # Create Openstack block
         # create_volume(size, name, location=None, snapshot=None)
@@ -535,8 +561,6 @@ class StoragePool(Service):
                 break
         else:
             raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
-        # Use the dataset name as the block device name inside the node
-        device_path = '/dev/{}'.format(filesystem.dataset)
         if not driver.attach_volume(node=node, volume=volume, device=device_path):
             raise Exception('Unable to attach volume. Volume: {}, Device: {}'.format(volume, device_path))
         # Format with ext4
@@ -696,8 +720,6 @@ def _list_filesystems(reactor, pool):
         filesystem.
     """
     return succeed([])
-    # do this until Tom's patch is accepted
-    monkeypatch()
 
     # Set up:
     # User on mycloud.rackspace.com
