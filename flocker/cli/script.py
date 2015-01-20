@@ -232,6 +232,12 @@ class DeployScript(object):
         """
         Connect to all nodes and run ``flocker-changestate``.
 
+        XXX: flocker-changestate on each node will either create
+        Openstack block devices that do not exist in the
+        cluster_config, or they will stop the Application and detach
+        the block from the current node, allowing the Application's
+        new node to attach the block before starting the application.
+        
         :param Deployment deployment: The requested already parsed
             configuration.
         :param bytes deployment_config: YAML-encoded deployment configuration.
