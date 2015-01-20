@@ -540,6 +540,9 @@ class Deployer(object):
             # have been received
             if volumes.coming:
                 phases.append(InParallel(changes=[
+                    # WaitForVolume might just be a case of polling
+                    # the API until the block is reported to be
+                    # unattached?
                     WaitForVolume(volume=volume)
                     for volume in volumes.coming]))
                 phases.append(InParallel(changes=[
