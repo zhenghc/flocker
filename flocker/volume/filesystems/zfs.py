@@ -687,10 +687,10 @@ def _list_filesystems(reactor, pool):
     # the first tutorial page works!
     # Create and set up a new node on Rackspace, with Fedora 20, as above
     # second tutorial page works!
-
-
-
-    #ate a second nodee TODO how do we set this variable?
+    # Run on each node (TODO this hung on one of our two nodes):
+    # firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
+    # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
+    # the third tutorial page works!
 
     username = os.environ.get('OPENSTACK_API_USER')
     api_key = os.environ.get('OPENSTACK_API_KEY')
