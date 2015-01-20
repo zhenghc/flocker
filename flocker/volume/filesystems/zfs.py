@@ -504,19 +504,29 @@ class StoragePool(Service):
 
     def create(self, volume):
         import pdb; pdb.set_trace()
+        # (Pdb++) filesystem
+        # <Filesystem(pool='flocker', dataset='3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example')>
+        # (Pdb++) filesystem.get_path()
+        # FilePath('/flocker/3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example')
+
         filesystem = self.get(volume)
         mount_path = filesystem.get_path().path
-        properties = [b"-o", b"mountpoint=" + mount_path]
-        if volume.locally_owned():
-            properties.extend([b"-o", b"readonly=off"])
-        if volume.size.maximum_size is not None:
-            properties.extend([
-                b"-o", u"refquota={0}".format(
-                    volume.size.maximum_size).encode("ascii")
-            ])
-        d = zfs_command(self._reactor,
-                        [b"create"] + properties + [filesystem.name])
-        d.addErrback(self._check_for_out_of_space)
+
+        # Create Openstack block
+        # Format with ext4
+        # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
+
+        # properties = [b"-o", b"mountpoint=" + mount_path]
+        # if volume.locally_owned():
+        #     properties.extend([b"-o", b"readonly=off"])
+        # if volume.size.maximum_size is not None:
+        #     properties.extend([
+        #         b"-o", u"refquota={0}".format(
+        #             volume.size.maximum_size).encode("ascii")
+        #     ])
+        # d = zfs_command(self._reactor,
+        #                 [b"create"] + properties + [filesystem.name])
+        # d.addErrback(self._check_for_out_of_space)
         d.addCallback(lambda _: filesystem)
         return d
 
@@ -650,6 +660,7 @@ def _list_filesystems(reactor, pool):
         of which are ``tuples`` containing the name and mountpoint of each
         filesystem.
     """
+    return succeed([])
     # do this until Tom's patch is accepted
     monkeypatch()
 
