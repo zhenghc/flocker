@@ -108,6 +108,8 @@ class VolumeService(Service):
         :param reactor: A ``twisted.internet.interface.IReactorTime`` provider.
         """
         self._config_path = config_path
+        # Remove this? There won't be a ZFS pool. 
+        # Or perhaps implement an OpenStackStoragePool. Not sure it that makes sense.
         self.pool = pool
         self._reactor = reactor
 
@@ -118,6 +120,8 @@ class VolumeService(Service):
             if not parent.exists():
                 parent.makedirs()
             if not self._config_path.exists():
+                # It wouldn't make sense to add a "default" API key,
+                # but perhaps we could add the key here?
                 uuid = unicode(uuid4())
                 self._config_path.setContent(json.dumps({u"uuid": uuid,
                                                          u"version": 1}))
@@ -125,6 +129,7 @@ class VolumeService(Service):
             raise CreateConfigurationError(e.args[1])
         config = json.loads(self._config_path.getContent())
         self.node_id = config[u"uuid"]
+        # Remove this? See above.
         self.pool.startService()
 
     def create(self, volume):
