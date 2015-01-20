@@ -508,6 +508,8 @@ class Deployer(object):
                                           desired_state)
 
             if volumes.resizing:
+                # Can Openstack Volumes be resized? And if so, we
+                # probably don't need to support that in this spike.
                 phases.append(InParallel(changes=[
                     ResizeVolume(volume=volume)
                     for volume in volumes.resizing]))
