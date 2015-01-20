@@ -21,7 +21,6 @@ from eliot import Field, MessageType, Logger
 
 from twisted.python.failure import Failure
 from twisted.python.filepath import FilePath
-from twisted.internet.defer import succeed
 from twisted.internet.endpoints import ProcessEndpoint, connectProtocol
 from twisted.internet.protocol import Protocol
 from twisted.internet.defer import Deferred, succeed
@@ -660,13 +659,17 @@ def _list_filesystems(reactor, pool):
     # attached that volume to a node, inside server mounted it and created a file
     # yum install docker-io on the Fedora node
     # systemctl start docker
+    # on the client running flocker-deploy, set OPENSTACK_API_KEY and
+    # OPENSTACK_API_USER
 
 
     # TODO how do we set this variable?
+
+    username = os.environ.get('OPENSTACK_API_USER')
     api_key = os.environ.get('OPENSTACK_API_KEY')
-    username = 'adam.dangoor'
     cls = get_driver(Provider.RACKSPACE)
     driver = cls(username, api_key, region='iad')
+    # TODO this can be slow, can we just run it once?
     volumes = driver.list_volumes()
 
     def listed():
