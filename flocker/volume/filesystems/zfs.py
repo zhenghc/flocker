@@ -21,11 +21,17 @@ from eliot import Field, MessageType, Logger
 
 from twisted.python.failure import Failure
 from twisted.python.filepath import FilePath
+from twisted.internet.defer import succeed
 from twisted.internet.endpoints import ProcessEndpoint, connectProtocol
 from twisted.internet.protocol import Protocol
 from twisted.internet.defer import Deferred, succeed
 from twisted.internet.error import ConnectionDone, ProcessTerminated
 from twisted.application.service import Service
+
+from libcloud.compute.providers import get_driver
+from libcloud.compute.types import Provider
+
+from flocker.provision._libcloud import monkeypatch
 
 from .errors import MaximumSizeTooSmall
 from .interfaces import (
@@ -644,14 +650,8 @@ def _list_filesystems(reactor, pool):
         of which are ``tuples`` containing the name and mountpoint of each
         filesystem.
     """
-
-    from libcloud.compute.providers import get_driver
-    from libcloud.compute.types import Provider
-    from flocker.provision._libcloud import monkeypatch
     # do this until Tom's patch is accepted
     monkeypatch()
-    from os import environ
-    from twisted.internet.defer import succeed
 
     # Set up:
     # User on mycloud.rackspace.com
@@ -662,15 +662,12 @@ def _list_filesystems(reactor, pool):
     # systemctl start docker
 
 
-    api_key = environ.get('OPENSTACK_API_KEY')
+    # TODO how do we set this variable?
+    api_key = os.environ.get('OPENSTACK_API_KEY')
     username = 'adam.dangoor'
     cls = get_driver(Provider.RACKSPACE)
     driver = cls(username, api_key, region='iad')
-    nodes = driver.list_nodes()
-    import pdb; pdb.set_trace()
-
-    node_with_volume = nodes[0]
-    volumes = node_with_volume.driver.list_volumes()
+    volumes = driver.list_volumes()
 
     def listed():
         for volume in volumes:
