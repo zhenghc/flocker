@@ -655,15 +655,39 @@ def _list_filesystems(reactor, pool):
     # Set up:
     # User on mycloud.rackspace.com
     # Node on Rackspace, with Fedora 20
+    # install flocker in a virtualenv, and docker, and
+    # link that virtualenv to /usr/local/bin:
+    # yum install git docker-io @buildsys-build python python-devel python-virtualenv python-virtualenvwrapper libffi-devel
+    # git clone git@github.com:ClusterHQ/flocker.git
+    # git branch -r | grep devstack
+    # cd flocker/
+    # git branch -r | grep devstack
+    # git checkout devstack-environment-FLOC-1236
+    # mkvirtualenv
+    # source virtualenvwrapper.sh
+    # mkvirtualenv 1236
+    # pip install --editable .[dev]
+    # docker info
+    # systemctl start docker
+    # docker info
+    # deactivate
+    # cd /usr/local/bin/
+    # find ~/.virtualenvs/1236/bin/ -type f -iname 'flocker-*' | xargs -I{} -- ln -s {}
+    # add your SSH keys so you can SSH in
+    # see all logs by:
+    # ssh -A root@NODE, then multitail -Q 1 '/var/log/flocker/flocker-*'
     # Volume added through UI, in region IAD
     # attached that volume to a node, inside server mounted it and created a file
     # yum install docker-io on the Fedora node
     # systemctl start docker
     # on the client running flocker-deploy, set OPENSTACK_API_KEY and
     # OPENSTACK_API_USER
+    # the first tutorial page works!
+    # Node on Rackspace, with Fedora 20
 
 
-    # TODO how do we set this variable?
+
+    #ate a second nodee TODO how do we set this variable?
 
     username = os.environ.get('OPENSTACK_API_USER')
     api_key = os.environ.get('OPENSTACK_API_KEY')
