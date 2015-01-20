@@ -161,7 +161,9 @@ class DeployScript(object):
         configuring = self._configure_ssh(deployment)
         configuring.addCallback(
             lambda _: self._reportstate_on_nodes(deployment))
-
+        # Maybe add an additional step here to gather a list of
+        # available Openstack volumes and add those to the
+        # current_config?
         def configured(current_config):
             return self._changestate_on_nodes(
                 deployment,
