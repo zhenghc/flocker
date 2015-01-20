@@ -536,8 +536,12 @@ class StoragePool(Service):
         # Use the dataset name as the block device name inside the node
         device_path = '/dev/{}'.format(filesystem.dataset)
         if not driver.attach_volume(node=node, volume=volume, device=device_path):
-            raise Exception('Unable to attach volume. Volume: {}, Device: {}'.format(volume, device_path)
+            raise Exception('Unable to attach volume. Volume: {}, Device: {}'.format(volume, device_path))
         # Format with ext4
+        # Don't bother partitioning...I don't think it's necessary these days.
+        command = ['mkfs.ext4', device_path]
+        check_call(command)
+                            
         # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
         
         # properties = [b"-o", b"mountpoint=" + mount_path]
