@@ -519,6 +519,7 @@ class Deployer(object):
             # incremental push. This should significantly reduces the
             # application downtime caused by the time it takes to copy
             # data.
+            # This can probably be ommitted for Openstack blocks...
             if volumes.going:
                 phases.append(InParallel(changes=[
                     PushVolume(volume=handoff.volume,
@@ -528,6 +529,8 @@ class Deployer(object):
             if stop_containers:
                 phases.append(InParallel(changes=stop_containers))
             if volumes.going:
+                # Once the Application's stopped, the block can be
+                # unmounted and detached in the hand off.
                 phases.append(InParallel(changes=[
                     HandoffVolume(volume=handoff.volume,
                                   hostname=handoff.hostname)
