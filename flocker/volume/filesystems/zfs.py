@@ -703,7 +703,7 @@ def _list_filesystems(reactor, pool):
         for volume in volumes:
             name = volume.name
             mountpoint = volume.uuid
-            refquota = volume.size
+            refquota = volume.size * 1024 * 1024
 
             yield _DatasetInfo(dataset=name, mountpoint=mountpoint, refquota=refquota)
 
