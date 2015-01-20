@@ -12,6 +12,7 @@ from uuid import uuid4
 from subprocess import (
     CalledProcessError, STDOUT, PIPE, Popen, check_call, check_output
 )
+import time
 
 from characteristic import attributes, with_cmp, with_repr
 
@@ -513,7 +514,6 @@ class StoragePool(Service):
         return Failure(MaximumSizeTooSmall())
 
     def create(self, volume):
-        import pdb; pdb.set_trace()
         # (Pdb++) filesystem
         # <Filesystem(pool='flocker', dataset='3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example')>
         # (Pdb++) filesystem.get_path()
@@ -563,6 +563,14 @@ class StoragePool(Service):
             raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
         if not driver.attach_volume(node=node, volume=volume, device=device_path):
             raise Exception('Unable to attach volume. Volume: {}, Device: {}'.format(volume, device_path))
+        # Wait for the device to appear
+        while True:
+            if FilePath(device_path).exists():
+                break
+            else:
+                time.sleep(0.5)
+        import pdb; pdb.set_trace()
+
         # Format with ext4
         # Don't bother partitioning...I don't think it's necessary these days.
         command = ['mkfs.ext4', device_path]
