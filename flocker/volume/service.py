@@ -22,6 +22,8 @@ from twisted.python.filepath import FilePath
 from twisted.application.service import Service
 from twisted.internet.defer import fail
 
+# The comment below, and the issue link in particular, doesn't make
+# much sense to me. Wrong issue link?
 # We might want to make these utilities shared, rather than in zfs
 # module... but in this case the usage is temporary and should go away as
 # part of https://clusterhq.atlassian.net/browse/FLOC-64
