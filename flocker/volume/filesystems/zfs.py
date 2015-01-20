@@ -40,6 +40,14 @@ from .interfaces import (
 from .._model import VolumeSize
 
 
+def driver_from_environment():
+    username = os.environ.get('OPENSTACK_API_USER')
+    api_key = os.environ.get('OPENSTACK_API_KEY')
+    cls = get_driver(Provider.RACKSPACE)
+    driver = cls(username, api_key, region='iad')
+    return driver
+
+
 def random_name():
     """Return a random pool name.
 
@@ -511,11 +519,13 @@ class StoragePool(Service):
 
         filesystem = self.get(volume)
         mount_path = filesystem.get_path().path
-
+        driver = driver_from_environment()
         # Create Openstack block
+        # create_volume(size, name, location=None, snapshot=None)
+        volume = driver.create_volume(size=volume.size, name=filesystem.dataset)
         # Format with ext4
         # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
-
+        
         # properties = [b"-o", b"mountpoint=" + mount_path]
         # if volume.locally_owned():
         #     properties.extend([b"-o", b"readonly=off"])
@@ -703,11 +713,7 @@ def _list_filesystems(reactor, pool):
     # firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
     # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
     # the third tutorial page works!
-
-    username = os.environ.get('OPENSTACK_API_USER')
-    api_key = os.environ.get('OPENSTACK_API_KEY')
-    cls = get_driver(Provider.RACKSPACE)
-    driver = cls(username, api_key, region='iad')
+    driver = driver_from_environment()
     # TODO this can be slow, can we just run it once?
     volumes = driver.list_volumes()
 
