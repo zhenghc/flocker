@@ -567,6 +567,10 @@ class Deployer(object):
 
         :return: ``Deferred`` that fires when the necessary changes are done.
         """
+        # This'll have to return state changes that carry out
+        # OpenStack block operations....but the state change instances
+        # themselves may be the same, just using a different storage
+        # pool....let's see...
         d = self.calculate_necessary_state_changes(
             desired_state=desired_state,
             current_cluster_state=current_cluster_state,
