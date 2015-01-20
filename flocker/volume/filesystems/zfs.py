@@ -567,7 +567,8 @@ class StoragePool(Service):
         # Don't bother partitioning...I don't think it's necessary these days.
         command = ['mkfs.ext4', device_path]
         check_call(command)
-                            
+        # Create the mount directory
+        FilePath(mount_path).makedirs()
         # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
         command = ['mount', device_path, mount_path]
         check_call(command)
