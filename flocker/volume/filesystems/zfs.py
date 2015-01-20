@@ -673,7 +673,8 @@ def _list_filesystems(reactor, pool):
     # deactivate
     # cd /usr/local/bin/
     # find ~/.virtualenvs/1236/bin/ -type f -iname 'flocker-*' | xargs -I{} -- ln -s {}
-    # add your SSH keys so you can SSH in
+    # add your SSH keys so you can SSH in:
+    # curl --silent https://github.com/adamtheturtle.keys >> ~/.ssh/authorized_keys
     # see all logs by:
     # ssh -A root@NODE, then multitail -Q 1 '/var/log/flocker/flocker-*'
     # Volume added through UI, in region IAD
