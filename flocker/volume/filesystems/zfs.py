@@ -554,7 +554,8 @@ class StoragePool(Service):
         # Attach to this node.
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
-        current_ip = '104.130.172.132'
+        import socket
+        current_ip = socket.gethostbyname(socket.gethostname())
         all_nodes = driver.list_nodes()
         for node in all_nodes:
             if current_ip in node.public_ips:
