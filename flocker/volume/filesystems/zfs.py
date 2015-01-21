@@ -537,12 +537,12 @@ class StoragePool(Service):
             """
             import string
             prefix = '/dev/xvd'
-            existing = [path for path in FilePath('/dev').children() 
-                        if path.path.startswith(prefix) 
+            existing = [path for path in FilePath('/dev').children()
+                        if path.path.startswith(prefix)
                         and len(path.basename()) == 4]
             letters = string.ascii_lowercase
             return prefix + letters[len(existing)]
-        
+
         device_path = next_device()
 
         driver = driver_from_environment()
