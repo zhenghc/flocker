@@ -7,6 +7,7 @@ ZFS APIs.
 from __future__ import absolute_import
 
 import os
+import socket
 from contextlib import contextmanager
 from uuid import uuid4
 from subprocess import (
@@ -550,11 +551,11 @@ class StoragePool(Service):
         # create_volume(size, name, location=None, snapshot=None)
         # Figure out how to convert volume.size into a supported Rackspace disk size, in GB.
         # Hard code it for now.
-        volume = driver.create_volume(size='75', name=filesystem.dataset)
+        volume = driver.create_volume(size='75', name=volume.name.to_bytes())
         # Attach to this node.
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
-        import socket
+
         current_ip = socket.gethostbyname(socket.gethostname())
         all_nodes = driver.list_nodes()
         for node in all_nodes:

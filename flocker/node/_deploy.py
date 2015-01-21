@@ -507,12 +507,12 @@ class Deployer(object):
             volumes = find_volume_changes(hostname, current_cluster_state,
                                           desired_state)
 
-            if volumes.resizing:
-                # Can Openstack Volumes be resized? And if so, we
-                # probably don't need to support that in this spike.
-                phases.append(InParallel(changes=[
-                    ResizeVolume(volume=volume)
-                    for volume in volumes.resizing]))
+            # if volumes.resizing:
+            #     # Can Openstack Volumes be resized? And if so, we
+            #     # probably don't need to support that in this spike.
+            #     phases.append(InParallel(changes=[
+            #         ResizeVolume(volume=volume)
+            #         for volume in volumes.resizing]))
 
             # Do an initial push of all volumes that are going to move, so
             # that the final push which happens during handoff is a quick
@@ -520,11 +520,11 @@ class Deployer(object):
             # application downtime caused by the time it takes to copy
             # data.
             # This can probably be ommitted for Openstack blocks...
-            if volumes.going:
-                phases.append(InParallel(changes=[
-                    PushVolume(volume=handoff.volume,
-                               hostname=handoff.hostname)
-                    for handoff in volumes.going]))
+            # if volumes.going:
+            #     phases.append(InParallel(changes=[
+            #         PushVolume(volume=handoff.volume,
+            #                    hostname=handoff.hostname)
+            #         for handoff in volumes.going]))
 
             if stop_containers:
                 phases.append(InParallel(changes=stop_containers))

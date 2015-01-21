@@ -111,7 +111,7 @@ class VolumeService(Service):
         :param reactor: A ``twisted.internet.interface.IReactorTime`` provider.
         """
         self._config_path = config_path
-        # Remove this? There won't be a ZFS pool. 
+        # Remove this? There won't be a ZFS pool.
         # Or perhaps implement an OpenStackStoragePool. Not sure it that makes sense.
         self.pool = pool
         self._reactor = reactor
@@ -284,7 +284,6 @@ class VolumeService(Service):
 
                 # Probably shouldn't yield this volume if the uuid doesn't
                 # match this service's uuid.
-
                 yield Volume(
                     node_id=node_id.decode("ascii"),
                     name=name,
@@ -385,13 +384,26 @@ class VolumeService(Service):
             errbacks on error (specifcally with a ``ValueError`` if the
             volume is not locally owned).
         """
-        pushing = maybeDeferred(self.push, volume, destination)
+        from flocker.volume.filesystems.zfs import driver_from_environment
+        driver = driver_from_environment()
+        from subprocess import check_call
+        check_call(['umount', volume.get_filesystem().get_path().path])
+        import pdb; pdb.set_trace()
+        openstack_volumes = driver.list_volumes()
+        for openstack_volume in openstack_volumes:
+            if openstack_volume.name.startswith(volume.node_id):
+                driver.detatch(openstack_volume)
+                break
+        # unmount volume
+        # detatch volume
 
-        def pushed(ignored):
-            remote_uuid = destination.acquire(volume)
-            return volume.change_owner(remote_uuid)
-        changing_owner = pushing.addCallback(pushed)
-        return changing_owner
+        # pushing = maybeDeferred(self.push, volume, destination)
+        #
+        # def pushed(ignored):
+        #     remote_uuid = destination.acquire(volume)
+        #     return volume.change_owner(remote_uuid)
+        # changing_owner = pushing.addCallback(pushed)
+        # return changing_owner
 
 
 @attributes(["node_id", "name", "service", "size"],

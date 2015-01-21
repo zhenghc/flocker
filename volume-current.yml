@@ -2,3 +2,13 @@
   "applications": {}
   "used_ports": [22, 27017, 54986, 55147]
   "version": 1
+"162.242.228.138":
+  applications:
+    mongodb-volume-example:
+      image: clusterhq/mongodb:latest
+      ports:
+      - {external: 27017, internal: 27017}
+      restart_policy: {name: never}
+      volume: {maximum_size: '78643200', mountpoint: /data/db}
+  used_ports: [22, 27017, 54775, 59476]
+  version: 1
