@@ -570,21 +570,22 @@ class StoragePool(Service):
                 break
             else:
                 time.sleep(0.5)
-        import pdb; pdb.set_trace()
 
         # Format with ext4
         # Don't bother partitioning...I don't think it's necessary these days.
         command = ['mkfs.ext4', device_path]
         check_call(command)
         # Create the mount directory
-        FilePath(mount_path).makedirs()
+        mount_path_filepath = FilePath(mount_path)
+        if not mount_path_filepath.exists():
+            mount_path_filepath.makedirs()
         # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
         command = ['mount', device_path, mount_path]
         check_call(command)
 
         # Return the filesystem
         return succeed(filesystem)
-        
+
         # properties = [b"-o", b"mountpoint=" + mount_path]
         # if volume.locally_owned():
         #     properties.extend([b"-o", b"readonly=off"])
