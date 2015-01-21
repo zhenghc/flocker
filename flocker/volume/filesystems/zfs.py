@@ -730,8 +730,6 @@ def _list_filesystems(reactor, pool):
         of which are ``tuples`` containing the name and mountpoint of each
         filesystem.
     """
-    return succeed([])
-
     # Set up:
     # User on mycloud.rackspace.com
     # Node on Rackspace, with Fedora 20
@@ -778,7 +776,7 @@ def _list_filesystems(reactor, pool):
     def listed():
         for volume in volumes:
             name = volume.name
-            mountpoint = volume.uuid
+            mountpoint = volume.uuid + '.' + name
             refquota = volume.size * 1024 * 1024
 
             yield _DatasetInfo(dataset=name, mountpoint=mountpoint, refquota=refquota)
