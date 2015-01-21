@@ -776,7 +776,7 @@ def _list_filesystems(reactor, pool):
     def listed():
         for volume in volumes:
             name = volume.name
-            mountpoint = volume.id + '.' + name
+            mountpoint = '/flocker/' + name
             refquota = volume.size * 1024 * 1024
 
             yield _DatasetInfo(dataset=name, mountpoint=mountpoint, refquota=refquota)
