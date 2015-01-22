@@ -29,7 +29,7 @@ from twisted.internet.defer import fail
 # part of https://clusterhq.atlassian.net/browse/FLOC-64
 # XXX understand StoragePool and see if it can be made less ZFS specific.
 from .filesystems.zfs import StoragePool
-from ._model import VolumeSize
+from ._model import VolumeSize, VolumeName
 from ..common.script import ICommandLineScript
 
 # Add openstack API key here?
@@ -43,55 +43,6 @@ WAIT_FOR_VOLUME_INTERVAL = 0.1
 
 class CreateConfigurationError(Exception):
     """Create the configuration file failed."""
-
-
-@attributes(["namespace", "dataset_id"])
-class VolumeName(object):
-    """
-    The volume and its copies' name within the cluster.
-
-    :ivar unicode namespace: The namespace of the volume,
-        e.g. ``u"default"``. Must not include periods.
-
-    :ivar unicode dataset_id: The unique id of the dataset. It is not
-        expected to be meaningful to humans. Since volume ids must match
-        Docker container names, the characters used should be limited to
-        those that Docker allows for container names (``[a-zA-Z0-9_.-]``).
-    """
-    def __init__(self):
-        """
-        :raises ValueError: If a period is included in the namespace.
-        """
-        if u"." in self.namespace:
-            raise ValueError(
-                "Periods not allowed in namespace: %s"
-                % (self.namespace,))
-
-    @classmethod
-    def from_bytes(cls, name):
-        """
-        Create ``VolumeName`` from its byte representation.
-
-        :param bytes name: The name, output of ``VolumeName.to_bytes``
-            call in past.
-
-        :raises ValueError: If parsing the bytes failed.
-
-        :return: Corresponding ``VolumeName``.
-        """
-        namespace, identifier = name.split(b'.', 1)
-        return VolumeName(namespace=namespace.decode("ascii"),
-                          dataset_id=identifier.decode("ascii"))
-
-    def to_bytes(self):
-        """
-        Convert the name to ``bytes``.
-
-        :return: ``VolumeName`` encoded as bytes that can be read by
-            ``VolumeName.from_bytes``.
-        """
-        return b"%s.%s" % (self.namespace.encode("ascii"),
-                           self.dataset_id.encode("ascii"))
 
 
 class VolumeService(Service):
@@ -477,6 +428,7 @@ class VolumeScript(object):
                            FilePath(options["mountpoint"]))
         service = cls._service_factory(
             config_path=options["config"], pool=pool, reactor=reactor)
+        pool.volume_service = service
         try:
             service.startService()
         except CreateConfigurationError as e:

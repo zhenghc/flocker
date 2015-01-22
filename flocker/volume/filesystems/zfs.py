@@ -41,7 +41,7 @@ from .interfaces import (
     IFilesystemSnapshots, IStoragePool, IFilesystem,
     FilesystemAlreadyExists)
 
-from .._model import VolumeSize
+from .._model import VolumeSize, VolumeName
 
 
 def driver_from_environment():
@@ -776,11 +776,13 @@ def _list_filesystems(reactor, pool):
 
     def listed():
         for volume in volumes:
-            name = volume.name
-            mountpoint = '/flocker/' + name
+            namespace, dataset_id = volume.name.split('.', 1)
+            volume_name = VolumeName(namespace=namespace, dataset_id=dataset_id)
+            flocker_volume = pool.volume_service.get(volume_name)
+            mountpoint = flocker_volume.get_filesystem().get_path().path
             refquota = volume.size * 1024 * 1024
-
-            yield _DatasetInfo(dataset=name, mountpoint=mountpoint, refquota=refquota)
+            # Maybe use volume_name here??
+            yield _DatasetInfo(dataset=volume.name, mountpoint=mountpoint, refquota=refquota)
 
     return succeed(listed())
 
