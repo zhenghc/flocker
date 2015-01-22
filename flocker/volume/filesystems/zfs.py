@@ -572,7 +572,7 @@ class StoragePool(Service):
         else:
             raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
 
-        openstack_volume.attach_to_instance(instance=node, device=device_path)
+        openstack_volume.attach_to_instance(instance=node, mountpoint=device_path)
 
         # Wait for the device to appear
         while True:
@@ -672,7 +672,7 @@ class StoragePool(Service):
         device_path = next_device()
         # Sometimes this raises:
         # Exception: 500 Server Error The server has either erred or is incapable of performing the requested operation.
-        openstack_volume.attach_to_instance(instance=node, device=device_path)
+        openstack_volume.attach_to_instance(instance=node, mountpoint=device_path)
 
         # Wait for device to appear
         while True:
