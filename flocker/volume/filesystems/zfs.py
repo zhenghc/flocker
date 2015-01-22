@@ -637,7 +637,20 @@ class StoragePool(Service):
     def change_owner(self, volume, new_volume):
         old_filesystem = self.get(volume)
         new_filesystem = self.get(new_volume)
+
         # Attach openstack block
+        driver = driver_from_environment()
+
+        openstack_volumes = driver.list_volumes()
+        for openstack_volume in openstack_volumes:
+            # Should we also check the node_id here?
+            if openstack_volume.name == volume.name.to_bytes():
+                driver.attach_volume(openstack_volume)
+                break
+        else:
+            # Will this ever happen? Maybe if flocker-deploy is called twice?
+            raise Exception('Volume is not found. Volume: {}'.format(volume))
+        
         # Wait for device to appear
         # Mount it
 
