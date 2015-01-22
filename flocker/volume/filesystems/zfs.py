@@ -733,16 +733,13 @@ def _list_filesystems(reactor, pool):
     """
     # Set up:
     # User on mycloud.rackspace.com
-    # Node on Rackspace, with Fedora 20
+    # 2xNode on Rackspace, with Fedora 20, and your ssh key
     # install flocker in a virtualenv, and docker, and
     # link that virtualenv to /usr/local/bin:
     # yum install git docker-io @buildsys-build python python-devel python-virtualenv python-virtualenvwrapper libffi-devel
     # git clone git@github.com:ClusterHQ/flocker.git
-    # git branch -r | grep devstack
     # cd flocker/
-    # git branch -r | grep devstack
     # git checkout devstack-environment-FLOC-1236
-    # mkvirtualenv
     # source virtualenvwrapper.sh
     # mkvirtualenv 1236
     # pip install --editable .[dev]
@@ -757,19 +754,11 @@ def _list_filesystems(reactor, pool):
     # see all logs by:
     # yum install multitail
     # ssh -A root@NODE, then multitail -Q 1 '/var/log/flocker/flocker-*'
-    # Volume added through UI, in region IAD
-    # attached that volume to a node, inside server mounted it and created a file
-    # yum install docker-io on the Fedora node
-    # systemctl start docker
     # on the client running flocker-deploy, set OPENSTACK_API_KEY and
     # OPENSTACK_API_USER
-    # the first tutorial page works!
-    # Create and set up a new node on Rackspace, with Fedora 20, as above
-    # second tutorial page works!
     # Run on each node (TODO this hung on one of our two nodes):
     # firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
     # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
-    # the third tutorial page works!
     driver = driver_from_environment()
     # TODO this can be slow, can we just run it once?
     volumes = driver.list_volumes()
