@@ -637,18 +637,23 @@ class StoragePool(Service):
     def change_owner(self, volume, new_volume):
         old_filesystem = self.get(volume)
         new_filesystem = self.get(new_volume)
-        d = zfs_command(self._reactor,
-                        [b"rename", old_filesystem.name, new_filesystem.name])
-        self._created(d, new_volume)
+        # Attach openstack block
+        # Wait for device to appear
+        # Mount it
 
-        def remounted(ignored):
-            # Use os.rmdir instead of FilePath.remove since we don't want
-            # recursive behavior. If the directory is non-empty, something
-            # went wrong (or there is a race) and we don't want to lose data.
-            os.rmdir(old_filesystem.get_path().path)
-        d.addCallback(remounted)
-        d.addCallback(lambda _: new_filesystem)
-        return d
+        return succeed(new_filesystem)
+        # d = zfs_command(self._reactor,
+        #                 [b"rename", old_filesystem.name, new_filesystem.name])
+        # self._created(d, new_volume)
+
+        # def remounted(ignored):
+        #     # Use os.rmdir instead of FilePath.remove since we don't want
+        #     # recursive behavior. If the directory is non-empty, something
+        #     # went wrong (or there is a race) and we don't want to lose data.
+        #     os.rmdir(old_filesystem.get_path().path)
+        # d.addCallback(remounted)
+        # d.addCallback(lambda _: new_filesystem)
+        # return d
 
     def _created(self, result, new_volume):
         """
