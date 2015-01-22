@@ -43,13 +43,20 @@ from .interfaces import (
 
 from .._model import VolumeSize, VolumeName
 
+import pyrax
+
 
 def driver_from_environment():
     username = os.environ.get('OPENSTACK_API_USER')
     api_key = os.environ.get('OPENSTACK_API_KEY')
-    cls = get_driver(Provider.RACKSPACE)
-    driver = cls(username, api_key, region='dfw')
-    return driver
+
+    ctx = pyrax.create_context(
+        id_type="rackspace", username=username, api_key=api_key)
+    ctx.authenticate()
+    compute = ctx.get_client('compute', 'DFW')
+    volume = ctx.get_client('volume', 'DFW')
+
+    return compute, volume
 
 
 def next_device():
@@ -547,25 +554,26 @@ class StoragePool(Service):
         mount_path = filesystem.get_path().path
         device_path = next_device()
 
-        driver = driver_from_environment()
+        compute_driver, volume_driver = driver_from_environment()
         # Create Openstack block
         # create_volume(size, name, location=None, snapshot=None)
         # Figure out how to convert volume.size into a supported Rackspace disk size, in GB.
         # Hard code it for now.
-        volume = driver.create_volume(size='75', name=volume.name.to_bytes())
+        openstack_volume = volume_driver.create(name=volume.name.to_bytes(), size=100, type='SATA')
         # Attach to this node.
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
 
         current_ip = socket.gethostbyname(socket.gethostname())
-        all_nodes = driver.list_nodes()
+        all_nodes = compute_driver.servers.list()
         for node in all_nodes:
-            if current_ip in node.public_ips:
+            if current_ip == node.accessIPv4:
                 break
         else:
             raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
-        if not driver.attach_volume(node=node, volume=volume, device=device_path):
-            raise Exception('Unable to attach volume. Volume: {}, Device: {}'.format(volume, device_path))
+
+        openstack_volume.attach_to_instance(instance=node, device=device_path)
+
         # Wait for the device to appear
         while True:
             if FilePath(device_path).exists():
