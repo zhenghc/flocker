@@ -545,9 +545,9 @@ class Deployer(object):
                     # unattached?
                     WaitForVolume(volume=volume)
                     for volume in volumes.coming]))
-                phases.append(InParallel(changes=[
-                    ResizeVolume(volume=volume)
-                    for volume in volumes.coming]))
+                # phases.append(InParallel(changes=[
+                #     ResizeVolume(volume=volume)
+                #     for volume in volumes.coming]))
             if volumes.creating:
                 phases.append(InParallel(changes=[
                     CreateVolume(volume=volume)
