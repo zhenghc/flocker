@@ -662,9 +662,10 @@ class StoragePool(Service):
             raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
 
         device_path = next_device()
-
+        # Sometimes this raises:
+        # Exception: 500 Server Error The server has either erred or is incapable of performing the requested operation.
         if not driver.attach_volume(node=node, volume=openstack_volume, device=device_path):
-            raise Exception('Unable to attach volume. Volume: {}, Device: {}'.format(volume, device_path))
+            raise Exception('Unable to attach volume. Openstack Volume: {}, Device: {}'.format(openstack_volume, device_path))
         
         # Wait for device to appear
         
