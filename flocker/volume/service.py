@@ -338,7 +338,10 @@ class VolumeService(Service):
         from flocker.volume.filesystems.zfs import driver_from_environment
         driver = driver_from_environment()
         from subprocess import check_call
+        # unmount volume
         check_call(['umount', volume.get_filesystem().get_path().path])
+
+        # detatch volume
         openstack_volumes = driver.list_volumes()
         for openstack_volume in openstack_volumes:
             # Should we also check the node_id here?
@@ -346,11 +349,13 @@ class VolumeService(Service):
                 driver.detach_volume(openstack_volume)
                 break
         else:
+            # Will this ever happen? Maybe if flocker-deploy is called twice?
             raise Exception('Volume is not attached. Volume: {}'.format(volume))
         
-        # unmount volume
-        # detatch volume
+
+        # Maybe wait here until the device has gone from the local OS?
         return succeed(None)
+
         # pushing = maybeDeferred(self.push, volume, destination)
         #
         # def pushed(ignored):
