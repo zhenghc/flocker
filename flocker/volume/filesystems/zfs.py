@@ -677,8 +677,8 @@ class StoragePool(Service):
 
         # Mount it
         mount_path = volume.get_filesystem().get_path()
-        if not mount_path_filepath.exists():
-            mount_path_filepath.makedirs()
+        if not mount_path.exists():
+            mount_path.makedirs()
         command = ['mount', device_path, mount_path.path]
         check_call(command)
 
