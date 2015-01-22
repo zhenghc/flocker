@@ -648,9 +648,9 @@ class StoragePool(Service):
         new_filesystem = self.get(new_volume)
 
         # Attach openstack block
-        driver = driver_from_environment()
+        compute_driver, volume_driver = driver_from_environment()
 
-        openstack_volumes = driver.list_volumes()
+        openstack_volumes = volume_driver.list()
         for openstack_volume in openstack_volumes:
             # Should we also check the node_id here?
             if openstack_volume.name == volume.name.to_bytes():
@@ -662,9 +662,9 @@ class StoragePool(Service):
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
         current_ip = socket.gethostbyname(socket.gethostname())
-        all_nodes = driver.list_nodes()
+        all_nodes = compute_driver.servers.list()
         for node in all_nodes:
-            if current_ip in node.public_ips:
+            if current_ip == node.accessIPv4:
                 break
         else:
             raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
@@ -672,17 +672,14 @@ class StoragePool(Service):
         device_path = next_device()
         # Sometimes this raises:
         # Exception: 500 Server Error The server has either erred or is incapable of performing the requested operation.
-        if not driver.attach_volume(node=node, volume=openstack_volume, device=device_path):
-            raise Exception('Unable to attach volume. Openstack Volume: {}, Device: {}'.format(openstack_volume, device_path))
+        openstack_volume.attach_to_instance(instance=node, device=device_path)
 
         # Wait for device to appear
-
         while True:
             if FilePath(device_path).exists():
                 break
             else:
                 time.sleep(0.5)
-
 
         # Mount it
         mount_path = volume.get_filesystem().get_path()
