@@ -157,8 +157,9 @@ def _clean_node(test_case, node):
     # http://doc-dev.clusterhq.com/advanced/cleanup.html#removing-zfs-volumes
     # A tool or flocker-deploy option to purge the state of a node does
     # not yet exist. See https://clusterhq.atlassian.net/browse/FLOC-682
-    _run_SSH(22, 'root', node, [b"zfs"] + [b"destroy"] + [b"-r"] +
-             [b"flocker"], None)
+    # We need something more generic here...for openstack etc.
+    # _run_SSH(22, 'root', node, [b"zfs"] + [b"destroy"] + [b"-r"] +
+    #          [b"flocker"], None)
 
 
 def get_nodes(test_case, num_nodes):

@@ -48,7 +48,7 @@ def driver_from_environment():
     username = os.environ.get('OPENSTACK_API_USER')
     api_key = os.environ.get('OPENSTACK_API_KEY')
     cls = get_driver(Provider.RACKSPACE)
-    driver = cls(username, api_key, region='iad')
+    driver = cls(username, api_key, region='dfw')
     return driver
 
 
