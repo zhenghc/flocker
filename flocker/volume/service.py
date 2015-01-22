@@ -352,10 +352,10 @@ class VolumeService(Service):
             # Will this ever happen? Maybe if flocker-deploy is called twice?
             raise Exception('Volume is not attached. Volume: {}'.format(volume))
 
+        remote_uuid = destination.acquire(volume)
+        return volume.change_owner(remote_uuid)
 
         # Maybe wait here until the device has gone from the local OS?
-        return succeed(None)
-
         # pushing = maybeDeferred(self.push, volume, destination)
         #
         # def pushed(ignored):
