@@ -696,7 +696,7 @@ class StoragePool(Service):
             self._name, dataset, mount_path, volume.size)
 
     def enumerate(self):
-        listing = _list_filesystems(self._reactor, self._name)
+        listing = _list_filesystems(self._reactor, pool=self)
 
         def listed(filesystems):
             result = set()
