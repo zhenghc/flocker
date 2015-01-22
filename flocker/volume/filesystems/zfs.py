@@ -41,7 +41,7 @@ from .interfaces import (
     IFilesystemSnapshots, IStoragePool, IFilesystem,
     FilesystemAlreadyExists)
 
-from .._model import VolumeSize
+from .._model import VolumeSize, VolumeName
 
 
 def driver_from_environment():
@@ -50,6 +50,29 @@ def driver_from_environment():
     cls = get_driver(Provider.RACKSPACE)
     driver = cls(username, api_key, region='iad')
     return driver
+
+
+def next_device():
+    """
+    Can't just use the dataset name as the block device name
+    inside the node, nor volume.id nor random_name. You can't
+    even leave it blank; auto is not supported.
+
+     Exception: 400 Bad Request The supplied device path (/dev/3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example) is invalid.
+
+    (Pdb++) driver.attach_volume(node=node, volume=volume)
+    *** Exception: 400 Bad Request The supplied device path (auto) is invalid.
+
+    (Pdb++) driver.attach_volume(node=node, volume=volume, device='/dev/{}'.format(volume.id))
+    *** Exception: 400 Bad Request The supplied device path (/dev/3419c7f5-95ed-490b-9c0a-590992380130) is invalid.
+    """
+    import string
+    prefix = '/dev/xvd'
+    existing = [path for path in FilePath('/dev').children()
+                if path.path.startswith(prefix)
+                and len(path.basename()) == 4]
+    letters = string.ascii_lowercase
+    return prefix + letters[len(existing)]
 
 
 def random_name():
@@ -522,28 +545,6 @@ class StoragePool(Service):
 
         filesystem = self.get(volume)
         mount_path = filesystem.get_path().path
-        def next_device():
-            """
-            Can't just use the dataset name as the block device name
-            inside the node, nor volume.id nor random_name. You can't
-            even leave it blank; auto is not supported.
-
-             Exception: 400 Bad Request The supplied device path (/dev/3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example) is invalid.
-
-            (Pdb++) driver.attach_volume(node=node, volume=volume)
-            *** Exception: 400 Bad Request The supplied device path (auto) is invalid.
-
-            (Pdb++) driver.attach_volume(node=node, volume=volume, device='/dev/{}'.format(volume.id))
-            *** Exception: 400 Bad Request The supplied device path (/dev/3419c7f5-95ed-490b-9c0a-590992380130) is invalid.
-            """
-            import string
-            prefix = '/dev/xvd'
-            existing = [path for path in FilePath('/dev').children()
-                        if path.path.startswith(prefix)
-                        and len(path.basename()) == 4]
-            letters = string.ascii_lowercase
-            return prefix + letters[len(existing)]
-
         device_path = next_device()
 
         driver = driver_from_environment()
@@ -637,18 +638,64 @@ class StoragePool(Service):
     def change_owner(self, volume, new_volume):
         old_filesystem = self.get(volume)
         new_filesystem = self.get(new_volume)
-        d = zfs_command(self._reactor,
-                        [b"rename", old_filesystem.name, new_filesystem.name])
-        self._created(d, new_volume)
 
-        def remounted(ignored):
-            # Use os.rmdir instead of FilePath.remove since we don't want
-            # recursive behavior. If the directory is non-empty, something
-            # went wrong (or there is a race) and we don't want to lose data.
-            os.rmdir(old_filesystem.get_path().path)
-        d.addCallback(remounted)
-        d.addCallback(lambda _: new_filesystem)
-        return d
+        # Attach openstack block
+        driver = driver_from_environment()
+
+        openstack_volumes = driver.list_volumes()
+        for openstack_volume in openstack_volumes:
+            # Should we also check the node_id here?
+            if openstack_volume.name == volume.name.to_bytes():
+                break
+        else:
+            # Will this ever happen? Maybe if flocker-deploy is called twice?
+            raise Exception('Volume is not found. Volume: {}'.format(volume))
+
+        # We need to know what the current node IP is here, or supply
+        # current node as an attribute of OpenstackStoragePool
+        current_ip = socket.gethostbyname(socket.gethostname())
+        all_nodes = driver.list_nodes()
+        for node in all_nodes:
+            if current_ip in node.public_ips:
+                break
+        else:
+            raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
+
+        device_path = next_device()
+        # Sometimes this raises:
+        # Exception: 500 Server Error The server has either erred or is incapable of performing the requested operation.
+        if not driver.attach_volume(node=node, volume=openstack_volume, device=device_path):
+            raise Exception('Unable to attach volume. Openstack Volume: {}, Device: {}'.format(openstack_volume, device_path))
+        
+        # Wait for device to appear
+        
+        while True:
+            if FilePath(device_path).exists():
+                break
+            else:
+                time.sleep(0.5)
+
+
+        # Mount it
+        mount_path = volume.get_filesystem().get_path()
+        if not mount_path.exists():
+            mount_path.makedirs()
+        command = ['mount', device_path, mount_path.path]
+        check_call(command)
+
+        return succeed(new_filesystem)
+        # d = zfs_command(self._reactor,
+        #                 [b"rename", old_filesystem.name, new_filesystem.name])
+        # self._created(d, new_volume)
+
+        # def remounted(ignored):
+        #     # Use os.rmdir instead of FilePath.remove since we don't want
+        #     # recursive behavior. If the directory is non-empty, something
+        #     # went wrong (or there is a race) and we don't want to lose data.
+        #     os.rmdir(old_filesystem.get_path().path)
+        # d.addCallback(remounted)
+        # d.addCallback(lambda _: new_filesystem)
+        # return d
 
     def _created(self, result, new_volume):
         """
@@ -696,7 +743,7 @@ class StoragePool(Service):
             self._name, dataset, mount_path, volume.size)
 
     def enumerate(self):
-        listing = _list_filesystems(self._reactor, self._name)
+        listing = _list_filesystems(self._reactor, pool=self)
 
         def listed(filesystems):
             result = set()
@@ -765,11 +812,14 @@ def _list_filesystems(reactor, pool):
 
     def listed():
         for volume in volumes:
-            name = volume.name
-            mountpoint = '/flocker/' + name
+            # Use VolumeName.from_bytes here instead??
+            namespace, dataset_id = volume.name.split('.', 1)
+            volume_name = VolumeName(namespace=namespace, dataset_id=dataset_id)
+            flocker_volume = pool.volume_service.get(volume_name)
+            mountpoint = flocker_volume.get_filesystem().get_path().path
             refquota = volume.size * 1024 * 1024
-
-            yield _DatasetInfo(dataset=name, mountpoint=mountpoint, refquota=refquota)
+            # Maybe use volume_name here??
+            yield _DatasetInfo(dataset=volume.name, mountpoint=mountpoint, refquota=refquota)
 
     return succeed(listed())
 
