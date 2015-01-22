@@ -16,7 +16,7 @@ from zope.interface import Interface, implementer
 
 from characteristic import attributes
 
-from twisted.internet.defer import maybeDeferred
+from twisted.internet.defer import maybeDeferred, succeed
 from twisted.internet.task import deferLater
 from twisted.python.filepath import FilePath
 from twisted.application.service import Service
@@ -339,15 +339,18 @@ class VolumeService(Service):
         driver = driver_from_environment()
         from subprocess import check_call
         check_call(['umount', volume.get_filesystem().get_path().path])
-        import pdb; pdb.set_trace()
         openstack_volumes = driver.list_volumes()
         for openstack_volume in openstack_volumes:
-            if openstack_volume.name.startswith(volume.node_id):
-                driver.detatch(openstack_volume)
+            # Should we also check the node_id here?
+            if openstack_volume.name == volume.name.to_bytes():
+                driver.detach_volume(openstack_volume)
                 break
+        else:
+            raise Exception('Volume is not attached. Volume: {}'.format(volume))
+        
         # unmount volume
         # detatch volume
-
+        return succeed(None)
         # pushing = maybeDeferred(self.push, volume, destination)
         #
         # def pushed(ignored):
