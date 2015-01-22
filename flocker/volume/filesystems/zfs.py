@@ -776,6 +776,7 @@ def _list_filesystems(reactor, pool):
 
     def listed():
         for volume in volumes:
+            # Use VolumeName.from_bytes here instead??
             namespace, dataset_id = volume.name.split('.', 1)
             volume_name = VolumeName(namespace=namespace, dataset_id=dataset_id)
             flocker_volume = pool.volume_service.get(volume_name)
