@@ -52,6 +52,29 @@ def driver_from_environment():
     return driver
 
 
+def next_device():
+    """
+    Can't just use the dataset name as the block device name
+    inside the node, nor volume.id nor random_name. You can't
+    even leave it blank; auto is not supported.
+
+     Exception: 400 Bad Request The supplied device path (/dev/3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example) is invalid.
+
+    (Pdb++) driver.attach_volume(node=node, volume=volume)
+    *** Exception: 400 Bad Request The supplied device path (auto) is invalid.
+
+    (Pdb++) driver.attach_volume(node=node, volume=volume, device='/dev/{}'.format(volume.id))
+    *** Exception: 400 Bad Request The supplied device path (/dev/3419c7f5-95ed-490b-9c0a-590992380130) is invalid.
+    """
+    import string
+    prefix = '/dev/xvd'
+    existing = [path for path in FilePath('/dev').children()
+                if path.path.startswith(prefix)
+                and len(path.basename()) == 4]
+    letters = string.ascii_lowercase
+    return prefix + letters[len(existing)]
+
+
 def random_name():
     """Return a random pool name.
 
@@ -522,28 +545,6 @@ class StoragePool(Service):
 
         filesystem = self.get(volume)
         mount_path = filesystem.get_path().path
-        def next_device():
-            """
-            Can't just use the dataset name as the block device name
-            inside the node, nor volume.id nor random_name. You can't
-            even leave it blank; auto is not supported.
-
-             Exception: 400 Bad Request The supplied device path (/dev/3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example) is invalid.
-
-            (Pdb++) driver.attach_volume(node=node, volume=volume)
-            *** Exception: 400 Bad Request The supplied device path (auto) is invalid.
-
-            (Pdb++) driver.attach_volume(node=node, volume=volume, device='/dev/{}'.format(volume.id))
-            *** Exception: 400 Bad Request The supplied device path (/dev/3419c7f5-95ed-490b-9c0a-590992380130) is invalid.
-            """
-            import string
-            prefix = '/dev/xvd'
-            existing = [path for path in FilePath('/dev').children()
-                        if path.path.startswith(prefix)
-                        and len(path.basename()) == 4]
-            letters = string.ascii_lowercase
-            return prefix + letters[len(existing)]
-
         device_path = next_device()
 
         driver = driver_from_environment()
@@ -645,13 +646,35 @@ class StoragePool(Service):
         for openstack_volume in openstack_volumes:
             # Should we also check the node_id here?
             if openstack_volume.name == volume.name.to_bytes():
-                driver.attach_volume(openstack_volume)
                 break
         else:
             # Will this ever happen? Maybe if flocker-deploy is called twice?
             raise Exception('Volume is not found. Volume: {}'.format(volume))
+
+        # We need to know what the current node IP is here, or supply
+        # current node as an attribute of OpenstackStoragePool
+        current_ip = socket.gethostbyname(socket.gethostname())
+        all_nodes = driver.list_nodes()
+        for node in all_nodes:
+            if current_ip in node.public_ips:
+                break
+        else:
+            raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
+
+        device_path = next_device()
+
+        if not driver.attach_volume(node=node, volume=openstack_volume, device=device_path):
+            raise Exception('Unable to attach volume. Volume: {}, Device: {}'.format(volume, device_path))
         
         # Wait for device to appear
+        
+        while True:
+            if FilePath(device_path).exists():
+                break
+            else:
+                time.sleep(0.5)
+
+
         # Mount it
 
         return succeed(new_filesystem)
