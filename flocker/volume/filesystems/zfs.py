@@ -811,20 +811,20 @@ def _list_filesystems(reactor, pool):
     # Run on each node (TODO this hung on one of our two nodes):
     # firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
     # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
-    driver = driver_from_environment()
+    compute_driver, volume_driver = driver_from_environment()
     # TODO this can be slow, can we just run it once?
-    volumes = driver.list_volumes()
+    volumes = volume_driver.list()
 
     def listed():
-        for volume in volumes:
+        for openstack_volume in volumes:
             # Use VolumeName.from_bytes here instead??
-            namespace, dataset_id = volume.name.split('.', 1)
+            namespace, dataset_id = openstack_volume.name.split('.', 1)
             volume_name = VolumeName(namespace=namespace, dataset_id=dataset_id)
             flocker_volume = pool.volume_service.get(volume_name)
             mountpoint = flocker_volume.get_filesystem().get_path().path
-            refquota = volume.size * 1024 * 1024
+            refquota = openstack_volume.size * 1024 * 1024
             # Maybe use volume_name here??
-            yield _DatasetInfo(dataset=volume.name, mountpoint=mountpoint, refquota=refquota)
+            yield _DatasetInfo(dataset=openstack_volume.name, mountpoint=mountpoint, refquota=refquota)
 
     return succeed(listed())
 
