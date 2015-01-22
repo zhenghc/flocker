@@ -666,9 +666,9 @@ class StoragePool(Service):
         # Exception: 500 Server Error The server has either erred or is incapable of performing the requested operation.
         if not driver.attach_volume(node=node, volume=openstack_volume, device=device_path):
             raise Exception('Unable to attach volume. Openstack Volume: {}, Device: {}'.format(openstack_volume, device_path))
-        
+
         # Wait for device to appear
-        
+
         while True:
             if FilePath(device_path).exists():
                 break
