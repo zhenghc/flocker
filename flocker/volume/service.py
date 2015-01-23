@@ -189,17 +189,12 @@ class VolumeService(Service):
 
         :return: A ``Deferred`` that fires with a :class:`Volume`.
         """
-        # Attach openstack block
         compute_driver, volume_driver = driver_from_environment()
 
         openstack_volumes = volume_driver.list()
         for openstack_volume in openstack_volumes:
-            # Should we also check the node_id here?
             if openstack_volume.name == name.to_bytes():
                 break
-        else:
-            # Will this ever happen? Maybe if flocker-deploy is called twice?
-            raise Exception('Volume is not found. VolumeName: {}'.format(name))
 
         # Wait for volume to detach
         # We need to know what the current node IP is here, or supply
@@ -209,8 +204,6 @@ class VolumeService(Service):
         for node in all_nodes:
             if ipaddr.IPv4Address(node.accessIPv4) in public_ips:
                 break
-        else:
-            raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
 
         while True:
             # Do we need this or is the availability check done on the server
