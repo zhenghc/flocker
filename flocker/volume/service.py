@@ -11,6 +11,7 @@ import sys
 import json
 import stat
 from uuid import UUID, uuid4
+import time
 
 from zope.interface import Interface, implementer
 
@@ -341,7 +342,7 @@ class VolumeService(Service):
         # unmount volume
         check_call(['umount', volume.get_filesystem().get_path().path])
 
-        # detatch volume
+        # detach volume
         openstack_volumes = volume_driver.list()
         for openstack_volume in openstack_volumes:
             # Should we also check the node_id here?
@@ -351,6 +352,12 @@ class VolumeService(Service):
         else:
             # Will this ever happen? Maybe if flocker-deploy is called twice?
             raise Exception('Volume is not attached. Volume: {}'.format(volume))
+
+        # Wait for volume to detach
+        while True:
+            if volume_driver.get(openstack_volume.id).status == u'available':
+                break
+            time.sleep(0.5)
 
         remote_uuid = destination.acquire(volume)
         return volume.change_owner(remote_uuid)
