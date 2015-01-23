@@ -708,7 +708,7 @@ class StoragePool(Service):
 
         # Mount it
         mount_path = new_filesystem.get_path()
-        sys.stderr.write("Adam says new path = " + mount_path + " on " + node.accessIPv4 + '\n')
+        sys.stderr.write("Adam says new path = " + mount_path.path + " on " + node.accessIPv4 + '\n')
         if not mount_path.exists():
             mount_path.makedirs()
         command = ['mount', device_path, mount_path.path]
