@@ -661,10 +661,6 @@ class StoragePool(Service):
     def change_owner(self, volume, new_volume):
         old_filesystem = self.get(volume)
         new_filesystem = self.get(new_volume)
-        if volume.service.node_id != new_volume.node_id:
-            sys.stderr.write('Adam says volume.service.node_id != new_volume.node_id\n')
-            return succeed(new_filesystem)
-
         return succeed(new_filesystem)
         # d = zfs_command(self._reactor,
         #                 [b"rename", old_filesystem.name, new_filesystem.name])
