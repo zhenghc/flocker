@@ -235,14 +235,15 @@ class VolumeService(Service):
                 time.sleep(0.5)
 
         # Mount it
-        mount_path = self.get(name).get_filesystem().get_path()
+        flocker_volume = self.get(name)
+        mount_path = flocker_volume.get_filesystem().get_path()
         sys.stderr.write("Adam says new path = " + mount_path.path + " on " + node.accessIPv4 + '\n')
         if not mount_path.exists():
             mount_path.makedirs()
         command = ['mount', device_path, mount_path.path]
         check_call(command)
         sys.stderr.write("Adam says mounted on " + node.accessIPv4 + '\n')
-
+        return succeed(flocker_volume)
         # def check_for_volume(node_id, name):
         #     d = self.enumerate()
         #     d.addCallback(compare_volumes_by_name_node_id, node_id, name)
