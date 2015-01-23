@@ -660,6 +660,10 @@ class StoragePool(Service):
     def change_owner(self, volume, new_volume):
         old_filesystem = self.get(volume)
         new_filesystem = self.get(new_volume)
+        if volume.service.node_id != new_volume.node_id:
+            sys.stderr.write('Adam says volume.service.node_id != new_volume.node_id\n')
+            return succeed(new_filesystem)
+
         import sys
         # Attach openstack block
         compute_driver, volume_driver = driver_from_environment()
