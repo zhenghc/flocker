@@ -1,9 +1,0 @@
-"version": 1
-"applications":
-  "mongodb-volume-example":
-    "image": "clusterhq/mongodb"
-    "ports":
-    - "internal": 27017
-      "external": 27017
-    "volume":
-      "mountpoint": "/data/db"
