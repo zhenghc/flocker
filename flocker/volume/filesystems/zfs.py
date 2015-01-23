@@ -680,6 +680,7 @@ class StoragePool(Service):
             openstack_volume = volume_driver.get(openstack_volume.id)
             if openstack_volume.status == u'available':
                 break
+            print 'Adam says Waiting for volume available'
             time.sleep(0.5)
 
         # We need to know what the current node IP is here, or supply
@@ -702,6 +703,7 @@ class StoragePool(Service):
             if FilePath(device_path).exists():
                 break
             else:
+                print 'Adam says Waiting for filepath device path to exist'
                 time.sleep(0.5)
 
         # Mount it
