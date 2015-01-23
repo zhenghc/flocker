@@ -218,7 +218,6 @@ class VolumeService(Service):
             openstack_volume = volume_driver.get(openstack_volume.id)
             if openstack_volume.status == u'available':
                 break
-            sys.stderr.write('Adam says Waiting for volume available, IP: {}\n'.format(public_ips))
             time.sleep(0.5)
 
         device_path = next_device()
@@ -231,18 +230,15 @@ class VolumeService(Service):
             if FilePath(device_path).exists():
                 break
             else:
-                sys.stderr.write('Adam says Waiting for filepath device path to exist\n')
                 time.sleep(0.5)
 
         # Mount it
         flocker_volume = self.get(name)
         mount_path = flocker_volume.get_filesystem().get_path()
-        sys.stderr.write("Adam says new path = " + mount_path.path + " on " + node.accessIPv4 + '\n')
         if not mount_path.exists():
             mount_path.makedirs()
         command = ['mount', device_path, mount_path.path]
         check_call(command)
-        sys.stderr.write("Adam says mounted on " + node.accessIPv4 + '\n')
         return succeed(flocker_volume)
         # def check_for_volume(node_id, name):
         #     d = self.enumerate()
@@ -405,18 +401,11 @@ class VolumeService(Service):
         # detach volume
         openstack_volumes = volume_driver.list()
         for openstack_volume in openstack_volumes:
-            # Should we also check the node_id here?
             if openstack_volume.name == volume.name.to_bytes():
                 openstack_volume.detach()
-                break
-        else:
-            # Will this ever happen? Maybe if flocker-deploy is called twice?
-            raise Exception('Volume is not attached. Volume: {}'.format(volume))
+                remote_uuid = destination.acquire(volume)
+                return volume.change_owner(remote_uuid)
 
-        remote_uuid = destination.acquire(volume)
-        return volume.change_owner(remote_uuid)
-
-        # Maybe wait here until the device has gone from the local OS?
         # pushing = maybeDeferred(self.push, volume, destination)
         #
         # def pushed(ignored):
