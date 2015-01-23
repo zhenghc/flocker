@@ -10,8 +10,11 @@ from __future__ import absolute_import
 import sys
 import json
 import stat
+from subprocess import check_call
 from uuid import UUID, uuid4
 import time
+
+import ipaddr
 
 from zope.interface import Interface, implementer
 
@@ -32,6 +35,7 @@ from twisted.internet.defer import fail
 from .filesystems.zfs import StoragePool
 from ._model import VolumeSize, VolumeName
 from ..common.script import ICommandLineScript
+from flocker.volume.filesystems.zfs import driver_from_environment, get_public_ips, next_device
 
 # Add openstack API key here?
 DEFAULT_CONFIG_PATH = FilePath(b"/etc/flocker/volume.json")
@@ -185,26 +189,80 @@ class VolumeService(Service):
 
         :return: A ``Deferred`` that fires with a :class:`Volume`.
         """
-        def check_for_volume(node_id, name):
-            d = self.enumerate()
-            d.addCallback(compare_volumes_by_name_node_id, node_id, name)
-            return d
+        # Attach openstack block
+        compute_driver, volume_driver = driver_from_environment()
 
-        def compare_volumes_by_name_node_id(volumes, node_id, name):
-            """
-            Iterate the volumes managed by this service and compare the
-            node ID and the ``VolumeName`` to determine if we have found the
-            ``Volume`` instance requested by name.
-            """
-            for volume in volumes:
-                if volume.node_id == node_id and volume.name == name:
-                    return volume
-            return deferLater(
-                self._reactor, WAIT_FOR_VOLUME_INTERVAL,
-                check_for_volume, node_id, name
-            )
+        openstack_volumes = volume_driver.list()
+        for openstack_volume in openstack_volumes:
+            # Should we also check the node_id here?
+            if openstack_volume.name == name.to_bytes():
+                break
+        else:
+            # Will this ever happen? Maybe if flocker-deploy is called twice?
+            raise Exception('Volume is not found. VolumeName: {}'.format(name))
 
-        return check_for_volume(self.node_id, name)
+        # Wait for volume to detach
+        # We need to know what the current node IP is here, or supply
+        # current node as an attribute of OpenstackStoragePool
+        public_ips = get_public_ips()
+        all_nodes = compute_driver.servers.list()
+        for node in all_nodes:
+            if ipaddr.IPv4Address(node.accessIPv4) in public_ips:
+                break
+        else:
+            raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
+
+        while True:
+            # Do we need this or is the availability check done on the server
+            # side?
+            openstack_volume = volume_driver.get(openstack_volume.id)
+            if openstack_volume.status == u'available':
+                break
+            sys.stderr.write('Adam says Waiting for volume available, IP: {}\n'.format(public_ips))
+            time.sleep(0.5)
+
+        device_path = next_device()
+        # Sometimes this raises:
+        # Exception: 500 Server Error The server has either erred or is incapable of performing the requested operation.
+        openstack_volume.attach_to_instance(instance=node, mountpoint=device_path)
+
+        # Wait for device to appear
+        while True:
+            if FilePath(device_path).exists():
+                break
+            else:
+                sys.stderr.write('Adam says Waiting for filepath device path to exist\n')
+                time.sleep(0.5)
+
+        # Mount it
+        mount_path = self.get(name).get_filesystem().get_path()
+        sys.stderr.write("Adam says new path = " + mount_path.path + " on " + node.accessIPv4 + '\n')
+        if not mount_path.exists():
+            mount_path.makedirs()
+        command = ['mount', device_path, mount_path.path]
+        check_call(command)
+        sys.stderr.write("Adam says mounted on " + node.accessIPv4 + '\n')
+
+        # def check_for_volume(node_id, name):
+        #     d = self.enumerate()
+        #     d.addCallback(compare_volumes_by_name_node_id, node_id, name)
+        #     return d
+
+        # def compare_volumes_by_name_node_id(volumes, node_id, name):
+        #     """
+        #     Iterate the volumes managed by this service and compare the
+        #     node ID and the ``VolumeName`` to determine if we have found the
+        #     ``Volume`` instance requested by name.
+        #     """
+        #     for volume in volumes:
+        #         if volume.node_id == node_id and volume.name == name:
+        #             return volume
+        #     return deferLater(
+        #         self._reactor, WAIT_FOR_VOLUME_INTERVAL,
+        #         check_for_volume, node_id, name
+        #     )
+
+        # return check_for_volume(self.node_id, name)
 
     def enumerate(self):
         """Get a listing of all volumes managed by this service.
@@ -336,7 +394,6 @@ class VolumeService(Service):
             errbacks on error (specifcally with a ``ValueError`` if the
             volume is not locally owned).
         """
-        from flocker.volume.filesystems.zfs import driver_from_environment
         compute_driver, volume_driver = driver_from_environment()
         from subprocess import check_call
         # unmount volume

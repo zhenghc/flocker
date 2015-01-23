@@ -8,6 +8,7 @@ from __future__ import absolute_import
 
 import os
 import socket
+import sys
 from contextlib import contextmanager
 from uuid import uuid4
 from subprocess import (
@@ -663,61 +664,6 @@ class StoragePool(Service):
         if volume.service.node_id != new_volume.node_id:
             sys.stderr.write('Adam says volume.service.node_id != new_volume.node_id\n')
             return succeed(new_filesystem)
-
-        import sys
-        # Attach openstack block
-        compute_driver, volume_driver = driver_from_environment()
-
-        openstack_volumes = volume_driver.list()
-        for openstack_volume in openstack_volumes:
-            # Should we also check the node_id here?
-            if openstack_volume.name == volume.name.to_bytes():
-                break
-        else:
-            # Will this ever happen? Maybe if flocker-deploy is called twice?
-            raise Exception('Volume is not found. Volume: {}'.format(volume))
-
-        # Wait for volume to detach
-        # We need to know what the current node IP is here, or supply
-        # current node as an attribute of OpenstackStoragePool
-        public_ips = get_public_ips()
-        all_nodes = compute_driver.servers.list()
-        for node in all_nodes:
-            if ipaddr.IPv4Address(node.accessIPv4) in public_ips:
-                break
-        else:
-            raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
-
-        while True:
-            # Do we need this or is the availability check done on the server
-            # side?
-            openstack_volume = volume_driver.get(openstack_volume.id)
-            if openstack_volume.status == u'available':
-                break
-            sys.stderr.write('Adam says Waiting for volume available, IP: {}\n'.format(public_ips))
-            time.sleep(0.5)
-
-        device_path = next_device()
-        # Sometimes this raises:
-        # Exception: 500 Server Error The server has either erred or is incapable of performing the requested operation.
-        openstack_volume.attach_to_instance(instance=node, mountpoint=device_path)
-
-        # Wait for device to appear
-        while True:
-            if FilePath(device_path).exists():
-                break
-            else:
-                sys.stderr.write('Adam says Waiting for filepath device path to exist\n')
-                time.sleep(0.5)
-
-        # Mount it
-        mount_path = new_filesystem.get_path()
-        sys.stderr.write("Adam says new path = " + mount_path.path + " on " + node.accessIPv4 + '\n')
-        if not mount_path.exists():
-            mount_path.makedirs()
-        command = ['mount', device_path, mount_path.path]
-        check_call(command)
-        sys.stderr.write("Adam says mounted on " + node.accessIPv4 + '\n')
 
         return succeed(new_filesystem)
         # d = zfs_command(self._reactor,
