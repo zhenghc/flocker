@@ -674,15 +674,6 @@ class StoragePool(Service):
             raise Exception('Volume is not found. Volume: {}'.format(volume))
 
         # Wait for volume to detach
-        while True:
-            # Do we need this or is the availability check done on the server
-            # side?
-            openstack_volume = volume_driver.get(openstack_volume.id)
-            if openstack_volume.status == u'available':
-                break
-            sys.stderr.write('Adam says Waiting for volume available\n')
-            time.sleep(0.5)
-
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
         public_ips = get_public_ips()
@@ -692,6 +683,15 @@ class StoragePool(Service):
                 break
         else:
             raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
+
+        while True:
+            # Do we need this or is the availability check done on the server
+            # side?
+            openstack_volume = volume_driver.get(openstack_volume.id)
+            if openstack_volume.status == u'available':
+                break
+            sys.stderr.write('Adam says Waiting for volume available, IP: {}\n'.format(public_ips))
+            time.sleep(0.5)
 
         device_path = next_device()
         # Sometimes this raises:
