@@ -353,12 +353,6 @@ class VolumeService(Service):
             # Will this ever happen? Maybe if flocker-deploy is called twice?
             raise Exception('Volume is not attached. Volume: {}'.format(volume))
 
-        # Wait for volume to detach
-        while True:
-            if volume_driver.get(openstack_volume.id).status == u'available':
-                break
-            time.sleep(0.5)
-
         remote_uuid = destination.acquire(volume)
         return volume.change_owner(remote_uuid)
 
