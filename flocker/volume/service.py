@@ -32,10 +32,10 @@ from twisted.internet.defer import fail
 # module... but in this case the usage is temporary and should go away as
 # part of https://clusterhq.atlassian.net/browse/FLOC-64
 # XXX understand StoragePool and see if it can be made less ZFS specific.
-from .filesystems.zfs import StoragePool
+from .filesystems.openstack import StoragePool
 from ._model import VolumeSize, VolumeName
 from ..common.script import ICommandLineScript
-from flocker.volume.filesystems.zfs import driver_from_environment, get_public_ips, next_device
+from flocker.volume.filesystems.openstack import driver_from_environment, get_public_ips, next_device
 
 # Add openstack API key here?
 DEFAULT_CONFIG_PATH = FilePath(b"/etc/flocker/volume.json")
