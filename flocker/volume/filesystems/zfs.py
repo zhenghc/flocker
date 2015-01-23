@@ -7,14 +7,11 @@ ZFS APIs.
 from __future__ import absolute_import
 
 import os
-import socket
-import sys
 from contextlib import contextmanager
 from uuid import uuid4
 from subprocess import (
     CalledProcessError, STDOUT, PIPE, Popen, check_call, check_output
 )
-import time
 
 from characteristic import attributes, with_cmp, with_repr
 
@@ -30,72 +27,12 @@ from twisted.internet.defer import Deferred, succeed
 from twisted.internet.error import ConnectionDone, ProcessTerminated
 from twisted.application.service import Service
 
-from libcloud.compute.providers import get_driver
-from libcloud.compute.types import Provider
-
-# do this until Tom's patch is accepted
-from flocker.provision._libcloud import monkeypatch
-monkeypatch()
-
 from .errors import MaximumSizeTooSmall
 from .interfaces import (
     IFilesystemSnapshots, IStoragePool, IFilesystem,
     FilesystemAlreadyExists)
 
-from .._model import VolumeSize, VolumeName
-
-import pyrax
-
-import netifaces
-import ipaddr
-
-
-def get_public_ips():
-    ips = []
-    for interface in netifaces.interfaces():
-        interface_addresses = netifaces.ifaddresses(interface)
-        ipv4addresses = interface_addresses.get(netifaces.AF_INET, [])
-        for address in ipv4addresses:
-            ip = ipaddr.IPv4Address(address['addr'])
-            if not ip.is_private:
-                ips.append(ip)
-    return ips
-
-
-def driver_from_environment():
-    username = os.environ.get('OPENSTACK_API_USER')
-    api_key = os.environ.get('OPENSTACK_API_KEY')
-
-    ctx = pyrax.create_context(
-        id_type="rackspace", username=username, api_key=api_key)
-    ctx.authenticate()
-    compute = ctx.get_client('compute', 'DFW')
-    volume = ctx.get_client('volume', 'DFW')
-
-    return compute, volume
-
-
-def next_device():
-    """
-    Can't just use the dataset name as the block device name
-    inside the node, nor volume.id nor random_name. You can't
-    even leave it blank; auto is not supported.
-
-     Exception: 400 Bad Request The supplied device path (/dev/3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example) is invalid.
-
-    (Pdb++) driver.attach_volume(node=node, volume=volume)
-    *** Exception: 400 Bad Request The supplied device path (auto) is invalid.
-
-    (Pdb++) driver.attach_volume(node=node, volume=volume, device='/dev/{}'.format(volume.id))
-    *** Exception: 400 Bad Request The supplied device path (/dev/3419c7f5-95ed-490b-9c0a-590992380130) is invalid.
-    """
-    import string
-    prefix = '/dev/xvd'
-    existing = [path for path in FilePath('/dev').children()
-                if path.path.startswith(prefix)
-                and len(path.basename()) == 4]
-    letters = string.ascii_lowercase
-    return prefix + letters[len(existing)]
+from .._model import VolumeSize
 
 
 def random_name():
@@ -561,69 +498,21 @@ class StoragePool(Service):
         return Failure(MaximumSizeTooSmall())
 
     def create(self, volume):
-        # (Pdb++) filesystem
-        # <Filesystem(pool='flocker', dataset='3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example')>
-        # (Pdb++) filesystem.get_path()
-        # FilePath('/flocker/3e074171-5065-466f-9aa5-9aacdf738b40.default.mongodb-volume-example')
-
         filesystem = self.get(volume)
         mount_path = filesystem.get_path().path
-        device_path = next_device()
-
-        compute_driver, volume_driver = driver_from_environment()
-        # Create Openstack block
-        # create_volume(size, name, location=None, snapshot=None)
-        # Figure out how to convert volume.size into a supported Rackspace disk size, in GB.
-        # Hard code it for now.
-        openstack_volume = volume_driver.create(name=volume.name.to_bytes(), size=100)
-        # Attach to this node.
-        # We need to know what the current node IP is here, or supply
-        # current node as an attribute of OpenstackStoragePool
-        public_ips = get_public_ips()
-        all_nodes = compute_driver.servers.list()
-        for node in all_nodes:
-            if ipaddr.IPv4Address(node.accessIPv4) in public_ips:
-                break
-        else:
-            raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
-
-        openstack_volume.attach_to_instance(instance=node, mountpoint=device_path)
-
-        # Wait for the device to appear
-        while True:
-            if FilePath(device_path).exists():
-                break
-            else:
-                time.sleep(0.5)
-
-        # Format with ext4
-        # Don't bother partitioning...I don't think it's necessary these days.
-        command = ['mkfs.ext4', device_path]
-        check_call(command)
-        # Create the mount directory
-        mount_path_filepath = FilePath(mount_path)
-        if not mount_path_filepath.exists():
-            mount_path_filepath.makedirs()
-        # Mount (zfs automounts, I think, but we'll need to do it ourselves.)
-        command = ['mount', device_path, mount_path]
-        check_call(command)
-
-        # Return the filesystem
-        return succeed(filesystem)
-
-        # properties = [b"-o", b"mountpoint=" + mount_path]
-        # if volume.locally_owned():
-        #     properties.extend([b"-o", b"readonly=off"])
-        # if volume.size.maximum_size is not None:
-        #     properties.extend([
-        #         b"-o", u"refquota={0}".format(
-        #             volume.size.maximum_size).encode("ascii")
-        #     ])
-        # d = zfs_command(self._reactor,
-        #                 [b"create"] + properties + [filesystem.name])
-        # d.addErrback(self._check_for_out_of_space)
-        # d.addCallback(lambda _: filesystem)
-        # return d
+        properties = [b"-o", b"mountpoint=" + mount_path]
+        if volume.locally_owned():
+            properties.extend([b"-o", b"readonly=off"])
+        if volume.size.maximum_size is not None:
+            properties.extend([
+                b"-o", u"refquota={0}".format(
+                    volume.size.maximum_size).encode("ascii")
+            ])
+        d = zfs_command(self._reactor,
+                        [b"create"] + properties + [filesystem.name])
+        d.addErrback(self._check_for_out_of_space)
+        d.addCallback(lambda _: filesystem)
+        return d
 
     def set_maximum_size(self, volume):
         filesystem = self.get(volume)
@@ -661,19 +550,18 @@ class StoragePool(Service):
     def change_owner(self, volume, new_volume):
         old_filesystem = self.get(volume)
         new_filesystem = self.get(new_volume)
-        return succeed(new_filesystem)
-        # d = zfs_command(self._reactor,
-        #                 [b"rename", old_filesystem.name, new_filesystem.name])
-        # self._created(d, new_volume)
+        d = zfs_command(self._reactor,
+                        [b"rename", old_filesystem.name, new_filesystem.name])
+        self._created(d, new_volume)
 
-        # def remounted(ignored):
-        #     # Use os.rmdir instead of FilePath.remove since we don't want
-        #     # recursive behavior. If the directory is non-empty, something
-        #     # went wrong (or there is a race) and we don't want to lose data.
-        #     os.rmdir(old_filesystem.get_path().path)
-        # d.addCallback(remounted)
-        # d.addCallback(lambda _: new_filesystem)
-        # return d
+        def remounted(ignored):
+            # Use os.rmdir instead of FilePath.remove since we don't want
+            # recursive behavior. If the directory is non-empty, something
+            # went wrong (or there is a race) and we don't want to lose data.
+            os.rmdir(old_filesystem.get_path().path)
+        d.addCallback(remounted)
+        d.addCallback(lambda _: new_filesystem)
+        return d
 
     def _created(self, result, new_volume):
         """
@@ -721,7 +609,7 @@ class StoragePool(Service):
             self._name, dataset, mount_path, volume.size)
 
     def enumerate(self):
-        listing = _list_filesystems(self._reactor, pool=self)
+        listing = _list_filesystems(self._reactor, self._name)
 
         def listed(filesystems):
             result = set()
@@ -756,76 +644,31 @@ def _list_filesystems(reactor, pool):
         of which are ``tuples`` containing the name and mountpoint of each
         filesystem.
     """
-    # Set up:
-    # User on mycloud.rackspace.com
-    # 2xNode on Rackspace, with Fedora 20, and your ssh key
-    # install flocker in a virtualenv, and docker, and
-    # link that virtualenv to /usr/local/bin:
-    # yum install git docker-io @buildsys-build python python-devel python-virtualenv python-virtualenvwrapper libffi-devel
-    # git clone git@github.com:ClusterHQ/flocker.git
-    # cd flocker/
-    # git checkout devstack-environment-FLOC-1236
-    # source virtualenvwrapper.sh
-    # mkvirtualenv 1236
-    # pip install --editable .[dev]
-    # docker info
-    # systemctl start docker
-    # docker info
-    # deactivate
-    # cd /usr/local/bin/
-    # find ~/.virtualenvs/1236/bin/ -type f -iname 'flocker-*' | xargs -I{} -- ln -s {}
-    # add your SSH keys so you can SSH in:
-    # curl --silent https://github.com/adamtheturtle.keys >> ~/.ssh/authorized_keys
-    # see all logs by:
-    # yum install multitail
-    # ssh -A root@NODE, then multitail -Q 1 '/var/log/flocker/flocker-*'
-    # on the client running flocker-deploy, set OPENSTACK_API_KEY and
-    # OPENSTACK_API_USER
-    # Run on each node (TODO this hung on one of our two nodes):
-    # firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
-    # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
-    compute_driver, volume_driver = driver_from_environment()
-    # TODO this can be slow, can we just run it once?
-    volumes = volume_driver.list()
+    listing = zfs_command(
+        reactor,
+        [b"list",
+         # Descend the hierarchy to a depth of one (ie, list the direct
+         # children of the pool)
+         b"-d", b"1",
+         # Omit the output header
+         b"-H",
+         # Output exact, machine-parseable values (eg 65536 instead of 64K)
+         b"-p",
+         # Output each dataset's name, mountpoint and refquota
+         b"-o", b"name,mountpoint,refquota",
+         # Look at this pool
+         pool])
 
-    def listed():
-        for openstack_volume in volumes:
-            # Use VolumeName.from_bytes here instead??
-            namespace, dataset_id = openstack_volume.name.split('.', 1)
-            volume_name = VolumeName(namespace=namespace, dataset_id=dataset_id)
-            flocker_volume = pool.volume_service.get(volume_name)
-            mountpoint = flocker_volume.get_filesystem().get_path().path
-            refquota = openstack_volume.size * 1024 * 1024
-            # Maybe use volume_name here??
-            yield _DatasetInfo(dataset=openstack_volume.name, mountpoint=mountpoint, refquota=refquota)
+    def listed(output, pool):
+        for line in output.splitlines():
+            name, mountpoint, refquota = line.split(b'\t')
+            name = name[len(pool) + 1:]
+            if name:
+                refquota = int(refquota.decode("ascii"))
+                if refquota == 0:
+                    refquota = None
+                yield _DatasetInfo(
+                    dataset=name, mountpoint=mountpoint, refquota=refquota)
 
-    return succeed(listed())
-
-    # listing = zfs_command(
-    #     reactor,
-    #     [b"list",
-    #      # Descend the hierarchy to a depth of one (ie, list the direct
-    #      # children of the pool)
-    #      b"-d", b"1",
-    #      # Omit the output header
-    #      b"-H",
-    #      # Output exact, machine-parseable values (eg 65536 instead of 64K)
-    #      b"-p",
-    #      # Output each dataset's name, mountpoint and refquota
-    #      b"-o", b"name,mountpoint,refquota",
-    #      # Look at this pool
-    #      pool])
-    #
-    # def listed(output, pool):
-    #     for line in output.splitlines():
-    #         name, mountpoint, refquota = line.split(b'\t')
-    #         name = name[len(pool) + 1:]
-    #         if name:
-    #             refquota = int(refquota.decode("ascii"))
-    #             if refquota == 0:
-    #                 refquota = None
-    #             yield _DatasetInfo(
-    #                 dataset=name, mountpoint=mountpoint, refquota=refquota)
-    #
-    # listing.addCallback(listed, pool)
-    # return listing
+    listing.addCallback(listed, pool)
+    return listing
