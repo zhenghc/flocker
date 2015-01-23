@@ -680,7 +680,7 @@ class StoragePool(Service):
             openstack_volume = volume_driver.get(openstack_volume.id)
             if openstack_volume.status == u'available':
                 break
-            print 'Adam says Waiting for volume available'
+            # print 'Adam says Waiting for volume available'
             time.sleep(0.5)
 
         # We need to know what the current node IP is here, or supply
@@ -708,12 +708,12 @@ class StoragePool(Service):
 
         # Mount it
         mount_path = new_filesystem.get_path()
-        print "Adam says new path = ", mount_path, "on", node.accessIPv4
+        # print "Adam says new path = ", mount_path, "on", node.accessIPv4
         if not mount_path.exists():
             mount_path.makedirs()
         command = ['mount', device_path, mount_path.path]
         check_call(command)
-        print "Adam says mounted on", node.accessIPv4
+        # print "Adam says mounted on", node.accessIPv4
 
         return succeed(new_filesystem)
         # d = zfs_command(self._reactor,
