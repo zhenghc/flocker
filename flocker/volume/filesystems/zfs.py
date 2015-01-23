@@ -52,12 +52,12 @@ import ipaddr
 def get_public_ips():
     ips = []
     for interface in netifaces.interfaces():
-        for interface_addresses in netifaces.ifaddresses(interface):
-            for ipv4addresses in interface_addresses.get(netifaces.AF_INET, []):
-                for address in ipv4addresses:
-                    ip = ipaddr.IPv4Address(address['addr'])
-                    if not ip.is_private:
-                        ips.append(ip)
+        interface_addresses = netifaces.ifaddresses(interface)
+        ipv4addresses = interface_addresses.get(netifaces.AF_INET, [])
+        for address in ipv4addresses:
+            ip = ipaddr.IPv4Address(address['addr'])
+            if not ip.is_private:
+                ips.append(ip)
     return ips
 
 
