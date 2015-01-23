@@ -135,6 +135,8 @@ setup(
         "docker-py == 0.5.0",
         "jsonschema == 2.4.0",
         "klein == 0.2.3",
+        "pyrsistent == 0.7.0",
+        "pyrax == 1.9.3",
         ],
 
     extras_require={
