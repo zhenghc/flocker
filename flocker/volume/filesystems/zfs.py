@@ -581,7 +581,7 @@ class StoragePool(Service):
         public_ips = get_public_ips()
         all_nodes = compute_driver.servers.list()
         for node in all_nodes:
-            if ipaddr.IPv4Address(node.accessIPv4) in public_ips():
+            if ipaddr.IPv4Address(node.accessIPv4) in public_ips:
                 break
         else:
             raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
@@ -678,7 +678,7 @@ class StoragePool(Service):
         public_ips = get_public_ips()
         all_nodes = compute_driver.servers.list()
         for node in all_nodes:
-            if ipaddr.IPv4Address(node.accessIPv4) in public_ips():
+            if ipaddr.IPv4Address(node.accessIPv4) in public_ips:
                 break
         else:
             raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
