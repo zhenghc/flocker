@@ -660,7 +660,7 @@ class StoragePool(Service):
     def change_owner(self, volume, new_volume):
         old_filesystem = self.get(volume)
         new_filesystem = self.get(new_volume)
-
+        import sys
         # Attach openstack block
         compute_driver, volume_driver = driver_from_environment()
 
@@ -680,7 +680,7 @@ class StoragePool(Service):
             openstack_volume = volume_driver.get(openstack_volume.id)
             if openstack_volume.status == u'available':
                 break
-            # print 'Adam says Waiting for volume available'
+            sys.stderr.write('Adam says Waiting for volume available\n')
             time.sleep(0.5)
 
         # We need to know what the current node IP is here, or supply
@@ -703,17 +703,17 @@ class StoragePool(Service):
             if FilePath(device_path).exists():
                 break
             else:
-                print 'Adam says Waiting for filepath device path to exist'
+                sys.stderr.write('Adam says Waiting for filepath device path to exist\n')
                 time.sleep(0.5)
 
         # Mount it
         mount_path = new_filesystem.get_path()
-        # print "Adam says new path = ", mount_path, "on", node.accessIPv4
+        sys.stderr.write("Adam says new path = " + mount_path + " on " + node.accessIPv4 + '\n')
         if not mount_path.exists():
             mount_path.makedirs()
         command = ['mount', device_path, mount_path.path]
         check_call(command)
-        # print "Adam says mounted on", node.accessIPv4
+        sys.stderr.write("Adam says mounted on " + node.accessIPv4 + '\n')
 
         return succeed(new_filesystem)
         # d = zfs_command(self._reactor,
