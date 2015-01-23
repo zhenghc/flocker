@@ -398,7 +398,9 @@ class VolumeService(Service):
         compute_driver, volume_driver = driver_from_environment()
         from subprocess import check_call
         # unmount volume
-        check_call(['umount', volume.get_filesystem().get_path().path])
+        volume_mount_path = volume.get_filesystem().get_path()
+        check_call(['umount', volume_mount_path.path])
+        FilePath.remove(volume_mount_path)
 
         # detach volume
         openstack_volumes = volume_driver.list()
