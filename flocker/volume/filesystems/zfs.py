@@ -706,10 +706,12 @@ class StoragePool(Service):
 
         # Mount it
         mount_path = new_filesystem.get_path()
+        print "Adam says new path = ", mount_path, "on", node.accessIPv4
         if not mount_path.exists():
             mount_path.makedirs()
         command = ['mount', device_path, mount_path.path]
         check_call(command)
+        print "Adam says mounted on", node.accessIPv4
 
         return succeed(new_filesystem)
         # d = zfs_command(self._reactor,
