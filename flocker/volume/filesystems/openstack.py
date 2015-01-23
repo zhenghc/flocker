@@ -45,6 +45,7 @@ def get_public_ips():
 
 
 def driver_from_environment():
+    # Notes on how to get this working are in https://clusterhq.atlassian.net/browse/FLOC-1147
     username = os.environ.get('OPENSTACK_API_USER')
     api_key = os.environ.get('OPENSTACK_API_KEY')
 
@@ -263,36 +264,7 @@ def _list_filesystems(reactor, pool):
         of which are ``tuples`` containing the name and mountpoint of each
         filesystem.
     """
-    # Set up:
-    # User on mycloud.rackspace.com
-    # 2xNode on Rackspace, with Fedora 20, and your ssh key
-    # install flocker in a virtualenv, and docker, and
-    # link that virtualenv to /usr/local/bin:
-    # yum install git docker-io @buildsys-build python python-devel python-virtualenv python-virtualenvwrapper libffi-devel
-    # git clone git@github.com:ClusterHQ/flocker.git
-    # cd flocker/
-    # git checkout devstack-environment-FLOC-1236
-    # source virtualenvwrapper.sh
-    # mkvirtualenv 1236
-    # pip install --editable .[dev]
-    # docker info
-    # systemctl start docker
-    # docker info
-    # deactivate
-    # cd /usr/local/bin/
-    # find ~/.virtualenvs/1236/bin/ -type f -iname 'flocker-*' | xargs -I{} -- ln -s {}
-    # add your SSH keys so you can SSH in:
-    # curl --silent https://github.com/adamtheturtle.keys >> ~/.ssh/authorized_keys
-    # see all logs by:
-    # yum install multitail
-    # ssh -A root@NODE, then multitail -Q 1 '/var/log/flocker/flocker-*'
-    # on the client running flocker-deploy, set OPENSTACK_API_KEY and
-    # OPENSTACK_API_USER
-    # Run on each node (TODO this hung on one of our two nodes):
-    # firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
-    # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
     compute_driver, volume_driver = driver_from_environment()
-    # TODO this can be slow, can we just run it once?
     volumes = volume_driver.list()
 
     def listed():
