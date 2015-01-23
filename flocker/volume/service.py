@@ -11,6 +11,7 @@ import sys
 import json
 import stat
 from uuid import UUID, uuid4
+import time
 
 from zope.interface import Interface, implementer
 
@@ -341,7 +342,7 @@ class VolumeService(Service):
         # unmount volume
         check_call(['umount', volume.get_filesystem().get_path().path])
 
-        # detatch volume
+        # detach volume
         openstack_volumes = volume_driver.list()
         for openstack_volume in openstack_volumes:
             # Should we also check the node_id here?

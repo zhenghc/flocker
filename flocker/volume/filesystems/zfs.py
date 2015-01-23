@@ -52,12 +52,12 @@ import ipaddr
 def get_public_ips():
     ips = []
     for interface in netifaces.interfaces():
-        for interface_addresses in netifaces.ifaddresses(interface):
-            for ipv4addresses in interface_addresses.get(netifaces.AF_INET, []):
-                for address in ipv4addresses:
-                    ip = ipaddr.IPv4Address(address['addr'])
-                    if not ip.is_private:
-                        ips.append(ip)
+        interface_addresses = netifaces.ifaddresses(interface)
+        ipv4addresses = interface_addresses.get(netifaces.AF_INET, [])
+        for address in ipv4addresses:
+            ip = ipaddr.IPv4Address(address['addr'])
+            if not ip.is_private:
+                ips.append(ip)
     return ips
 
 
@@ -581,7 +581,7 @@ class StoragePool(Service):
         public_ips = get_public_ips()
         all_nodes = compute_driver.servers.list()
         for node in all_nodes:
-            if ipaddr.IPv4Address(node.accessIPv4) in public_ips():
+            if ipaddr.IPv4Address(node.accessIPv4) in public_ips:
                 break
         else:
             raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
@@ -673,12 +673,21 @@ class StoragePool(Service):
             # Will this ever happen? Maybe if flocker-deploy is called twice?
             raise Exception('Volume is not found. Volume: {}'.format(volume))
 
+        # Wait for volume to detach
+        while True:
+            # Do we need this or is the availability check done on the server
+            # side?
+            openstack_volume = volume_driver.get(openstack_volume.id)
+            if openstack_volume.status == u'available':
+                break
+            time.sleep(0.5)
+
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
         public_ips = get_public_ips()
         all_nodes = compute_driver.servers.list()
         for node in all_nodes:
-            if ipaddr.IPv4Address(node.accessIPv4) in public_ips():
+            if ipaddr.IPv4Address(node.accessIPv4) in public_ips:
                 break
         else:
             raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))

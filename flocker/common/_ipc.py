@@ -86,7 +86,7 @@ class ProcessNode(object):
             username = os.environ.get('OPENSTACK_API_USER')
             return check_output(
                 self.initial_command_arguments +
-                tuple(map(self._quote, ['/usr/bin/env', 'OPENSTACK_API_KEY=' + api_key, 'OPENSTACK_API_USER=' + username, 'LIBCLOUD_DEBUG=/dev/stderr', 'LIBCLOUD_DEBUG_PRETTY_PRINT_RESPONSE=1'] + remote_command)))
+                tuple(map(self._quote, ['/usr/bin/env', 'OPENSTACK_API_KEY=' + api_key, 'OPENSTACK_API_USER=' + username] + remote_command)))
         except CalledProcessError as e:
             # We should really capture this and stderr better:
             # https://clusterhq.atlassian.net/browse/FLOC-155
