@@ -45,6 +45,21 @@ from .._model import VolumeSize, VolumeName
 
 import pyrax
 
+import netifaces
+import ipaddr
+
+
+def get_public_ips():
+    ips = []
+    for interface in netifaces.interfaces():
+        for interface_addresses in netifaces.ifaddresses(interface):
+            for ipv4addresses in interface_addresses.get(netifaces.AF_INET, []):
+                for address in ipv4addresses:
+                    ip = ipaddr.IPv4Address(address['addr'])
+                    if not ip.is_private:
+                        ips.append(ip)
+    return ips
+
 
 def driver_from_environment():
     username = os.environ.get('OPENSTACK_API_USER')
@@ -563,14 +578,13 @@ class StoragePool(Service):
         # Attach to this node.
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
-
-        current_ip = socket.gethostbyname(socket.gethostname())
+        public_ips = get_public_ips()
         all_nodes = compute_driver.servers.list()
         for node in all_nodes:
-            if current_ip == node.accessIPv4:
+            if ipaddr.IPv4Address(node.accessIPv4) in public_ips():
                 break
         else:
-            raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
+            raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
 
         openstack_volume.attach_to_instance(instance=node, mountpoint=device_path)
 
@@ -661,13 +675,13 @@ class StoragePool(Service):
 
         # We need to know what the current node IP is here, or supply
         # current node as an attribute of OpenstackStoragePool
-        current_ip = socket.gethostbyname(socket.gethostname())
+        public_ips = get_public_ips()
         all_nodes = compute_driver.servers.list()
         for node in all_nodes:
-            if current_ip == node.accessIPv4:
+            if ipaddr.IPv4Address(node.accessIPv4) in public_ips():
                 break
         else:
-            raise Exception('Current node not listed. IP: {}, Nodes: {}'.format(current_ip, all_nodes))
+            raise Exception('Current node not listed. IPs: {}, Nodes: {}'.format(public_ips, all_nodes))
 
         device_path = next_device()
         # Sometimes this raises:
