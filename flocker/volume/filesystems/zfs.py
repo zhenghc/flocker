@@ -705,7 +705,7 @@ class StoragePool(Service):
                 time.sleep(0.5)
 
         # Mount it
-        mount_path = volume.get_filesystem().get_path()
+        mount_path = new_filesystem.get_path()
         if not mount_path.exists():
             mount_path.makedirs()
         command = ['mount', device_path, mount_path.path]
