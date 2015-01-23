@@ -12,7 +12,7 @@ import string
 from subprocess import check_call
 import time
 
-from characteristic import attributes, with_cmp, with_repr
+from characteristic import with_cmp, with_repr
 
 from zope.interface import implementer
 
@@ -92,8 +92,7 @@ def random_name():
 @with_cmp(["pool", "dataset"])
 @with_repr(["pool", "dataset"])
 class Filesystem(object):
-    """A ZFS filesystem.
-
+    """
     For now the goal is simply not to pass bytes around when referring to a
     filesystem.  This will likely grow into a more sophisticiated
     implementation over time.
@@ -145,15 +144,6 @@ def volume_to_dataset(volume):
 @with_repr(["_name"])
 @with_cmp(["_name", "_mount_root"])
 class StoragePool(Service):
-    """
-    A ZFS storage pool.
-
-    Remotely owned filesystems are mounted read-only to prevent changes
-    (divergence which would break ``zfs recv``).  This is done by having the
-    root dataset be ``readonly=on`` - which is inherited by all child datasets.
-    Locally owned datasets have this overridden with an explicit
-    ```readonly=off`` property set on them.
-    """
     logger = Logger()
 
     def __init__(self, reactor, name, mount_root):
@@ -229,53 +219,22 @@ class StoragePool(Service):
             self._name, dataset, mount_path, volume.size)
 
     def enumerate(self):
-        listing = _list_filesystems(self._reactor, pool=self)
+        filesystems = []
+        compute_driver, volume_driver = driver_from_environment()
+        volumes = volume_driver.list()
 
-        def listed(filesystems):
-            result = set()
-            for entry in filesystems:
-                filesystem = Filesystem(
-                    self._name, entry.dataset, FilePath(entry.mountpoint),
-                    VolumeSize(maximum_size=entry.refquota))
-                result.add(filesystem)
-            return result
-
-        return listing.addCallback(listed)
-
-
-@attributes(["dataset", "mountpoint", "refquota"], apply_immutable=True)
-class _DatasetInfo(object):
-    """
-    :ivar bytes dataset: The name of the ZFS dataset to which this information
-        relates.
-    :ivar bytes mountpoint: The value of the dataset's ``mountpoint`` property
-        (where it will be auto-mounted by ZFS).
-    :ivar int refquota: The value of the dataset's ``refquota`` property (the
-        maximum number of bytes the dataset is allowed to have a reference to).
-    """
-
-
-def _list_filesystems(reactor, pool):
-    """Get a listing of all filesystems on a given pool.
-
-    :param pool: A `flocker.volume.filesystems.interface.IStoragePool`
-        provider.
-    :return: A ``Deferred`` that fires with an iterator, the elements
-        of which are ``tuples`` containing the name and mountpoint of each
-        filesystem.
-    """
-    compute_driver, volume_driver = driver_from_environment()
-    volumes = volume_driver.list()
-
-    def listed():
         for openstack_volume in volumes:
             # Use VolumeName.from_bytes here instead??
             namespace, dataset_id = openstack_volume.name.split('.', 1)
             volume_name = VolumeName(namespace=namespace, dataset_id=dataset_id)
-            flocker_volume = pool.volume_service.get(volume_name)
-            mountpoint = flocker_volume.get_filesystem().get_path().path
+            flocker_volume = self.volume_service.get(volume_name)
+            mountpoint = flocker_volume.get_filesystem().get_path()
             refquota = openstack_volume.size * 1024 * 1024
             # Maybe use volume_name here??
-            yield _DatasetInfo(dataset=openstack_volume.name, mountpoint=mountpoint, refquota=refquota)
+            filesystems.append(
+                Filesystem(
+                    self._name, openstack_volume.name, mountpoint,
+                    VolumeSize(maximum_size=refquota))
+            )
 
-    return succeed(listed())
+        return succeed(filesystems)
