@@ -180,6 +180,8 @@ def _clean_node(test_case, node):
     # A tool or flocker-deploy option to purge the state of a node does
     # not yet exist. See https://clusterhq.atlassian.net/browse/FLOC-682
     # We need something more generic here...for openstack etc.
+    # for openstack we need to unmount everything, detatch, delete all volumes:
+    # find /flocker/  -mindepth 1 -maxdepth 1 -type d  | xargs -n1 umount
     # _run_SSH(22, 'root', node, [b"zfs"] + [b"destroy"] + [b"-r"] +
     #          [b"flocker"], None)
 
