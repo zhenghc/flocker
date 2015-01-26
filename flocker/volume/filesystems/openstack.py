@@ -128,6 +128,8 @@ def volume_to_dataset(volume):
     :param flocker.volume.service.Volume volume: The volume.
 
     :return: Dataset name as ``bytes``.
+
+    # This is the same as in zfs.py so can maybe be shared logic.
     """
     return b"%s.%s" % (volume.node_id.encode("ascii"),
                        volume.name.to_bytes())
