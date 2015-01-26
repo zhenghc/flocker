@@ -1,0 +1,38 @@
+* Configure API key
+  * Where?
+  * In each Node volumes.json?
+  * That doesn't really make sense because all the Nodes must be part of the same OpenStack cluster and have access to the same OpenStack block devices.
+
+* List available volumes
+  * Each node can do this its self, but that'll cause duplicate API calls.
+  * OR the client (flocker-deploy) could make direct OpenStack API calls instead.
+  * Supply the found list of volumes to each node as
+
+* Flocker Change State
+  * New Application - creates necessary block and attaches it to the node.
+  * Moved Application
+    * Existing node - stops application and detaches block
+    * New node - waits until the block is unattached and attaches it, then starts the Application.
+
+* Limits of Cloud Block Storage
+
+  http://www.rackspace.com/knowledge_center/article/cloud-block-storage-overview#limits-of-cbs
+
+  - 100 GB to 1 TB / Volume
+  - 14 Volumes max / Server - Operating system (OS) dependent - 50 Volumes max
+    / region OR 10 TB max/ region (whichever is first) - This is the default
+    for all new customers. Customers can request limit increases. Please
+    contact Rackspace Support, your Account Manager, or your Service Delivery
+    Manager for more information.
+
+
+* Add meta data for openstack volume.
+
+  Or choose a human readable name for the Openstack volume.
+
+* Duplicate API calls
+
+  Could we only make the calls from  flocker deploy
+  - To avoid duplication
+  - To avoid redundant authentication
+  - To avoid having to send cloud credentials to each node.
