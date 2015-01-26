@@ -52,7 +52,12 @@ Discussion
 ----------
 
 * Where and how to configure Cloud credentials
-  * In each Node volumes.json? That doesn't really make sense because all the Nodes must be part of the same OpenStack cluster and have access to the same OpenStack block devices.
+  * On each Node, in volumes.json?
+    That doesn't really make sense because all the Nodes must be part of the same OpenStack cluster and have access to the same OpenStack block devices.
+  * Individual ``flocker-deploy`` users supply their own credentials?
+    But no audit trail / log of who made changes anyway, so seems pointless.
+  * A cluster wide set credentials, for the first version anyway.
+    Allows the convergence agent to make all necessary changes on all nodes.
 
 * List available volumes
   * Each node can do this its self, but that'll cause duplicate API calls.
