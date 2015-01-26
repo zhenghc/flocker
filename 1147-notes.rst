@@ -48,10 +48,11 @@ Limits of Cloud Block Storage
 * Different cloud providers have different limits.
 * For example, rackspace limits volume sizes and maximum numbers of volumes per server.
 
-* Configure API key
-  * Where?
-  * In each Node volumes.json?
-  * That doesn't really make sense because all the Nodes must be part of the same OpenStack cluster and have access to the same OpenStack block devices.
+Discussion
+----------
+
+* Where and how to configure Cloud credentials
+  * In each Node volumes.json? That doesn't really make sense because all the Nodes must be part of the same OpenStack cluster and have access to the same OpenStack block devices.
 
 * List available volumes
   * Each node can do this its self, but that'll cause duplicate API calls.
