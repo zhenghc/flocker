@@ -195,11 +195,6 @@ class DeployScript(object):
         """
         Connect to all nodes and run ``flocker-reportstate``.
 
-        XXX: This will currently include information about the volumes
-        available on each node, but that doesn't make sense for
-        Openstack block stores, which are not tied to any particular
-        node.
-
         :param Deployment deployment: The requested already parsed
             configuration.
 

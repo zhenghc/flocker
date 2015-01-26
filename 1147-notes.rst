@@ -59,6 +59,22 @@ Discussion
   * A cluster wide set credentials, for the first version anyway.
     Allows the convergence agent to make all necessary changes on all nodes.
 
+* Slow API calls
+  * API calls to attach and detach block devices are not synchronous.
+  * The API call returns and you then have to wait (often minutes) before the block appears or disappears inside the node OS.
+  * Investigate the cause of the delay.
+  * Possible causes:
+    * Rackspace moving data behind the scenes.
+      Would explain slow re-attachment, but not slow detachment.
+    * Slow release and detection of devices by the node operating system.
+      Investigate what sort of device is being emulated and whether other users report the same delays.
+    * We also noted that the block device could not be detached without first unmounting it.
+      Which suggests that Openstack has access to the device usage inside the node OS.
+
+* Cluster Configuration
+  * ``flocker-reportstate`` is currently run on each node causing each node to issue the same (slow) Openstack API calls.
+    But Openstack block stores are not tied to any particular node so the volume information, in this case, could be retrieved centrally by ``flocker-deploy``.
+
 * List available volumes
   * Each node can do this its self, but that'll cause duplicate API calls.
   * OR the client (flocker-deploy) could make direct OpenStack API calls instead.
