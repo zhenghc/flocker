@@ -91,6 +91,11 @@ Discussion
     contact Rackspace Support, your Account Manager, or your Service Delivery
     Manager for more information.
 
+* Resizing blocks
+  * Appears to be supported by Rackspace.
+  * Need to think about whether the filesystem can be resized while mounted.
+  * And if not, to modify state changes to include stopping applications, and unmounting before resizing.
+  * Shrinking is often not possible but growing a filesystem is usually possible.
 
 * Add meta data for openstack volume.
 
