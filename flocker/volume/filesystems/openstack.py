@@ -114,16 +114,6 @@ class Filesystem(object):
         self.dataset = dataset
         self._mountpoint = mountpoint
         self.size = size
-        if reactor is None:
-            from twisted.internet import reactor
-        self._reactor = reactor
-
-    @property
-    def name(self):
-        """The filesystem's full name, e.g. ``b"hpool/myfs"``."""
-        if self.dataset is None:
-            return self.pool
-        return b"%s/%s" % (self.pool, self.dataset)
 
     def get_path(self):
         return self._mountpoint
