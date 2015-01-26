@@ -96,6 +96,9 @@ class Filesystem(object):
     For now the goal is simply not to pass bytes around when referring to a
     filesystem.  This will likely grow into a more sophisticiated
     implementation over time.
+
+    # This is a cut down version of zfs.py's Filesystem class.
+      Some logic should be shared, perhaps in flocker.volume._model
     """
     def __init__(self, pool, dataset, mountpoint=None, size=None,
                  reactor=None):
