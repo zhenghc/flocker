@@ -37,10 +37,8 @@ from ._model import VolumeSize, VolumeName
 from ..common.script import ICommandLineScript
 from flocker.volume.filesystems.openstack import driver_from_environment, get_public_ips, next_device
 
-# Add openstack API key here?
 DEFAULT_CONFIG_PATH = FilePath(b"/etc/flocker/volume.json")
 FLOCKER_MOUNTPOINT = FilePath(b"/flocker")
-# This is ZFS specific. Rename?
 FLOCKER_POOL = b"flocker"
 
 WAIT_FOR_VOLUME_INTERVAL = 0.1
@@ -67,8 +65,6 @@ class VolumeService(Service):
         :param reactor: A ``twisted.internet.interface.IReactorTime`` provider.
         """
         self._config_path = config_path
-        # Remove this? There won't be a ZFS pool.
-        # Or perhaps implement an OpenStackStoragePool. Not sure it that makes sense.
         self.pool = pool
         self._reactor = reactor
 
@@ -79,8 +75,6 @@ class VolumeService(Service):
             if not parent.exists():
                 parent.makedirs()
             if not self._config_path.exists():
-                # It wouldn't make sense to add a "default" API key,
-                # but perhaps we could add the key here?
                 uuid = unicode(uuid4())
                 self._config_path.setContent(json.dumps({u"uuid": uuid,
                                                          u"version": 1}))
@@ -88,7 +82,6 @@ class VolumeService(Service):
             raise CreateConfigurationError(e.args[1])
         config = json.loads(self._config_path.getContent())
         self.node_id = config[u"uuid"]
-        # Remove this? See above.
         self.pool.startService()
 
     def create(self, volume):
@@ -183,8 +176,6 @@ class VolumeService(Service):
 
         Polls the storage pool for the specified volume to appear.
 
-        XXX: Poll Openstack  API until block is unattached.
-
         :param VolumeName name: The name of the volume.
 
         :return: A ``Deferred`` that fires with a :class:`Volume`.
@@ -214,8 +205,6 @@ class VolumeService(Service):
             time.sleep(0.5)
 
         device_path = next_device()
-        # Sometimes this raises:
-        # Exception: 500 Server Error The server has either erred or is incapable of performing the requested operation.
         openstack_volume.attach_to_instance(instance=node, mountpoint=device_path)
 
         # Wait for device to appear

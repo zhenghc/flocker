@@ -147,7 +147,6 @@ class ChangeStateScript(object):
         self._docker_client = docker_client
 
     def main(self, reactor, options, volume_service):
-        # This will be an VolumeService with an OpenStackStoragePool...
         deployer = Deployer(volume_service, self._docker_client)
         return deployer.change_node_state(
             desired_state=options['deployment'],

@@ -591,8 +591,6 @@ class Deployer(object):
                                           desired_state)
 
             # if volumes.resizing:
-            #     # Can Openstack Volumes be resized? And if so, we
-            #     # probably don't need to support that in this spike.
             #     phases.append(InParallel(changes=[
             #         ResizeVolume(volume=volume)
             #         for volume in volumes.resizing]))
@@ -602,7 +600,6 @@ class Deployer(object):
             # incremental push. This should significantly reduces the
             # application downtime caused by the time it takes to copy
             # data.
-            # This can probably be ommitted for Openstack blocks...
             # if volumes.going:
             #     phases.append(InParallel(changes=[
             #         PushVolume(volume=handoff.volume,
@@ -612,8 +609,8 @@ class Deployer(object):
             if stop_containers:
                 phases.append(InParallel(changes=stop_containers))
             if volumes.going:
-                # Once the Application's stopped, the block can be
-                # unmounted and detached in the hand off.
+                # Unmount and detach the Openstack volume after stopping the
+                # application.
                 phases.append(InParallel(changes=[
                     HandoffVolume(volume=handoff.volume,
                                   hostname=handoff.hostname)
@@ -623,9 +620,8 @@ class Deployer(object):
             # have been received
             if volumes.coming:
                 phases.append(InParallel(changes=[
-                    # WaitForVolume might just be a case of polling
-                    # the API until the block is reported to be
-                    # unattached?
+                    # Attach, wait for device to appear and then mount the
+                    # Openstack volume before starting the application.
                     WaitForVolume(volume=volume)
                     for volume in volumes.coming]))
                 # phases.append(InParallel(changes=[
@@ -658,10 +654,6 @@ class Deployer(object):
 
         :return: ``Deferred`` that fires when the necessary changes are done.
         """
-        # This'll have to return state changes that carry out
-        # OpenStack block operations....but the state change instances
-        # themselves may be the same, just using a different storage
-        # pool....let's see...
         d = self.calculate_necessary_state_changes(
             desired_state=desired_state,
             current_cluster_state=current_cluster_state,
