@@ -64,12 +64,6 @@ Discussion
   * OR the client (flocker-deploy) could make direct OpenStack API calls instead.
   * Supply the found list of volumes to each node as
 
-* Flocker Change State
-  * New Application - creates necessary block and attaches it to the node.
-  * Moved Application
-    * Existing node - stops application and detaches block
-    * New node - waits until the block is unattached and attaches it, then starts the Application.
-
 * Limits of Cloud Block Storage
 
   http://www.rackspace.com/knowledge_center/article/cloud-block-storage-overview#limits-of-cbs
