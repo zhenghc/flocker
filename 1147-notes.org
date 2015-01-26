@@ -1,3 +1,53 @@
+What is OpenStack?
+------------------
+* Set of projects which people usually use to deploy infrastructure as a service solutions.
+  For example, it is a back end for Rackspace.
+* Supporting openstack's Cinder storage would allow us to support some infrastructure without ZFS.
+* This means that you're dealing with disks, instead of the filesystem on top of those disks.
+
+How to interact with it?
+------------------------
+* We made a start on getting a local environment running with Openstack on Vagrant
+* We settled on a more realistic, and easier to get started case of Rackspace nodes
+* This meant that we could use apache-libcloud to interact with it
+  * libcloud is a library for interacting with > 30 cloud providers so we hoped we could get a lot of benefit with hopefully not too much work
+  * However, our initial attempts showed up some libcloud problems, including particularly bad error reporting so we gave up
+* We switched to pyrax, a Rackspace API which they say "should work with most OpenStack-based cloud deployments" (though we haven't tried)
+
+What did we do?
+---------------
+* Wanted the core feature of flocker to work - migrating data from one node to another to work
+* Use the acceptance test for this - does what the docs do, and for those who don't know that means:
+  * adding some data to Mongo DB on one node,
+  * moving mongo DB to another node,
+  * checking that the data is still available
+* The summary of how we managed this was, when you want to move an application with data:
+  * stop the container
+  * unmount the device
+  * detatch the block device
+  * attach it to another node
+  * mount it
+  * start the container
+
+However, integrating this with Flocker has some challenges, mainly because the code expects a filesystem, and deals with ZFS as one of some possible filesystems.
+But block storage works differently - there is no two-phase push for example.
+This means that we might have to think about how to avoid downtime during the slow phases of attaching and detaching block devices.
+We also had to think about credentials, as cloud providers such as Rackspace require them.
+
+What is necessary
+------------------
+* We used environment variables for credentials, how should users pass credentials in?
+* We ditched ZFS for this, but our code will have to be structured to allow both ZFS and OpenStack.
+  What will the user's UI be for choosing which back end they want?
+* Hopefully we can switch to libcloud and fix the issues
+* How about sending a volume from a node with ZFS to an OpenStack node? Impossible?
+
+Limits of Cloud Block Storage
+-----------------------------
+
+* Different cloud providers have different limits.
+* For example, rackspace limits volume sizes and maximum numbers of volumes per server.
+
 * Configure API key
   * Where?
   * In each Node volumes.json?
