@@ -197,8 +197,8 @@ class VolumeService(Service):
                 break
 
         while True:
-            # Do we need this or is the availability check done on the server
-            # side?
+            # Attaching and detaching volumes may be so slow that it causes
+            # downtime when migrating applications between nodes.
             openstack_volume = volume_driver.get(openstack_volume.id)
             if openstack_volume.status == u'available':
                 break
