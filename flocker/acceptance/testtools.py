@@ -315,8 +315,14 @@ def assert_expected_deployment(test_case, expected_deployment):
         ``Application`` instances expected on the nodes with those IP
         addresses.
     """
+    api_key = environ.get('OPENSTACK_API_KEY')
+    username = environ.get('OPENSTACK_API_USER')
     for node, expected in expected_deployment.items():
-        yaml = _run_SSH(22, 'root', node, [b"flocker-reportstate"], None)
+        yaml = _run_SSH(22, 'root', node, [
+                    '/usr/bin/env',
+                    'OPENSTACK_API_KEY=' + api_key,
+                    'OPENSTACK_API_USER=' + username,
+                    b"flocker-reportstate"], None)
         state = safe_load(yaml)
         test_case.assertSetEqual(
             set(FlockerConfiguration(state).applications().values()),
