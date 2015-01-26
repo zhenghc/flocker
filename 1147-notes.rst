@@ -97,6 +97,10 @@ Discussion
   * And if not, to modify state changes to include stopping applications, and unmounting before resizing.
   * Shrinking is often not possible but growing a filesystem is usually possible.
 
+* Pushing volumes
+  * We don't use this state change in this Openstack spike.
+    But it might be a useful place to copy data between cloud regions or between different cloud providers.
+
 * Add meta data for openstack volume.
 
   Or choose a human readable name for the Openstack volume.
