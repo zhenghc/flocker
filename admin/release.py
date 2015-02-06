@@ -51,6 +51,8 @@ def make_rpm_version(flocker_version):
     else:
         # Neither of the expected suffixes was found, the tag can be used as
         # the RPM version
+        if tag.startswith('+doc'):
+            tag = tag[1:]
         version = tag
         release = ['1']
 
