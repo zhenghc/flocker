@@ -103,7 +103,7 @@ class IaaSLikeMemoryDeployer(object):
         basic_changes = self._deployer.calculate_necessary_state_changes(
             local_state, configuration, cluster_state,
         )
-        return InParallel([basic_changes] + iaas_changes)
+        return InParallel(changes=[basic_changes] + iaas_changes)
 
     def _calculate_handoff_completion(self, cluster_state):
         # We can complete a handoff when no one else in the cluster
