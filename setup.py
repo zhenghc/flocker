@@ -82,6 +82,7 @@ setup(
             'flocker-changestate = flocker.node.script:flocker_changestate_main',
             'flocker-reportstate = flocker.node.script:flocker_reportstate_main',
             'flocker-zfs-agent = flocker.node.script:flocker_zfs_agent_main',
+            'flocker-iaas-memory-agent = flocker.node.script:flocker_iaas_memory_agent_main',
             'flocker-control = flocker.control.script:flocker_control_main',
         ],
     },

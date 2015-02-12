@@ -265,3 +265,31 @@ def flocker_zfs_agent_main():
         script=VolumeScript(ZFSAgentScript()),
         options=ZFSAgentOptions()
     ).main()
+
+
+def flocker_iaas_memory_agent_main():
+    return FlockerScriptRunner(
+        script=AgentScript(deployer_factory=IaaSLikeMemoryDeployer),
+        options=AgentOptions()
+    ).main()
+
+class AgentOptions(Options):
+    optParameters = [
+        ("hostname", "H", None, "This node's hostname."),
+        ("destination-host", None, None, "Control service address."),
+        ("destination-port", None, None, "Control service address.", int),
+    ]
+
+from ..common.script import ICommandLineScript
+from characteristic import Attribute, attributes
+from .agents.memory import IaaSLikeMemoryDeployer
+@implementer(ICommandLineScript)
+@attributes([Attribute("deployer_factory")])
+class AgentScript(object):
+    def main(self, reactor, options):
+        deployer = self.deployer_factory(hostname=options["hostname"])
+        loop = AgentLoopService(
+            reactor=reactor, deployer=deployer,
+            host=options["destination-host"], port=options["destination-port"],
+        )
+        return main_for_service(reactor, loop)
