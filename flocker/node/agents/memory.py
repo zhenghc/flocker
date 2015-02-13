@@ -103,7 +103,7 @@ class IaaSLikeMemoryDeployer(object):
         )
 
     def discover_local_state(self):
-        return succeed(self._local_state)
+        return deferLater(reactor, 0, lambda state=self._local_state: state)
 
     def calculate_necessary_state_changes(self, local_state, configuration,
                                           cluster_state):
