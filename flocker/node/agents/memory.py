@@ -2,7 +2,9 @@ from zope.interface import implementer
 
 from characteristic import Attribute, attributes
 
-from twisted.internet.defer import Deferred, succeed
+from twisted.internet.defer import Deferred, maybeDeferred
+from twisted.internet.task import deferLater
+from twisted.internet import reactor
 
 from .._deploy import (
     IDeployer,
@@ -23,8 +25,11 @@ class _BoundStateChanger(object):
     def __init__(self, method):
         self.method = method
 
+    def __call__(self, *args, **kwargs):
+        return _BoundStateChanger(lambda: self.method(*args, **kwargs))
+
     def run(self, deployer):
-        return self.method()
+        return maybeDeferred(self.method)
 
 
 @attributes([
