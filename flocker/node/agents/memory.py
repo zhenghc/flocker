@@ -43,6 +43,9 @@ class IaaSLikeDeployer(object):
     def calculate_necessary_state_changes(self, local_state,
                                           desired_configuration,
                                           current_cluster_state):
+
+        current_cluster_state = current_cluster_state.update_node(
+            local_state.to_node())
         dataset_changes = find_dataset_changes(
             self.hostname, current_cluster_state, desired_configuration)
 
