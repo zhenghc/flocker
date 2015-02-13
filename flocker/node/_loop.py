@@ -266,7 +266,7 @@ class ConvergenceLoop(object):
                 local_state, self.configuration, self.cluster_state)
             return action.run(self.deployer)
         d.addCallback(got_local_state)
-        d.addCallback(lambda _: self.fsm.receive(
+        d.addBoth(lambda _: self.fsm.receive(
             ConvergenceLoopInputs.ITERATION_DONE))
         # This needs error handling:
         # https://clusterhq.atlassian.net/browse/FLOC-1357
