@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# This requires Vagrant 1.6.2 or newer (earlier versions can't reliably
+# configure the Fedora 20 network stack).
+Vagrant.require_version ">= 1.6.2"
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
+
+FLOCKER_VERSION = "0.3.2+doc1-1.1675.gdb553cf.dirty"
+FLOCKER_PYTHON = "clusterhq-python-flocker-#{FLOCKER_VERSION}.x86_64.rpm"
+FLOCKER_NODE = "clusterhq-flocker-node-#{FLOCKER_VERSION}.noarch.rpm"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "clusterhq/flocker-tutorial"
+  config.vm.box_version = "= 0.3.2.doc1.1601.g0b50ed0"
+
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
+  end
+
+  config.vm.define "node1" do |node1|
+    node1.vm.network :private_network, :ip => "172.16.255.220"
+    node1.vm.hostname = "node1"
+    node1.vm.provision "file", source: FLOCKER_PYTHON, destination: FLOCKER_PYTHON
+    node1.vm.provision "file", source: FLOCKER_NODE, destination: FLOCKER_NODE
+    node1.vm.provision "shell",
+      inline: "rpm -e clusterhq-flocker-node clusterhq-python-flocker; rpm -i #{FLOCKER_PYTHON} #{FLOCKER_NODE}"
+
+    node1.vm.provision "shell",
+      inline: "flocker-control --port 80 > control.log &"
+    node1.vm.provision "shell",
+      inline: "flocker-iaas-memory-agent 172.16.255.220 172.16.255.220 > agent.log &"
+    
+  end
+
+  config.vm.define "node2" do |node2|
+    node2.vm.network :private_network, :ip => "172.16.255.221"
+    node2.vm.hostname = "node1"
+    node2.vm.provision "file", source: FLOCKER_PYTHON, destination: FLOCKER_PYTHON
+    node2.vm.provision "file", source: FLOCKER_NODE, destination: FLOCKER_NODE
+    node2.vm.provision "shell",
+      inline: "rpm -e clusterhq-flocker-node clusterhq-python-flocker; rpm -i #{FLOCKER_PYTHON} #{FLOCKER_NODE}"
+    node2.vm.provision "shell",
+      inline: "flocker-iaas-memory-agent 172.16.255.221 172.16.255.220 > agent.log &"
+  end
+end

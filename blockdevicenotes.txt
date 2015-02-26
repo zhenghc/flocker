@@ -1,0 +1,64 @@
+  * abstract in-memory-only deployer type
+    * calculate generic change (shared across all block device backend implementations)
+      * create filesystem on block device (eg mkfs.ext4)
+      * resize existing filesystem
+      * mount
+      * unmount
+    * calculate backend-specific changes (needs to be implemented for each block device backend)
+      * create
+      * destroy
+      * grow
+      * shrink
+        * all nodes might race for these two operations
+	* start with an attach (XXX can you resize an attached
+          device?) to force the rest of the process to happen on only
+          one node
+        * this goes away when we switch to single-instance-openstack model
+	* this problem goes away 
+      * move (detach/attach)
+    * discover state
+      * list all existing block-device volumes
+        * -> allows determination of whether a particular dataset needs to be created or not
+      * list attached/mounted volumes
+        * for reporting to the control service, two states: has primary manifestation or does not
+        * for local convergence logic:
+          * detached / attaching / attached / detaching
+          * mounted / unmounted
+            * mount could fail for corrupt filesystems
+            * mount could succeed in read-only mode for corrupt filesystems
+            * need to reflect this in state reported to control service
+          * must be attached to be mounted
+          * must be unmounted to be detached
+          * -> (detached & unmounted, attached & unmounted, attached & mounted)
+          * mid-filesystem creation
+            * drop a marker somewhere that creation has started
+            * clean it up when creation is done
+            * -> gives robustness against crash mid-creation
+          * mid-filesystem resize (all user data lost, so sad: maybe take a snapshot before doing this)
+            * similar stuff for crash mid-resize (existence of snapshot itself might indicate this?)
+
+  * openstack implementation of change operations
+    * create
+    * destroy
+      * many nodes will issue destroy, all but one will fail, that's okay
+      * this goes away when we switch to single-instance-openstack model
+    * resize
+    * attach
+    * detach
+    * list
+
+  * strategy for implementing single-instance-openstack model
+    * insert logic into convergence loop to check for availability of
+      openstack keys
+    * if found, proceed with openstack api call
+    * if not found, throw hands up in air about the change and hope
+      someone else does the work
+    * give a single node the keys
+    * single node will perform create/attach/detach/resize/destroy
+      operations as necessary
+    * other nodes will notice consequences of those operations and be
+      able to proceed starting from the next step
+    * problem: changes convergence logic for all backend API
+      operations so that node with keys must perform all of them
+      instead of only those relevant to the node the convergence logic
+      is running on
