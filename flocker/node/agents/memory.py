@@ -32,54 +32,53 @@ class _BoundStateChanger(object):
         return maybeDeferred(self.method)
 
 
-@attributes([
-    Attribute("hostname"),
-    Attribute("resize_dataset"),
-    Attribute("handoff_dataset"),
-    Attribute("wait_for_dataset"),
-    Attribute("create_dataset"),
-])
-class IaaSLikeDeployer(object):
-    def calculate_necessary_state_changes(self, local_state,
-                                          desired_configuration,
-                                          current_cluster_state):
+def _calculate_necessary_state_changes(hostname,
+                                       local_state,
+                                       desired_configuration,
+                                       current_cluster_state,
+                                       backend):
+    """
+    Calculate dataset state changes necessary to go from current to
+    desired state assuming an IaaS block device-like dataset backend
+    implementation (such as EBS or OpenStack Cinder).
+    """
+    current_cluster_state = current_cluster_state.update_node(
+        local_state.to_node())
+    dataset_changes = find_dataset_changes(
+        self.hostname, current_cluster_state, desired_configuration)
 
-        current_cluster_state = current_cluster_state.update_node(
-            local_state.to_node())
-        dataset_changes = find_dataset_changes(
-            self.hostname, current_cluster_state, desired_configuration)
+    # TODO Respect leases
 
-        # TODO Respect leases
+    phases = []
 
-        phases = []
+    if dataset_changes.resizing:
+        phases.append(InParallel(changes=[
+            backend.resize_dataset(dataset=dataset)
+            for dataset in dataset_changes.resizing]))
 
-        if dataset_changes.resizing:
-            phases.append(InParallel(changes=[
-                self.resize_dataset(dataset=dataset)
-                for dataset in dataset_changes.resizing]))
+    if dataset_changes.going:
+        phases.append(InParallel(changes=[
+            backend.handoff_dataset(dataset=handoff.dataset,
+                                 hostname=handoff.hostname)
+            for handoff in dataset_changes.going]))
 
-        if dataset_changes.going:
-            phases.append(InParallel(changes=[
-                self.handoff_dataset(dataset=handoff.dataset,
-                                     hostname=handoff.hostname)
-                for handoff in dataset_changes.going]))
+    if dataset_changes.coming:
+        phases.append(InParallel(changes=[
+            backend.wait_for_dataset(dataset=dataset)
+            for dataset in dataset_changes.coming]))
+        phases.append(InParallel(changes=[
+            backend.resize_dataset(dataset=dataset)
+            for dataset in dataset_changes.coming]))
 
-        if dataset_changes.coming:
-            phases.append(InParallel(changes=[
-                self.wait_for_dataset(dataset=dataset)
-                for dataset in dataset_changes.coming]))
-            phases.append(InParallel(changes=[
-                self.resize_dataset(dataset=dataset)
-                for dataset in dataset_changes.coming]))
+    if dataset_changes.creating:
+        # TODO Could be in parallel with the rest
+        phases.append(InParallel(changes=[
+            backend.create_dataset(dataset=dataset)
+            for dataset in dataset_changes.creating]))
 
-        if dataset_changes.creating:
-            # TODO Could be in parallel with the rest
-            phases.append(InParallel(changes=[
-                self.create_dataset(dataset=dataset)
-                for dataset in dataset_changes.creating]))
+    # deletion
 
-        return Sequentially(changes=phases)
-
+    return Sequentially(changes=phases)
 
 @implementer(IDeployer)
 @attributes([
@@ -93,13 +92,6 @@ class IaaSLikeMemoryDeployer(object):
             self._local_state = NodeState(
                 hostname=self.hostname, running=[], not_running=[]
             )
-        self._deployer = IaaSLikeDeployer(
-            hostname=self.hostname,
-            resize_dataset=self._resize_dataset,
-            handoff_dataset=self._handoff_dataset,
-            wait_for_dataset=self._wait_for_dataset,
-            create_dataset=self._create_dataset,
-        )
 
     def discover_local_state(self):
         return deferLater(reactor, 1, lambda state=self._local_state: state)
@@ -107,8 +99,8 @@ class IaaSLikeMemoryDeployer(object):
     def calculate_necessary_state_changes(self, local_state, configuration,
                                           cluster_state):
         self._cluster_state = cluster_state
-        return self._deployer.calculate_necessary_state_changes(
-            local_state, configuration, cluster_state
+        return _calculate_necessary_state_changes(
+            local_state, configuration, cluster_state, self
         )
 
     def _get_manifestation(self, dataset_id):
