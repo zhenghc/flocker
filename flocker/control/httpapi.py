@@ -245,27 +245,26 @@ class DatasetAPIUserV1(object):
         # Get the current configuration.
         deployment = self.persistence_service.get()
 
-        # Find all manifestations of requested dataset.
-        manifestations_and_nodes = list(
-            other_manifestations_from_deployment(deployment, dataset_id)
-        )
-
-        # There are no manifestations containing the requested dataset.
-        if not manifestations_and_nodes:
-            raise DATASET_NOT_FOUND
-
         # Lookup the node that has a primary Manifestation (if any)
-        primary_manifestation, origin_node = [
-            (manifestation, node)
-            for manifestation, node in manifestations_and_nodes
-            if manifestation.primary
-        ][0]
-
-        if origin_node.hostname == primary:
-            # Maybe return early here rather than bother the
-            # persistence_service.  raise Exception('New primary is the same as
-            # existing primary')
-            pass
+        manifestations_and_nodes = other_manifestations_from_deployment(
+            deployment, dataset_id)
+        index = 0
+        for index, (manifestation, node) in enumerate(
+                manifestations_and_nodes):
+            if manifestation.primary:
+                primary_manifestation, origin_node = manifestation, node
+                break
+        else:
+            # There are no manifestations containing the requested dataset.
+            if index == 0:
+                raise DATASET_NOT_FOUND
+            else:
+                # There were no primary manifestations
+                raise IndexError(
+                    'No primary manifestations for dataset: {!r}. See '
+                    'https://clusterhq.atlassian.net/browse/FLOC-1403'.format(
+                        dataset_id)
+                )
 
         # Now construct a new_deployment where the primary manifestation of the
         # dataset is on the requested primary node.
@@ -293,7 +292,7 @@ class DatasetAPIUserV1(object):
             )
         else:
             # There should only be one node with the requested primary
-            # hostname. ``IndexError`` here if that's not the case.
+            # hostname. ``ValueError`` here if that's not the case.
             (target_node,) = primary_nodes
             new_target_node = Node(
                 hostname=target_node.hostname,

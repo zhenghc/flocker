@@ -1,6 +1,7 @@
 admin
 app
 apps
+backend
 behaviour
 Btrfs
 bugfix
@@ -67,3 +68,4 @@ workflow
 yml
 yourlaptop
 ZFS
+Zulip

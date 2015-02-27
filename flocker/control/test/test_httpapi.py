@@ -109,8 +109,20 @@ class APITestsMixin(object):
         requesting = self.assertResponseCode(
             method, path, request_body, expected_code)
         requesting.addCallback(readBody)
-        requesting.addCallback(lambda body: self.assertEqual(
-            expected_result, loads(body)))
+        requesting.addCallback(loads)
+
+        def assertEqualAndReturn(expected, actual):
+            """
+            Assert that ``expected`` is equal to ``actual`` and return
+            ``actual`` for further processing.
+            """
+            self.assertEqual(expected, actual)
+            return actual
+
+        requesting.addCallback(
+            lambda actual_result: assertEqualAndReturn(
+                expected_result, actual_result)
+        )
         return requesting
 
     def assertResultItems(self, method, path, request_body,
@@ -444,7 +456,8 @@ class CreateDatasetTestsMixin(APITestsMixin):
 
 class UpdatePrimaryDatasetTestsMixin(APITestsMixin):
     """
-    Tests for the dataset modification endpoint at ``/datasets/<dataset_id>``.
+    Tests for the dataset modification endpoint at
+    ``/configuration/datasets/<dataset_id>``.
     """
     def test_unknown_dataset(self):
         """
@@ -470,29 +483,44 @@ class UpdatePrimaryDatasetTestsMixin(APITestsMixin):
         return updating
 
     def _test_change_primary(self, dataset, deployment, origin, target):
+        """
+        Helper method which pre-populates the persistence_service with the
+        supplied ``dataset``, makes an API call to move the supplied
+        ``dataset`` from ``origin`` to ``target`` and finally asserts that the
+        API call returned the expected result and that the persistence_service
+        has been updated.
+
+        :param Dataset dataset: The dataset which will be moved.
+        :param Deployment deployment: The deployment that contains the dataset.
+        :param bytes origin: The node IP address of the node that holds the
+            current primary manifestation of the ``dataset``.
+        :param bytes target: The node IP address of the node to which the
+            dataset will be moved.
+        :returns: A ``Deferred`` which fires when all assertions have been
+            executed.
+        """
+        expected_dataset_id = dataset.dataset_id
+
+        expected_dataset = {
+            u"dataset_id": expected_dataset_id,
+            u"primary": target,
+            u"metadata": {}
+        }
+
         saving = self.persistence_service.save(deployment)
 
         def saved(ignored):
-            expected_dataset_id = dataset.dataset_id
-            creating = self.assertResponseCode(
+            creating = self.assertResult(
                 b"POST",
                 b"/configuration/datasets/%s" % (
                     expected_dataset_id.encode('ascii'),),
                 {u"primary": target},
-                OK
+                OK,
+                expected_dataset
             )
-            creating.addCallback(readBody)
-            creating.addCallback(loads)
 
             def got_result(result):
-                self.assertEqual(
-                    {u"dataset_id": expected_dataset_id,
-                     u"primary": target,
-                     u"metadata": {}},
-                    result
-                )
                 deployment = self.persistence_service.get()
-
                 for node in deployment.nodes:
                     if node.hostname == target:
                         dataset_ids = [
@@ -569,6 +597,11 @@ class UpdatePrimaryDatasetTestsMixin(APITestsMixin):
     )
 
     def test_change_primary_to_configured_node(self):
+        """
+        If a different primary IP address is supplied and it identifies a node
+        which is already part of the cluster configuration, the modification
+        request succeeds and the dataset's primary becomes the given address.
+        """
         expected_manifestation = _manifestation()
         node_a = Node(
             hostname=self.NODE_A,
@@ -607,6 +640,10 @@ class UpdatePrimaryDatasetTestsMixin(APITestsMixin):
 
         XXX The 500 error message really should be clearer.
         See https://clusterhq.atlassian.net/browse/FLOC-1393
+
+        XXX This situation should return a more friendly error code and
+        message.
+        See https://clusterhq.atlassian.net/browse/FLOC-1403.
         """
         expected_manifestation = _manifestation(primary=False)
         node_a = Node(
@@ -636,7 +673,8 @@ class UpdatePrimaryDatasetTestsMixin(APITestsMixin):
         "There should always be a primary."
         "But perhaps there should be a test that demonstrates the general 500 "
         "response message format."
-        "See https://clusterhq.atlassian.net/browse/FLOC-1393"
+        "See https://clusterhq.atlassian.net/browse/FLOC-1393 and "
+        "https://clusterhq.atlassian.net/browse/FLOC-1403"
     )
 
     def test_primary_invalid(self):
@@ -694,7 +732,8 @@ class UpdatePrimaryDatasetTestsMixin(APITestsMixin):
     test_no_primary.todo = (
         'It should be possible to submit a dataset update request without a '
         'primary address, but the input schema currently requires the primary '
-        'attribute.'
+        'attribute. This will need to be addressed before or as part of '
+        'https://clusterhq.atlassian.net/browse/FLOC-1404'
     )
 
 RealTestsUpdatePrimaryDataset, MemoryTestsUpdatePrimaryDataset = (
@@ -724,10 +763,12 @@ RealTestsCreateDataset, MemoryTestsCreateDataset = buildIntegrationTests(
 
 def _manifestation(**kwargs):
     """
-    :param bool primary: Whether to create a primary or replica
-        ``Manifestation``. Defaults to ``True``.
     :param kwargs: Additional keyword arguments to use to initialize the
         manifestation's ``Dataset``.
+        If ``kwargs`` includes a ``primary`` key its value will be supplied to
+        the ``Manifestation`` initialiser as the ``primary`` argument in order
+        to control whether to create a primary or replica
+        ``Manifestation``. Defaults to ``True``.
 
     :return: A ``Manifestation`` for a dataset with a new
         random identifier.
