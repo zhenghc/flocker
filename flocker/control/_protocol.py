@@ -257,6 +257,7 @@ class _AgentLocator(CommandLocator):
         """
         CommandLocator.__init__(self)
         self.agent = agent
+        print "_AgentLocator.__init__"
 
     @ClusterStatusCommand.responder
     def cluster_updated(self, configuration, state):

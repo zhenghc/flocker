@@ -34,7 +34,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     node1.vm.provision "shell",
       inline: "flocker-control --port 80 > control.log &"
     node1.vm.provision "shell",
-      inline: "flocker-iaas-memory-agent --hostname=172.16.255.220 --destination-host=172.16.255.220 --destination-port=80 > agent.log &"
+      inline: "flocker-iaas-memory-agent --hostname=172.16.255.220 --destination-host=172.16.255.220 --destination-port=4524 > agent.log &"
   end
 
   config.vm.define "node2" do |node2|
@@ -45,6 +45,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     node2.vm.provision "shell",
       inline: "yum install -y #{FLOCKER_REPO}/#{FLOCKER_PYTHON}-#{FLOCKER_VERSION}.x86_64.rpm #{FLOCKER_REPO}/#{FLOCKER_NODE}-#{FLOCKER_VERSION}.noarch.rpm"
     node2.vm.provision "shell",
-      inline: "flocker-iaas-memory-agent --hostname=172.16.255.221 --destination-host=172.16.255.220 --destination-port=80 > agent.log &"
+      inline: "flocker-iaas-memory-agent --hostname=172.16.255.221 --destination-host=172.16.255.220 --destination-port=4524 > agent.log &"
   end
 end
