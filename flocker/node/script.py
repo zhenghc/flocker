@@ -287,6 +287,7 @@ from .agents.memory import IaaSLikeMemoryDeployer
 @attributes([Attribute("deployer_factory")])
 class AgentScript(object):
     def main(self, reactor, options):
+        print "AGENT_SCRIPT_MAIN"
         deployer = self.deployer_factory(hostname=options["hostname"])
         loop = AgentLoopService(
             reactor=reactor, deployer=deployer,

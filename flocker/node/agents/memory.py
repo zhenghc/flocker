@@ -92,18 +92,22 @@ class IaaSLikeMemoryDeployer(object):
             self._local_state = NodeState(
                 hostname=self.hostname, running=[], not_running=[]
             )
+        print "IaaSLikeMemoryDeployer.__init__"
 
     def discover_local_state(self):
+        print "DISCOVER_LOCAL_STATE"
         return deferLater(reactor, 1, lambda state=self._local_state: state)
 
     def calculate_necessary_state_changes(self, local_state, configuration,
                                           cluster_state):
+        print "CALCULATE_NECESSARY_STATE_CHANGES"
         self._cluster_state = cluster_state
         return _calculate_necessary_state_changes(
             local_state, configuration, cluster_state, self
         )
 
     def _get_manifestation(self, dataset_id):
+
         manifestations = list(
             manifestation
             for manifestation

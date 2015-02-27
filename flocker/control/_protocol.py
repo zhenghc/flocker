@@ -157,10 +157,12 @@ class ControlAMPService(Service):
         self.endpoint_service = StreamServerEndpointService(
             endpoint, ServerFactory.forProtocol(lambda: ControlAMP(self)))
         # When configuration changes, notify all connected clients:
+        print "registering connections"
         self.configuration_service.register(
             lambda: self._send_state_to_connections(self.connections))
 
     def startService(self):
+        print "controlampservice.startService"
         self.endpoint_service.startService()
 
     def stopService(self):
@@ -174,12 +176,15 @@ class ControlAMPService(Service):
 
         :param connections: A collection of ``AMP`` instances.
         """
+        print "_send_state_to_connections"
         configuration = self.configuration_service.get()
         state = self.cluster_state.as_deployment()
+        import sys
         for connection in connections:
-            connection.callRemote(ClusterStatusCommand,
+            d = connection.callRemote(ClusterStatusCommand,
                                   configuration=configuration,
                                   state=state)
+            d.addErrback(lambda err: sys.stdout.write('ClusterStatusCommand error: {!r}'.format(err) and err))
             # Handle errors from callRemote by logging them
             # https://clusterhq.atlassian.net/browse/FLOC-1311
 
@@ -255,6 +260,7 @@ class _AgentLocator(CommandLocator):
 
     @ClusterStatusCommand.responder
     def cluster_updated(self, configuration, state):
+        print "cluster_updated"
         self.agent.cluster_updated(configuration, state)
         return {}
 
