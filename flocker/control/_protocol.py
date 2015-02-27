@@ -280,9 +280,11 @@ class AgentAMP(AMP):
         self.agent = agent
 
     def connectionMade(self):
+        print "AGENT_AMP CONNECTION MADE"
         AMP.connectionMade(self)
         self.agent.connected(self)
 
     def connectionLost(self, reason):
+        print "AGENT_AMP CONNECTION LOST"
         AMP.connectionLost(self, reason)
         self.agent.disconnected()

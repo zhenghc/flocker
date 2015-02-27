@@ -349,15 +349,15 @@ class AgentLoopService(object, MultiService):
     # IConvergenceAgent methods:
 
     def connected(self, client):
-        print "Connected"
+        print "AgentLoopService.connected"
         self.cluster_status.receive(_ConnectedToControlService(client=client))
 
     def disconnected(self):
-        print "disconnected"
+        print "AgentLoopService.disconnected"
         self.cluster_status.receive(
             ClusterStatusInputs.DISCONNECTED_FROM_CONTROL_SERVICE)
 
     def cluster_updated(self, configuration, cluster_state):
-        print "cluster_updated"
+        print "AgentLoopService.cluster_updated"
         self.cluster_status.receive(_StatusUpdate(configuration=configuration,
                                                   state=cluster_state))
