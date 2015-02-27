@@ -10,14 +10,13 @@ VAGRANTFILE_API_VERSION = "2"
 
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
 
-FLOCKER_VERSION = "0.3.2+doc1-1.1676.g52e0485"
-FLOCKER_REPO = "http://build.clusterhq.com/results/omnibus/openstack-agents-spike-FLOC-1147/fedora-20"
-FLOCKER_PYTHON = "clusterhq-python-flocker"
-FLOCKER_NODE = "clusterhq-flocker-node"
+FLOCKER_VERSION = ENV['VERSION']
+FLOCKER_PYTHON = "clusterhq-python-flocker-#{FLOCKER_VERSION}.x86_64.rpm"
+FLOCKER_NODE = "clusterhq-flocker-node-#{FLOCKER_VERSION}.noarch.rpm"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "clusterhq/flocker-tutorial"
-  config.vm.box_version = "= 0.3.3dev7"
+  config.vm.box_version = "= 0.3.2.doc1.1601.g0b50ed0"
 
   if Vagrant.has_plugin?("vagrant-cachier")
     config.cache.scope = :box
@@ -26,25 +25,26 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define "node1" do |node1|
     node1.vm.network :private_network, :ip => "172.16.255.220"
     node1.vm.hostname = "node1"
+    node1.vm.provision "file", source: FLOCKER_PYTHON, destination: FLOCKER_PYTHON
+    node1.vm.provision "file", source: FLOCKER_NODE, destination: FLOCKER_NODE
     node1.vm.provision "shell",
-      inline: "yum remove -y #{FLOCKER_NODE} #{FLOCKER_PYTHON}"
-    node1.vm.provision "shell",
-      inline: "yum install -y #{FLOCKER_REPO}/#{FLOCKER_PYTHON}-#{FLOCKER_VERSION}.x86_64.rpm #{FLOCKER_REPO}/#{FLOCKER_NODE}-#{FLOCKER_VERSION}.noarch.rpm"
+      inline: "rpm -e clusterhq-flocker-node clusterhq-python-flocker; rpm -i #{FLOCKER_PYTHON} #{FLOCKER_NODE}"
 
     node1.vm.provision "shell",
-      inline: "flocker-control --port 80 > control.log &"
+      inline: "kill $(cat control.pid); flocker-control --port 80 > control.log & echo $! > control.pid"
     node1.vm.provision "shell",
-      inline: "flocker-iaas-memory-agent --hostname=172.16.255.220 --destination-host=172.16.255.220 --destination-port=4524 > agent.log &"
+      inline: "kill $(cat agent.pid); flocker-iaas-memory-agent --host 172.16.255.220 --destination-host=172.16.255.220 --destination-port=4524 > agent.log & echo $! > agent.pid"
+
   end
 
-  config.vm.define "node2" do |node2|
-    node2.vm.network :private_network, :ip => "172.16.255.221"
-    node2.vm.hostname = "node2"
-    node2.vm.provision "shell",
-      inline: "yum remove -y #{FLOCKER_NODE} #{FLOCKER_PYTHON}"
-    node2.vm.provision "shell",
-      inline: "yum install -y #{FLOCKER_REPO}/#{FLOCKER_PYTHON}-#{FLOCKER_VERSION}.x86_64.rpm #{FLOCKER_REPO}/#{FLOCKER_NODE}-#{FLOCKER_VERSION}.noarch.rpm"
-    node2.vm.provision "shell",
-      inline: "flocker-iaas-memory-agent --hostname=172.16.255.221 --destination-host=172.16.255.220 --destination-port=4524 > agent.log &"
-  end
+  # config.vm.define "node2" do |node2|
+  #   node2.vm.network :private_network, :ip => "172.16.255.221"
+  #   node2.vm.hostname = "node1"
+  #   node2.vm.provision "file", source: FLOCKER_PYTHON, destination: FLOCKER_PYTHON
+  #   node2.vm.provision "file", source: FLOCKER_NODE, destination: FLOCKER_NODE
+  #   node2.vm.provision "shell",
+  #     inline: "rpm -e clusterhq-flocker-node clusterhq-python-flocker; rpm -i #{FLOCKER_PYTHON} #{FLOCKER_NODE}"
+  #   node2.vm.provision "shell",
+  #     inline: "flocker-iaas-memory-agent --host 172.16.255.221 --destination-host=172.16.255.220 --destination-port=4524 > agent.log &"
+  # end
 end

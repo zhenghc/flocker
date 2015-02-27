@@ -17,6 +17,8 @@ from zope.interface import implementer
 
 from characteristic import attributes
 
+from eliot import Logger, writeFailure
+
 from machinist import (
     trivialInput, TransitionTable, constructFiniteStateMachine,
     MethodSuffixOutputer,
@@ -267,9 +269,8 @@ class ConvergenceLoop(object):
                 local_state, self.configuration, self.cluster_state)
             return action.run(self.deployer)
         d.addCallback(got_local_state)
-        import sys
-        d.addErrback(lambda err: sys.stdout.write('OUTPUT_CONVERGE: {!r}'.format(err)) and err)
-        d.addBoth(lambda _: self.fsm.receive(
+        d.addErrback(writeFailure, Logger(), u"flocker:convergence")
+        d.addCallback(lambda _: self.fsm.receive(
             ConvergenceLoopInputs.ITERATION_DONE))
         # This needs error handling:
         # https://clusterhq.atlassian.net/browse/FLOC-1357

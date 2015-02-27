@@ -80,6 +80,26 @@ def _calculate_necessary_state_changes(hostname,
 
     return Sequentially(changes=phases)
 
+class IaaS(object):
+    def create_volume(self):
+        return succeed(None)
+
+    def destroy_volume(self):
+        return succeed(None)
+
+    def resize_volume(self):
+        return succeed(None)
+
+    def attach_volume(self):
+        return succeed(None)
+
+    def detach_volume(self):
+        return succeed(None)
+
+    def list_volumes(self):
+        return succeed(self._volumes)
+
+
 @implementer(IDeployer)
 @attributes([
     Attribute("hostname"),
@@ -100,6 +120,7 @@ class IaaSLikeMemoryDeployer(object):
                                           cluster_state):
         self._cluster_state = cluster_state
         return _calculate_necessary_state_changes(
+            self.hostname,
             local_state, configuration, cluster_state, self
         )
 
@@ -123,6 +144,14 @@ class IaaSLikeMemoryDeployer(object):
             )
         )
 
+    def _remove_manifestation(self, manifestation):
+        self._local_state = NodeState(
+            hostname=self._local_state.hostname, running=[], not_running=[],
+            other_manifestations=(
+                self._local_state.other_manifestations - {manifestation}
+            )
+        )
+
     def _replace_manifestation(self, replacement):
         existing = self._get_manifestation(replacement.dataset.dataset_id)
         self._local_state = NodeState(
@@ -133,27 +162,26 @@ class IaaSLikeMemoryDeployer(object):
         )
 
     @_StateChanger
-    def _create_dataset(self, dataset):
+    def create_dataset(self, dataset):
         print "Creating", dataset
         manifestation = Manifestation(dataset=dataset, primary=True)
         self._add_manifestation(manifestation)
 
     @_StateChanger
-    def _resize_dataset(self, dataset):
+    def resize_dataset(self, dataset):
         existing = self._get_manifestation(dataset.dataset_id)
         resized = Manifestation(dataset=dataset, primary=existing.primary)
         print "Resizing", existing, "to", resized
         self._replace_manifestation(resized)
 
     @_StateChanger
-    def _handoff_dataset(self, dataset, hostname):
+    def handoff_dataset(self, dataset, hostname):
         manifestation = self._get_manifestation(dataset.dataset_id)
         print "Handing off", manifestation, "to", hostname
-        replica = Manifestation(dataset=dataset, primary=False)
-        self._replace_manifestation(replica)
+        self._remove_manifestation(manifestation)
 
     @_StateChanger
-    def _wait_for_dataset(self, dataset):
+    def wait_for_dataset(self, dataset):
         # We can complete a handoff when no one else in the cluster
         # claims a primary manifestation of the dataset.
         for node in self._cluster_state.nodes:

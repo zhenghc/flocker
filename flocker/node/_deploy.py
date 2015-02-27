@@ -508,6 +508,8 @@ class P2PNodeDeployer(object):
         # local state, so update it accordingly:
         current_cluster_state = current_cluster_state.update_node(
             local_state.to_node())
+        # collect all dataset ids by looking at each node in current_cluster_state
+        # stuff that information onto current_cluster_state
 
         phases = []
 
@@ -697,6 +699,8 @@ def find_dataset_changes(hostname, current_state, desired_state):
         if dataset_hostname != hostname:
             remote_current_dataset_ids |= set(
                 dataset.dataset_id for dataset in current)
+
+    # XXX For block device backend this will miss entirely unattached datasets.
 
     # If a dataset exists locally and is desired anywhere on the cluster, and
     # the desired dataset is a different maximum_size to the existing dataset,
