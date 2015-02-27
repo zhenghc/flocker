@@ -172,7 +172,6 @@ def build_cluster_status_fsm(convergence_loop_fsm):
             I.DISCONNECTED_FROM_CONTROL_SERVICE: ([], S.SHUTDOWN),
             I.STATUS_UPDATE: ([], S.SHUTDOWN),
             })
-    print "build_cluster_status_fsm"
     return constructFiniteStateMachine(
         inputs=I, outputs=O, states=S, initial=S.DISCONNECTED, table=table,
         richInputs=[_ConnectedToControlService, _StatusUpdate],
@@ -256,12 +255,10 @@ class ConvergenceLoop(object):
     def output_STORE_INFO(self, context):
         """
         """
-        print "OUTPUT_STORE_INFO"
         self.client, self.configuration, self.cluster_state = (
             context.client, context.configuration, context.state)
 
     def output_CONVERGE(self, context):
-        print "OUTPUT_CONVERGE"
         d = self.deployer.discover_local_state()
 
         def got_local_state(local_state):
@@ -336,12 +333,10 @@ class AgentLoopService(object, MultiService):
             lambda: AgentAMP(self))
 
     def startService(self):
-        print "startService"
         MultiService.startService(self)
         self.reactor.connectTCP(self.host, self.port, self.factory)
 
     def stopService(self):
-        print "stopService"
         MultiService.stopService(self)
         self.factory.stopTrying()
         self.cluster_status.receive(ClusterStatusInputs.SHUTDOWN)
@@ -349,15 +344,12 @@ class AgentLoopService(object, MultiService):
     # IConvergenceAgent methods:
 
     def connected(self, client):
-        print "AgentLoopService.connected"
         self.cluster_status.receive(_ConnectedToControlService(client=client))
 
     def disconnected(self):
-        print "AgentLoopService.disconnected"
         self.cluster_status.receive(
             ClusterStatusInputs.DISCONNECTED_FROM_CONTROL_SERVICE)
 
     def cluster_updated(self, configuration, cluster_state):
-        print "AgentLoopService.cluster_updated"
         self.cluster_status.receive(_StatusUpdate(configuration=configuration,
                                                   state=cluster_state))

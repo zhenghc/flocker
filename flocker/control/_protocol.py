@@ -157,12 +157,10 @@ class ControlAMPService(Service):
         self.endpoint_service = StreamServerEndpointService(
             endpoint, ServerFactory.forProtocol(lambda: ControlAMP(self)))
         # When configuration changes, notify all connected clients:
-        print "registering connections"
         self.configuration_service.register(
             lambda: self._send_state_to_connections(self.connections))
 
     def startService(self):
-        print "controlampservice.startService"
         self.endpoint_service.startService()
 
     def stopService(self):
@@ -176,7 +174,6 @@ class ControlAMPService(Service):
 
         :param connections: A collection of ``AMP`` instances.
         """
-        print "_send_state_to_connections"
         configuration = self.configuration_service.get()
         state = self.cluster_state.as_deployment()
         import sys
@@ -257,11 +254,9 @@ class _AgentLocator(CommandLocator):
         """
         CommandLocator.__init__(self)
         self.agent = agent
-        print "_AgentLocator.__init__"
 
     @ClusterStatusCommand.responder
     def cluster_updated(self, configuration, state):
-        print "cluster_updated"
         self.agent.cluster_updated(configuration, state)
         return {}
 
@@ -281,11 +276,9 @@ class AgentAMP(AMP):
         self.agent = agent
 
     def connectionMade(self):
-        print "AGENT_AMP CONNECTION MADE"
         AMP.connectionMade(self)
         self.agent.connected(self)
 
     def connectionLost(self, reason):
-        print "AGENT_AMP CONNECTION LOST"
         AMP.connectionLost(self, reason)
         self.agent.disconnected()
