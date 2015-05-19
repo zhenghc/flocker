@@ -103,6 +103,12 @@ def get_client(provider):
             'https://docs.clusterhq.com/en/latest/gettinginvolved/acceptance-testing.html '  # noqa
             'for details of the expected format.'
         )
+    flocker_functional_test = os.environ.get('FLOCKER_FUNCTIONAL_TEST')
+    if flocker_functional_test is None:
+        raise SkipTest(
+            'Please set FLOCKER_FUNCTIONAL_TEST environment variable '
+            'to run storage backend functional tests. '
+        )
 
     config = yaml.safe_load(config_file.read())
 
