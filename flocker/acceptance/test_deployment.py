@@ -135,15 +135,10 @@ class DeploymentTests(TestCase):
 
         def got_container_1(actual_container):
             self.assertTrue(actual_container['running'])
-            waiting_for_dataset = cluster.wait_for_dataset(
-                {
-                    u"dataset_id": mongo_dataset_id,
-                    u"metadata": None,
-                    u"deleted": False,
-                    u"maximum_size": REALISTIC_BLOCKDEVICE_SIZE,
-                    u"primary": node_1_uuid
-                }
-            )
+            waiting_for_dataset = cluster.wait_for_dataset({
+                "dataset_id": mongo_dataset_id,
+                "primary": node_1_uuid
+            })
 
             def got_dataset(dataset):
                 self.assertEqual(
@@ -160,15 +155,10 @@ class DeploymentTests(TestCase):
             got_container_1)
 
         def got_container_2(actual_container):
-            waiting_for_dataset = cluster.wait_for_dataset(
-                {
-                    u"dataset_id": mongo_dataset_id,
-                    u"metadata": None,
-                    u"deleted": False,
-                    u"maximum_size": REALISTIC_BLOCKDEVICE_SIZE,
-                    u"primary": node_2_uuid
-                }
-            )
+            waiting_for_dataset = cluster.wait_for_dataset({
+                "dataset_id": mongo_dataset_id,
+                "primary": node_2_uuid
+            })
 
             def got_dataset(dataset):
                 self.assertEqual(

@@ -20,6 +20,7 @@ from twisted.internet import reactor
 
 from eliot import Logger, start_action, Message, write_failure
 from eliot.twisted import DeferredContext
+from eliot.testing import issuperset
 
 from treq import json_content, content
 
@@ -363,18 +364,10 @@ class Cluster(PRecord):
             request = self.datasets_state()
 
             def got_body(body):
-                # State listing doesn't have metadata or deleted, but does
-                # have unpredictable path.
-                expected_dataset = dataset_properties.copy()
-                del expected_dataset[u"metadata"]
-                del expected_dataset[u"deleted"]
                 for dataset in body:
-                    try:
-                        dataset.pop("path")
-                    except KeyError:
-                        # Non-manifest datasets don't have a path
-                        pass
-                return expected_dataset in body
+                    if issuperset(dataset, dataset_properties):
+                        return dataset
+                return False
             request.addCallback(got_body)
             return request
 
