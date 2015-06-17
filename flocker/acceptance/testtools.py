@@ -353,7 +353,7 @@ class Cluster(PRecord):
         Poll the dataset state API until the supplied dataset exists.
 
         :param dict dataset_properties: The attributes of the dataset that
-            we're waiting for.
+            we're waiting for. Keys that aren't present here are ignored.
         :returns: A ``Deferred`` which fires with an API response when a
             dataset with the supplied properties appears in the cluster.
         """
@@ -542,8 +542,7 @@ class Cluster(PRecord):
         supplied ``container_properties``.
 
         :param dict container_properties: The attributes of the container that
-            we're waiting for. All the keys, values and those of nested
-            dictionaries must match.
+            we're waiting for. Keys that aren't present here are ignored.
         :returns: A ``Deferred`` which fires with an API response when a
             container with the supplied properties appears in the cluster.
         """
@@ -555,14 +554,8 @@ class Cluster(PRecord):
             request = self.current_containers()
 
             def got_response(containers):
-                expected_container = container_properties.copy()
                 for container in containers:
-                    container_items = container.items()
-                    if all([
-                        item in container_items
-                        for item in expected_container.items()
-                    ]):
-                        # Return cluster and container state
+                    if issuperset(container, container_properties):
                         return container
                 return False
             request.addCallback(got_response)

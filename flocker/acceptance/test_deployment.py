@@ -87,9 +87,6 @@ class DeploymentTests(TestCase):
         expected_container_1 = container_configuration_response(
             application_1, node_1_uuid
         )
-        expected_container_2 = container_configuration_response(
-            application_1, node_2_uuid
-        )
 
         container_configuration_1 = (
             api_configuration_to_flocker_deploy_configuration(
@@ -130,8 +127,10 @@ class DeploymentTests(TestCase):
 
         # Wait for the agent on node1 to create a container with the expected
         # properties.
-        waiting_for_container_1 = cluster.wait_for_container(
-            expected_container_1)
+        waiting_for_container_1 = cluster.wait_for_container({
+            u'name': MONGO_APPLICATION,
+            u'node_uuid': node_1_uuid,
+        })
 
         def got_container_1(actual_container):
             self.assertTrue(actual_container['running'])
@@ -147,7 +146,11 @@ class DeploymentTests(TestCase):
                 )
                 cluster.flocker_deploy(
                     self, config_deployment_2, config_application_1)
-                return cluster.wait_for_container(expected_container_2)
+                return cluster.wait_for_container({
+                    u'name': MONGO_APPLICATION,
+                    u'node_uuid': node_2_uuid,
+                })
+
             waiting_for_dataset.addCallback(got_dataset)
             return waiting_for_dataset
 
