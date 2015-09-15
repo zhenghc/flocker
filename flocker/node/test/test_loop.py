@@ -453,7 +453,7 @@ class ConvergenceLoopFSMTests(SynchronousTestCase):
         loop = build_convergence_loop_fsm(reactor, deployer)
         loop.receive(_ClientStatusUpdate(
             client=client, configuration=configuration, state=state))
-        reactor.advance(1.0)
+        reactor.advance(3.0)
         # Calculating actions happened, result was run... and then we did
         # whole thing again:
         self.assertTupleEqual(
@@ -487,7 +487,7 @@ class ConvergenceLoopFSMTests(SynchronousTestCase):
         self.patch(loop, "logger", logger)
         loop.receive(_ClientStatusUpdate(
             client=client, configuration=configuration, state=state))
-        reactor.advance(1.0)
+        reactor.advance(3.0)
         # Calculating actions happened, result was run and caused error...
         # but we started on loop again and are thus in discovery state,
         # which we can tell because all faked local states have been
@@ -529,7 +529,7 @@ class ConvergenceLoopFSMTests(SynchronousTestCase):
         # which happens with second set of client, desired configuration
         # and cluster state:
         action.result.callback(None)
-        reactor.advance(1.0)
+        reactor.advance(3.0)
 
         self.assertTupleEqual(
             (deployer.calculate_inputs, client.calls, client2.calls),
@@ -566,7 +566,7 @@ class ConvergenceLoopFSMTests(SynchronousTestCase):
         loop.receive(ConvergenceLoopInputs.STOP)
         # Action finally finishes:
         action.result.callback(None)
-        reactor.advance(1.0)
+        reactor.advance(3.0)
 
         # work is scheduled:
         expected = (
@@ -626,7 +626,7 @@ class ConvergenceLoopFSMTests(SynchronousTestCase):
         # which happens with second set of client, desired configuration
         # and cluster state:
         action.result.callback(None)
-        reactor.advance(1.0)
+        reactor.advance(3.0)
         self.assertTupleEqual(
             (deployer.calculate_inputs, client.calls, client2.calls),
             ([(local_state, configuration, state),
