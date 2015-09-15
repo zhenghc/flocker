@@ -347,7 +347,7 @@ class ConvergenceLoop(object):
         d.addCallback(
             lambda _:
                 self.reactor.callLater(
-                    1.0, self.fsm.receive, ConvergenceLoopInputs.ITERATION_DONE
+                    3.0, self.fsm.receive, ConvergenceLoopInputs.ITERATION_DONE
                 )
         )
         d.addActionFinish()
