@@ -341,7 +341,7 @@ class ConvergenceLoopFSMTests(SynchronousTestCase):
         loop = build_convergence_loop_fsm(reactor, deployer)
         loop.receive(_ClientStatusUpdate(
             client=client, configuration=configuration, state=state))
-        reactor.advance(1.0)
+        reactor.advance(3.0)
 
         # Calculating actions happened, result was run... and then we did
         # whole thing again:
@@ -378,7 +378,7 @@ class ConvergenceLoopFSMTests(SynchronousTestCase):
         loop = build_convergence_loop_fsm(reactor, deployer)
         loop.receive(_ClientStatusUpdate(
             client=client, configuration=configuration, state=state))
-        reactor.advance(1.0)
+        reactor.advance(3.0)
 
         # Calculating actions happened, result was run... and then we did
         # whole thing again:
@@ -414,7 +414,7 @@ class ConvergenceLoopFSMTests(SynchronousTestCase):
         loop = build_convergence_loop_fsm(reactor, deployer)
         loop.receive(_ClientStatusUpdate(
             client=client, configuration=configuration, state=state))
-        reactor.advance(1.0)
+        reactor.advance(3.0)
 
         # Calculating actions happened, result was run... and then we did
         # whole thing again:
