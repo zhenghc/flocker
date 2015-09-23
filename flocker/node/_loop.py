@@ -421,6 +421,9 @@ def build_convergence_loop_fsm(reactor, deployer, loop_delay):
 
     :param IDeployer deployer: Used to discover local state and calcualte
         necessary changes to match desired configuration.
+
+    :param float loop_delay: The interval between convergence iterations
+        in seconds.
     """
     I = ConvergenceLoopInputs
     O = ConvergenceLoopOutputs
@@ -473,7 +476,7 @@ class AgentLoopService(MultiService, object):
         """
         MultiService.__init__(self)
         convergence_loop = build_convergence_loop_fsm(
-            self.reactor, self.deployer, 6.0
+            self.reactor, self.deployer, 2.0
         )
         self.logger = convergence_loop.logger
         self.cluster_status = build_cluster_status_fsm(convergence_loop)
