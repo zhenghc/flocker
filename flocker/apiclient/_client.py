@@ -12,7 +12,7 @@ from pytz import UTC
 
 from zope.interface import Interface, implementer
 
-from pyrsistent import PClass, field, pmap_field, pmap
+from pyrsistent import PClass, field, pmap_field, pmap, pset
 
 from eliot import ActionType, Field
 from eliot.twisted import DeferredContext
@@ -38,6 +38,25 @@ _LOG_HTTP_REQUEST = ActionType(
 
 
 NoneType = type(None)
+
+
+class Node(PClass):
+    uuid = field(type=UUID, mandatory=True)
+
+
+class Container(PClass):
+    """
+    A container in the configuration.
+    """
+    primary = field()
+    name = field()
+    image = field()
+
+
+class ContainerState(PClass):
+    primary = field()
+    name = field()
+    image = field()
 
 
 class Dataset(PClass):
@@ -104,6 +123,22 @@ class IFlockerAPIV1Client(Interface):
     """
     The Flocker REST API v1 client.
     """
+    def version():
+        """
+        Get version information from the API server.
+        """
+
+    def list_nodes():
+        """
+        Get information about active cluster nodes.
+        """
+
+    def create_container(primary, name, image):
+        pass
+
+    def list_containers_state():
+        pass
+
     def create_dataset(primary, maximum_size=None, dataset_id=None,
                        metadata=pmap()):
         """
@@ -201,8 +236,28 @@ class FakeFlockerClient(object):
 
     def __init__(self):
         self._configured_datasets = pmap()
+        self._configured_containers = pmap()
         self._leases = LeasesModel()
+        self._nodes = pset([Node(uuid=uuid4()), Node(uuid=uuid4())])
         self.synchronize_state()
+
+    def version(self):
+        return succeed({u"flocker": u"1.2.3.4"})
+
+    def list_nodes(self):
+        return succeed(list(self._nodes))
+
+    def create_container(self, primary, name, image):
+        if name in self._configured_containers:
+            return fail(ContainerAlreadyExists())
+        result = Container(primary=primary, name=name, image=image)
+        self._configured_containers = self._configured_containers.set(
+            name, result
+        )
+        return succeed(result)
+
+    def list_containers_state(self):
+        return succeed(self._state_containers)
 
     def create_dataset(self, primary, maximum_size=None, dataset_id=None,
                        metadata=pmap()):
@@ -246,6 +301,10 @@ class FakeFlockerClient(object):
                 maximum_size=dataset.maximum_size,
                 path=FilePath(b"/flocker").child(bytes(dataset.dataset_id)))
             for dataset in self._configured_datasets.values()]
+        self._state_containers = list(
+            ContainerState(**container.serialize())
+            for container in self._configured_containers.values()
+        )
 
     def acquire_lease(self, dataset_id, node_uuid, expires):
         try:
@@ -361,6 +420,45 @@ class FlockerClient(object):
         request.addCallback(got_body)
         request.addActionFinish()
         return request.result
+
+    def version(self):
+        return self._request(b"GET", b"/version", None, {OK})
+
+    def list_nodes(self):
+        d = self._request(b"GET", b"/v1/state/nodes", None, {OK})
+        d.addCallback(
+            lambda nodes: list(Node(uuid=node[u"uuid"]) for node in nodes)
+        )
+        return d
+
+    def create_container(self, primary, name, image):
+        container = dict(
+            primary=primary, name=name, image=image,
+        )
+        d = self._request(
+            b"POST",
+            b"/v1/containers/configuration",
+            container,
+            {CREATED},
+            {CONFLICT: ContainerAlreadyExists},
+        )
+        d.addCallback(self._parse_configuration_container)
+        return d
+
+    def list_containers_state(self):
+        d = self._request(
+            b"GET",
+            b"/v1/containers/state",
+            None,
+            {OK},
+        )
+        d.addCallback(
+            lambda containers: list(
+                parse_container_state(container)
+                for container in containers
+            )
+        )
+        return d
 
     def _parse_configuration_dataset(self, dataset_dict):
         """
