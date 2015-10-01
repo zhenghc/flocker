@@ -4,6 +4,7 @@ from platform import node, platform
 from datetime import datetime
 from os import environ, getcwd
 
+from twisted.python.components import proxyForInterface
 from twisted.python.filepath import FilePath
 from twisted.internet.task import cooperate
 
