@@ -1,5 +1,7 @@
 from pyrsistent import PClass, field
 
+from twisted.internet.defer import maybeDeferred
+
 
 class _WallClock(PClass):
     clock = field(mandatory=True)
@@ -21,4 +23,4 @@ _measurements = {
 
 
 def get_measurement(clock, name):
-    return _measurements[name](clock=clock)
+    return maybeDeferred(_measurements[name], clock=clock)

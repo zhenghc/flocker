@@ -24,4 +24,4 @@ _metrics = {
 
 
 def get_metric(client, name):
-    return _metrics[name](client=client)
+    return maybeDeferred(_metrics[name], client=client)
