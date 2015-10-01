@@ -29,7 +29,7 @@ def sample(measure, operation):
                 dict(success=True, value=interval)
             ),
             lambda reason: samples.append(
-                dict(success=False, reason=reason.getErrorMessage()),
+                dict(success=False, reason=reason.getTraceback()),
             ),
         )
         return d
