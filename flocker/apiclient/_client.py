@@ -10,6 +10,8 @@ from datetime import datetime
 
 from pytz import UTC
 
+from ipaddr import IPNetwork, IPv4Address, IPv6Address
+
 from zope.interface import Interface, implementer
 
 from pyrsistent import PClass, field, pmap_field, pmap, pset
@@ -42,6 +44,10 @@ NoneType = type(None)
 
 class Node(PClass):
     uuid = field(type=UUID, mandatory=True)
+    public_address = field(
+        type=(IPv4Address, IPv6Address),
+        mandatory=True,
+    )
 
 
 class Container(PClass):
@@ -238,7 +244,11 @@ class FakeFlockerClient(object):
         self._configured_datasets = pmap()
         self._configured_containers = pmap()
         self._leases = LeasesModel()
-        self._nodes = pset([Node(uuid=uuid4()), Node(uuid=uuid4())])
+        addresses = iter(IPNetwork("10.0.0.0/8"))
+        self._nodes = pset(
+            Node(uuid=uuid4(), public_address=next(addresses))
+            for i in range(2)
+        )
         self.synchronize_state()
 
     def version(self):
@@ -427,7 +437,13 @@ class FlockerClient(object):
     def list_nodes(self):
         d = self._request(b"GET", b"/v1/state/nodes", None, {OK})
         d.addCallback(
-            lambda nodes: list(Node(uuid=node[u"uuid"]) for node in nodes)
+            lambda nodes: list(
+                Node(
+                    uuid=node[u"uuid"],
+                    public_address=IPAddress(node[u"host"]),
+                )
+                for node in nodes
+            )
         )
         return d
 
