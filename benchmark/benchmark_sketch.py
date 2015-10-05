@@ -89,6 +89,11 @@ class FastConvergingFakeFlockerClient(
         self.original.synchronize_state()
         return result
 
+    def delete_container(self, *a, **kw):
+        result = self.original.delete_container(*a, **kw)
+        self.original.synchronize_state()
+        return result
+
 
 def driver(reactor, control_service_address=None, cert_directory=b"certs",
          metric_name=b"read-request", measurement_name=b"wallclock"):

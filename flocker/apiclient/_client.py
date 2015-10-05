@@ -148,6 +148,9 @@ class IFlockerAPIV1Client(Interface):
     def create_container(primary, name, image):
         pass
 
+    def delete_container(name):
+        pass
+
     def list_containers_state():
         pass
 
@@ -271,6 +274,10 @@ class FakeFlockerClient(object):
             name, result
         )
         return succeed(result)
+
+    def delete_container(self, name):
+        self._configured_containers = self._configured_containers.remove(name)
+        return succeed(None)
 
     def list_containers_state(self):
         return succeed(self._state_containers)
@@ -466,6 +473,14 @@ class FlockerClient(object):
         )
         d.addCallback(self._parse_configuration_container)
         return d
+
+    def delete_container(self, name):
+        return self._request(
+            b"DELETE",
+            b"/configuration/containers/" + name.encode("ascii"),
+            None,
+            {OK},
+        )
 
     def list_containers_state(self):
         d = self._request(
