@@ -6,6 +6,7 @@ from twisted.protocols.basic import LineOnlyReceiver
 from flocker.common import gather_deferreds
 from flocker.common.runner import run_ssh
 
+
 class _WallClock(PClass):
     clock = field(mandatory=True)
     client = field()
