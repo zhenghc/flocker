@@ -1,7 +1,10 @@
-from pyrsistent import PClass, field
+from pyrsistent import PClass, field, pset
 
-from twisted.internet.defer import maybeDeferred
+from twisted.internet.defer import Deferred, maybeDeferred
+from twisted.protocols.basic import LineOnlyReceiver
 
+from flocker.common import gather_deferreds
+from flocker.common.runner import run_ssh
 
 class _WallClock(PClass):
     clock = field(mandatory=True)
@@ -21,6 +24,7 @@ class _WallClock(PClass):
 
 _GET_CURSOR_COMMAND = [b"journalctl", b"--show-cursor", b"--lines", b"0"]
 
+
 class _ParseCursor(LineOnlyReceiver):
     def __init__(self):
         self.result = Deferred()
@@ -37,7 +41,7 @@ def get_cursor(reactor, node):
     d = run_ssh(
         reactor,
         b"root",
-        node.primary_address.exploded,
+        node.public_address.exploded,
         _GET_CURSOR_COMMAND,
         handle_stdout=parser.lineReceived,
     )
@@ -91,13 +95,17 @@ class _JournalVolume(PClass):
 
     def __call__(self, f, *a, **kw):
         d = self.client.list_nodes()
+
         def get_cursors(nodes):
-            return gather_deferreds(list(
+            d = gather_deferreds(list(
                 # XXX s/clock/reactor/
                 get_cursor(self.clock, node) for node in nodes
             ))
+            d.addCallback(lambda cursors: (cursors, nodes))
+            return d
         d.addCallback(get_cursors)
-        def finished(result, cursors):
+
+        def finished(result, (cursors, nodes)):
             d = gather_deferreds(list(
                 measure_journal(
                     self.clock, node, cursor, _JOURNAL_UNITS
@@ -105,12 +113,14 @@ class _JournalVolume(PClass):
             ))
             d.addCallback(sum)
             return d
+
         def run(cursors):
             d = f(*a, **kw)
             d.addCallback(finished, cursors)
             return d
         d.addCallback(run)
         return d
+
 
 _measurements = {
     "wallclock": _WallClock,

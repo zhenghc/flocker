@@ -106,7 +106,9 @@ def driver(reactor, control_service_address=None, cert_directory=b"certs",
         client = FastConvergingFakeFlockerClient(FakeFlockerClient())
 
     metric = get_metric(client=client, name=metric_name)
-    measurement = get_measurement(clock=reactor, name=measurement_name)
+    measurement = get_measurement(
+        clock=reactor, client=client, name=measurement_name,
+    )
     version = client.version()
 
     d = gather_deferreds((metric, measurement, version))
