@@ -22,9 +22,6 @@ def _report_ssl_error(failure):
 
 
 class _ReadRequest(PClass):
-    """
-    
-    """
     client = field(mandatory=True)
 
     def run(self):
@@ -99,6 +96,7 @@ class _WriteRequestMetric(PClass):
 @classmethod
 def pick_primary_node(cls, client):
     d = client.list_nodes()
+
     def pick_primary(nodes):
         for node in nodes:
             return cls(client=client, primary=node)
@@ -204,6 +202,7 @@ def _converged(expected, list_state, state_matches):
         )
     d.addCallback(find_match)
     return d
+
 
 def loop_until_converged(expected, list_state, state_matches):
     # XXX reactor

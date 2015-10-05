@@ -103,7 +103,7 @@ class FastConvergingFakeFlockerClient(
 
 
 def driver(reactor, control_service_address=None, cert_directory=b"certs",
-         metric_name=b"read-request", measurement_name=b"wallclock"):
+           metric_name=b"read-request", measurement_name=b"wallclock"):
     if control_service_address:
         cert_directory = FilePath(cert_directory)
         client = FlockerClient(
