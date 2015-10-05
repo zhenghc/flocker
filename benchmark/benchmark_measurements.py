@@ -71,12 +71,12 @@ def measure_journal(reactor, node, cursor, units):
     d = run_ssh(
         reactor,
         b"root",
-        node.primary_address.exploded,
+        node.public_address.exploded,
         _show_journal_command(units, cursor) + [
             # Count it all up remotely so we don't have to transfer it.
             b"|", b"wc", b"--lines", b"--bytes"
         ],
-        parser.lineReceived,
+        handle_stdout=parser.lineReceived,
     )
     d.addCallback(lambda ignored: parser.result)
     return d
