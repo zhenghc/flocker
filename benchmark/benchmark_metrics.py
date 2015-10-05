@@ -5,7 +5,7 @@ from pyrsistent import PClass, field
 
 from twisted.web.client import ResponseFailed
 
-from twisted.internet.defer import maybeDeferred
+from twisted.internet.defer import succeed, maybeDeferred
 
 from flocker.testtools import loop_until
 
@@ -32,8 +32,33 @@ class _ReadRequest(PClass):
         d.addErrback(_report_ssl_error)
         return d
 
+    def cleanup(self):
+        return succeed(None)
+
+
+class _ReadRequestMetric(PClass):
+    client = field(mandatory=True)
+
+    def get_probe(self):
+        return _ReadRequest(client=self.client)
+
 
 class _WriteRequest(PClass):
+    client = field(mandatory=True)
+    dataset_id = field(mandatory=True)
+    primary = field(mandatory=True)
+
+    def run(self):
+        return self.client.move_dataset(
+            primary=self.primary,
+            dataset_id=self.dataset_id,
+        )
+
+    def cleanup(self):
+        return succeed(None)
+
+
+class _WriteRequestMetric(PClass):
     client = field(mandatory=True)
     dataset_id = field(mandatory=True)
     some_primaries = field(mandatory=True)
@@ -42,9 +67,10 @@ class _WriteRequest(PClass):
     def from_client(cls, client):
         some_primaries = iter(cycle([uuid4(), uuid4()]))
         d = client.list_datasets_configuration()
+
         def create(datasets):
             for a_dataset in datasets:
-                return _WriteRequest(
+                return cls(
                     client=client,
                     dataset_id=a_dataset.dataset_id,
                     some_primaries=some_primaries,
@@ -62,8 +88,9 @@ class _WriteRequest(PClass):
         d.addCallback(create)
         return d
 
-    def run(self):
-        return self.client.move_dataset(
+    def get_probe(self):
+        return _WriteRequest(
+            client=self.client,
             primary=next(self.some_primaries),
             dataset_id=self.dataset_id,
         )
@@ -84,11 +111,7 @@ def pick_primary_node(cls, client):
 class _CreateDatasetConvergence(PClass):
     client = field(mandatory=True)
     primary = field(mandatory=True)
-
-    # XXX Leaks datasets!  Alters cluster state so likely alters its own future
-    # results.  Need a cleanup stage for metrics.
-
-    from_client = pick_primary_node
+    dataset_id = field(mandatory=True)
 
     def run(self):
         def dataset_matches(inspecting, expected):
@@ -101,6 +124,7 @@ class _CreateDatasetConvergence(PClass):
         d = self.client.create_dataset(
             primary=self.primary.uuid,
             maximum_size=MAXIMUM_SIZE,
+            dataset_id=self.dataset_id,
         )
         d.addCallback(
             loop_until_converged,
@@ -109,14 +133,29 @@ class _CreateDatasetConvergence(PClass):
         )
         return d
 
+    def cleanup(self):
+        return self.client.delete_dataset(dataset_id=self.dataset_id)
 
-class _CreateContainerConvergence(PClass):
-    # XXX Should involve a dataset, does not; probably does not make much real
-    # difference.
+
+class _CreateDatasetConvergenceMetric(PClass):
     client = field(mandatory=True)
     primary = field(mandatory=True)
 
     from_client = pick_primary_node
+
+    def get_probe(self):
+        return _CreateDatasetConvergence(
+            client=self.client,
+            primary=self.primary,
+            dataset_id=uuid4(),
+        )
+
+
+class _CreateContainerConvergence(PClass):
+    client = field(mandatory=True)
+    primary = field(mandatory=True)
+    name = field(mandatory=True)
+    image = field(mandatory=True)
 
     def run(self):
         def container_matches(inspecting, expected):
@@ -124,7 +163,7 @@ class _CreateContainerConvergence(PClass):
 
         d = self.client.create_container(
             self.primary,
-            unicode(uuid4()),
+            self.name,
             u"nginx",
         )
         d.addCallback(
@@ -133,6 +172,26 @@ class _CreateContainerConvergence(PClass):
             container_matches,
         )
         return d
+
+    def cleanup(self):
+        return self.client.delete_container(name=self.name)
+
+
+class _CreateContainerConvergenceMetric(PClass):
+    client = field(mandatory=True)
+    primary = field(mandatory=True)
+
+    from_client = pick_primary_node
+
+    def get_probe(self):
+        # XXX Should involve a dataset, does not; probably does not make much
+        # real difference.
+        return _CreateContainerConvergence(
+            client=self.client,
+            primary=self.primary,
+            name=unicode(uuid4()),
+            image=u"nginx",
+        )
 
 
 def _converged(expected, list_state, state_matches):
@@ -154,10 +213,11 @@ def loop_until_converged(expected, list_state, state_matches):
 
 
 _metrics = {
-    "read-request": _ReadRequest,
-    "write-request": _WriteRequest.from_client,
-    "create-dataset-convergence": _CreateDatasetConvergence.from_client,
-    "create-container-convergence": _CreateContainerConvergence.from_client,
+    "read-request": _ReadRequestMetric,
+    "write-request": _WriteRequestMetric.from_client,
+    "create-dataset-convergence": _CreateDatasetConvergenceMetric.from_client,
+    "create-container-convergence":
+        _CreateContainerConvergenceMetric.from_client,
 }
 
 

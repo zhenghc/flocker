@@ -7,6 +7,7 @@ from os import environ, getcwd
 from twisted.python.components import proxyForInterface
 from twisted.python.filepath import FilePath
 from twisted.internet.task import cooperate
+from twisted.internet.defer import maybeDeferred
 
 from flocker import __version__ as flocker_client_version
 from flocker.apiclient import (
@@ -23,15 +24,21 @@ def sample(measure, operation):
 
     def once(i):
         print("Starting sample #{i}".format(i=i))
-        d = measure(operation.run)
-        d.addCallbacks(
-            lambda interval: samples.append(
-                dict(success=True, value=interval)
-            ),
-            lambda reason: samples.append(
-                dict(success=False, reason=reason.getTraceback()),
-            ),
-        )
+        d = maybeDeferred(operation.get_probe)
+
+        def got_probe(probe):
+            d = measure(probe.run)
+            d.addCallbacks(
+                lambda interval: samples.append(
+                    dict(success=True, value=interval)
+                ),
+                lambda reason: samples.append(
+                    dict(success=False, reason=reason.getTraceback()),
+                ),
+            )
+            d.addCallback(lambda ignored: probe.cleanup())
+            return d
+        d.addCallback(got_probe)
         return d
     task = cooperate(once(i) for i in range(3))
     return task.whenDone().addCallback(lambda ignored: samples)
