@@ -10,7 +10,7 @@ from datetime import datetime
 
 from pytz import UTC
 
-from ipaddr import IPNetwork, IPv4Address, IPv6Address
+from ipaddr import IPNetwork, IPAddress, IPv4Address, IPv6Address
 
 from zope.interface import Interface, implementer
 
@@ -26,7 +26,7 @@ from twisted.web.http import CREATED, OK, CONFLICT
 from treq import json_content, content
 
 from ..ca import treq_with_authentication
-from ..control import Leases as LeasesModel, LeaseError
+from ..control import Leases as LeasesModel, LeaseError, DockerImage
 
 
 _LOG_HTTP_REQUEST = ActionType(
@@ -54,13 +54,13 @@ class Container(PClass):
     """
     A container in the configuration.
     """
-    primary = field()
+    node_uuid = field()
     name = field()
     image = field()
 
 
 class ContainerState(PClass):
-    primary = field()
+    node_uuid = field()
     name = field()
     image = field()
 
@@ -122,6 +122,12 @@ class DatasetAlreadyExists(Exception):
 class LeaseAlreadyHeld(Exception):
     """
     A lease exists for the specified dataset ID on a different node.
+    """
+
+
+class ContainerAlreadyExists(Exception):
+    """
+    The specified container name is in use by another container.
     """
 
 
@@ -257,10 +263,10 @@ class FakeFlockerClient(object):
     def list_nodes(self):
         return succeed(list(self._nodes))
 
-    def create_container(self, primary, name, image):
+    def create_container(self, node_uuid, name, image):
         if name in self._configured_containers:
             return fail(ContainerAlreadyExists())
-        result = Container(primary=primary, name=name, image=image)
+        result = Container(node_uuid=node_uuid, name=name, image=image)
         self._configured_containers = self._configured_containers.set(
             name, result
         )
@@ -435,11 +441,11 @@ class FlockerClient(object):
         return self._request(b"GET", b"/version", None, {OK})
 
     def list_nodes(self):
-        d = self._request(b"GET", b"/v1/state/nodes", None, {OK})
+        d = self._request(b"GET", b"/state/nodes", None, {OK})
         d.addCallback(
             lambda nodes: list(
                 Node(
-                    uuid=node[u"uuid"],
+                    uuid=UUID(node[u"uuid"]),
                     public_address=IPAddress(node[u"host"]),
                 )
                 for node in nodes
@@ -449,11 +455,11 @@ class FlockerClient(object):
 
     def create_container(self, primary, name, image):
         container = dict(
-            primary=primary, name=name, image=image,
+            node_uuid=unicode(primary.uuid), name=name, image=image,
         )
         d = self._request(
             b"POST",
-            b"/v1/containers/configuration",
+            b"/configuration/containers",
             container,
             {CREATED},
             {CONFLICT: ContainerAlreadyExists},
@@ -464,10 +470,18 @@ class FlockerClient(object):
     def list_containers_state(self):
         d = self._request(
             b"GET",
-            b"/v1/containers/state",
+            b"/state/containers",
             None,
             {OK},
         )
+
+        def parse_container_state(container):
+            return ContainerState(
+                node_uuid=UUID(container[u"node_uuid"]),
+                name=container[u"name"],
+                image=DockerImage.from_string(container[u"image"]),
+            )
+
         d.addCallback(
             lambda containers: list(
                 parse_container_state(container)
@@ -475,6 +489,19 @@ class FlockerClient(object):
             )
         )
         return d
+
+    def _parse_configuration_container(self, container_dict):
+        """
+        Convert a dictionary decoded from JSON with a dataset's configuration.
+
+        :param container_dict: Dictionary describing a container.
+        :return: ``Container`` instance.
+        """
+        return Container(
+            node_uuid=UUID(container_dict[u"node_uuid"]),
+            name=container_dict[u"name"],
+            image=DockerImage.from_string(container_dict[u"image"]),
+        )
 
     def _parse_configuration_dataset(self, dataset_dict):
         """

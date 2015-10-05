@@ -91,10 +91,11 @@ class _CreateDatasetConvergence(PClass):
     from_client = pick_primary_node
 
     def run(self):
-        def dataset_matches(expected, inspecting):
+        def dataset_matches(inspecting, expected):
             return (
-                inspecting.dataset_id == inspecting.dataset_id and
-                inspecting.primary == inspecting.primary
+                expected.dataset_id == inspecting.dataset_id and
+                expected.primary == inspecting.primary and
+                inspecting.path is not None
             )
 
         d = self.client.create_dataset(
@@ -118,7 +119,7 @@ class _CreateContainerConvergence(PClass):
     from_client = pick_primary_node
 
     def run(self):
-        def container_matches(expected, inspecting):
+        def container_matches(inspecting, expected):
             return expected.serialize() == inspecting.serialize()
 
         d = self.client.create_container(
