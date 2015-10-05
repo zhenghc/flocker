@@ -61,24 +61,30 @@ def _show_journal_command(units, cursor):
 
 
 class _ParseWC(LineOnlyReceiver):
+    def __init__(self):
+        self.bytes = 0
+        self.lines = 0
+
     def lineReceived(self, line):
-        lines, bytes = line.split()
-        self.result.callback(dict(lines=int(lines), bytes=int(bytes)))
+        self.bytes += len(line)
+        self.lines += 1
 
 
 def measure_journal(reactor, node, cursor, units):
     parser = _ParseWC()
+    # It would be nice to count the bytes and lines remotely instead of
+    # transferring all that log data.  That's hard, though!  Maybe later.
+    command = _show_journal_command(units, cursor)
     d = run_ssh(
         reactor,
         b"root",
         node.public_address.exploded,
-        _show_journal_command(units, cursor) + [
-            # Count it all up remotely so we don't have to transfer it.
-            b"|", b"wc", b"--lines", b"--bytes"
-        ],
+        command,
         handle_stdout=parser.lineReceived,
     )
-    d.addCallback(lambda ignored: parser.result)
+    d.addCallback(
+        lambda ignored: dict(lines=parser.lines, bytes=parser.bytes)
+    )
     return d
 
 
@@ -111,7 +117,12 @@ class _JournalVolume(PClass):
                     self.clock, node, cursor, _JOURNAL_UNITS
                 ) for node, cursor in zip(nodes, cursors)
             ))
-            d.addCallback(sum)
+            d.addCallback(
+                lambda measurements: dict(
+                    lines=sum(m["lines"] for m in measurements),
+                    bytes=sum(m["bytes"] for m in measurements),
+                )
+            )
             return d
 
         def run(cursors):
