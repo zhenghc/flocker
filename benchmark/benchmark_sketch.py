@@ -109,6 +109,10 @@ def driver(reactor, control_service_address=None, cert_directory=b"certs",
            metric_name=b"read-request", measurement_name=b"wallclock"):
 
     to_file(stderr)
+    # from twisted.internet.defer import setDebugging
+    # setDebugging(True)
+    # from twisted.python.failure import startDebugMode
+    # startDebugMode()
 
     if control_service_address:
         cert_directory = FilePath(cert_directory)
