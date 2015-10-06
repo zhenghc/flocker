@@ -1,4 +1,7 @@
+from datetime import datetime, timedelta
+
 from pyrsistent import PClass, field, pset
+from characteristic import Attribute, attributes
 
 from twisted.internet.defer import Deferred, maybeDeferred
 from twisted.protocols.basic import LineOnlyReceiver
@@ -89,7 +92,7 @@ def measure_journal(reactor, node, cursor, units):
     return d
 
 
-_JOURNAL_UNITS = pset({
+_FLOCKER_PROCESSES = _JOURNAL_UNITS = pset({
     u"flocker-control",
     u"flocker-dataset-agent",
     u"flocker-container-agent",
@@ -134,9 +137,142 @@ class _JournalVolume(PClass):
         return d
 
 
+class _CPUTime(PClass):
+    user = field(mandatory=True)
+    system = field(mandatory=True)
+
+
+_GET_CPUTIME_COMMAND = [
+    # Use system ps to collect the information
+    b"ps",
+    # Output the command name (truncated) and the cputime of the process
+    b"-o",
+    # `=` provides a header.  Making all the headers blank prevents the header
+    # line from being written.
+    b"comm=,cputime=",
+    # Output lines for processes with names matching the following (values
+    # supplied by invoker)
+    b"-C",
+]
+
+
+class _CPUParser(LineOnlyReceiver):
+    def __init__(self):
+        self.result = _CPUTime(user=timedelta(), system=timedelta())
+
+    def lineReceived(self, line):
+        # Lines are like:
+        #
+        # flocker-control 00:03:41
+        # flocker-dataset 00:18:14
+        # flocker-contain 01:47:02
+        name, formatted_cputime = line.split()
+        cputime = (
+            datetime.strptime(formatted_cputime, "%H:%M:%S") -
+            datetime.strptime("", "")
+        )
+
+        # XXX Could keep these separate and track them separately.
+        #
+        # XXX Could actually measure and track user and system time separately.
+        #
+        self.result = _CPUTime(
+            user=self.result.user + cputime,
+            system=self.result.system,
+        )
+
+
+def get_cpu_times(reactor, node, processes):
+    parser = _CPUParser()
+    print "Getting CPU from", node.public_address.exploded
+    d = run_ssh(
+        reactor,
+        b"root",
+        node.public_address.exploded,
+        _GET_CPUTIME_COMMAND + [b",".join(processes)],
+        handle_stdout=parser.lineReceived,
+    )
+    d.addCallback(lambda ignored: parser.result)
+    return d
+
+
+def _get_all_cpu_times(clock, nodes, processes):
+    return gather_deferreds(list(
+        get_cpu_times(clock, node, processes)
+        for node in nodes
+    ))
+
+
+@attributes(["clock", "client", "f", "a", "kw",
+             # Mutate-y bits.
+             Attribute(name="nodes", default_factory=list),
+             Attribute(name="before_cpu", default_factory=list),
+             Attribute(name="after_cpu", default_factory=list),
+         ])
+class _CPUMeasurement(object):
+    def _marshal_times(self, cpuchange):
+        return list(
+            dict(
+                user=cpu.user.total_seconds(),
+                system=cpu.system.total_seconds(),
+            )
+            for cpu in cpuchange
+        )
+
+    def _compute_change(self, ignored, before_cpu, after_cpu):
+        for (before, after) in zip(before_cpu, after_cpu):
+            yield _CPUTime(
+                user=after.user - before.user,
+                system=after.system - before.system,
+            )
+
+    def _get_all_cpu_times(self, ignored):
+        return _get_all_cpu_times(
+            self.clock, self.nodes, _FLOCKER_PROCESSES
+        )
+
+    def measure(self):
+        getting_nodes = self.client.list_nodes()
+        getting_nodes.addCallback(self.nodes.extend)
+
+        getting_before_cpu = getting_nodes.addCallback(
+            self._get_all_cpu_times
+        )
+        getting_before_cpu.addCallback(self.before_cpu.extend)
+
+        exercising_system = getting_before_cpu.addCallback(
+            lambda ignored: self.f(*self.a, **self.kw)
+        )
+        getting_after_cpu = exercising_system.addCallback(
+            self._get_all_cpu_times
+        )
+        getting_after_cpu.addCallback(self.after_cpu.extend)
+
+        computing = getting_after_cpu.addCallback(
+            self._compute_change, self.before_cpu, self.after_cpu
+        )
+
+        marshalling = computing.addCallback(self._marshal_times)
+        return marshalling
+
+
+class _CPU(PClass):
+    clock = field(mandatory=True)
+    client = field(mandatory=True)
+
+    def __call__(self, f, *a, **kw):
+        # Put the mutate-y side-effect-y bits onto a separate object with a
+        # limited lifetime.
+        return _CPUMeasurement(
+            clock=self.clock, client=self.client, f=f, a=a, kw=kw
+        ).measure()
+
+
 _measurements = {
     "wallclock": _WallClock,
     "journal-volume": _JournalVolume,
+    "flocker-cpu": _CPU,
+    # "flocker-memory": _Memory,
 }
 
 
