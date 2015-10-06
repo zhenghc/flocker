@@ -1,8 +1,11 @@
+from sys import stderr
 from pprint import pprint
 from json import dump
 from platform import node, platform
 from datetime import datetime
 from os import environ, getcwd
+
+from eliot import to_file
 
 from twisted.python.components import proxyForInterface
 from twisted.python.filepath import FilePath
@@ -104,6 +107,9 @@ class FastConvergingFakeFlockerClient(
 
 def driver(reactor, control_service_address=None, cert_directory=b"certs",
            metric_name=b"read-request", measurement_name=b"wallclock"):
+
+    to_file(stderr)
+
     if control_service_address:
         cert_directory = FilePath(cert_directory)
         client = FlockerClient(
