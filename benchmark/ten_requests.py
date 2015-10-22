@@ -17,34 +17,30 @@ def url_requester():
 
 
 class RateMeasurer(object):
-    rate = 0
-    _five_second_count = 0
-    _last_time = 0
+    _sample_size = 5
+    _count = 0
+    _last_second = int(time.time())
+
+    def __init__(self):
+        self._counts = []
 
     def new_sample(self):
         now = int(time.time())
-        if now - self._last_time > 5:
-            self.rate = self._five_second_count / 5
-            self._last_time = now
-            self._five_second_count = 0
-        self._five_second_count += 1
+        if now > self._last_second:
+            self._counts.append(self._count)
+            self._counts = self._counts[-self._sample_size:]
+            self._last_second = now
+            self._count = 0
+        self._count += 1
+
+    @property
+    def rate(self):
+        return float(sum(self._counts) / float(len(self._counts)))
 
 
 class LoadGenerator(object):
-    def __init__(self, url_requester, rate_measurer, req_per_sec):
-        self.url_requester = url_requester
-        self._rate_measurer = rate_measurer
-
-        def sample_and_return(result):
-            self._rate_measurer.new_sample()
-            return result
-
-        def request_and_measure():
-            for d in url_requester:
-                d.addCallback(sample_and_return)
-                yield d
-
-        self.url_requester = request_and_measure()
+    def __init__(self, request_generator, req_per_sec):
+        self._request_generator = request_generator
         self.req_per_sec = req_per_sec
         self._loops = []
         self._starts = []
@@ -52,7 +48,7 @@ class LoadGenerator(object):
     def start(self):
         for i in range(self.req_per_sec):
             loop = LoopingCall(
-                self.url_requester.next,
+                self._request_generator.next,
             )
             self._loops.append(loop)
             started = loop.start(interval=1)
@@ -67,9 +63,18 @@ class LoadGenerator(object):
 class TestResponseTime(TestCase):
     def setUp(self):
         self.rate_measurer = RateMeasurer()
+
+        def sample_and_return(result):
+            self.rate_measurer.new_sample()
+            return result
+
+        def request_and_measure():
+            for d in url_requester():
+                d.addCallback(sample_and_return)
+                yield d
+
         self.load_generator = LoadGenerator(
-            url_requester(),
-            self.rate_measurer,
+            request_generator=request_and_measure(),
             req_per_sec=10,
         )
         self.load_generator.start()
@@ -77,7 +82,7 @@ class TestResponseTime(TestCase):
     def tearDown(self):
         return self.load_generator.stop()
 
-    def test_foo(self):
+    def test_rate(self):
         def do_assert():
             self.assertEqual(10, self.rate_measurer.rate)
         return deferLater(reactor, 10, do_assert)
