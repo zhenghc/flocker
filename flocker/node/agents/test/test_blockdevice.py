@@ -344,7 +344,6 @@ class BlockDeviceDeployerLocalStateTests(SynchronousTestCase):
     """
     Tests for ``BlockDeviceDeployerLocalState``.
     """
-
     def setUp(self):
         self.node_uuid = uuid4()
         self.hostname = u"192.0.2.1"
@@ -558,7 +557,6 @@ class BlockDeviceDeployerAsyncAPITests(SynchronousTestCase):
     """
     Tests for ``BlockDeviceDeployer.async_block_device_api``.
     """
-
     def test_default(self):
         """
         When not otherwise initialized, the attribute evaluates to a
@@ -728,7 +726,6 @@ class BlockDeviceDeployerDiscoverStateTests(SynchronousTestCase):
     """
     Tests for ``BlockDeviceDeployer.discover_state``.
     """
-
     def setUp(self):
         self.expected_hostname = u'192.0.2.123'
         self.expected_uuid = uuid4()
@@ -1073,7 +1070,6 @@ def make_icalculator_tests(calculator_factory):
         """
         Tests of an ``ICalculator`` implementation.
         """
-
         def test_interface(self):
             """
             The ``ICalculator`` implemention actually implements the interface.
@@ -1179,7 +1175,6 @@ class BlockDeviceCalculatorTests(SynchronousTestCase):
     """
     Tests for ``BlockDeviceCalculator``.
     """
-
     def setUp(self):
         self.deployer = create_blockdevicedeployer(self)
 
@@ -1856,7 +1851,6 @@ class BlockDeviceDeployerAlreadyConvergedCalculateChangesTests(
     changes are necessary because the local state already matches the desired
     configuration.
     """
-
     def test_no_changes(self):
         """
         ``BlockDeviceDeployer.calculate_changes`` calculates no changes when
@@ -1909,7 +1903,6 @@ class BlockDeviceDeployerIgnorantCalculateChangesTests(
     Tests for the cases of ``BlockDeviceDeployer.calculate_changes`` where no
     changes can be calculated because application state is unknown.
     """
-
     def test_unknown_applications(self):
         """
         If applications are unknown, no changes are calculated.
@@ -1952,7 +1945,6 @@ class BlockDeviceDeployerDestructionCalculateChangesTests(
     Tests for ``BlockDeviceDeployer.calculate_changes`` in the cases relating
     to dataset destruction.
     """
-
     def test_deleted_dataset_volume_mounted(self):
         """
         If the configuration indicates a dataset with a primary manifestation
@@ -2225,7 +2217,6 @@ class BlockDeviceDeployerAttachCalculateChangesTests(
     Tests for ``BlockDeviceDeployer.calculate_changes`` in the cases relating
     to attaching existing datasets.
     """
-
     def test_attach_existing_nonmanifest(self):
         """
         If a dataset exists but is not manifest anywhere in the cluster and the
@@ -2285,7 +2276,6 @@ class BlockDeviceDeployerMountCalculateChangesTests(
     Tests for ``BlockDeviceDeployer.calculate_changes`` in the cases relating
     to mounting of filesystems.
     """
-
     def test_mount_manifestation(self):
         """
         If the volume for a dataset is attached to the node but the filesystem
@@ -2339,7 +2329,6 @@ class BlockDeviceDeployerCreateFilesystemCalculateChangesTests(
     Tests for ``BlockDeviceDeployer.calculate_changes`` in the cases relating
     to creation of filesystems.
     """
-
     def test_create_filesystem(self):
         """
         If the volume for a dataset is attached to the node but the filesystem
@@ -2386,7 +2375,6 @@ class BlockDeviceDeployerUnmountCalculateChangesTests(
     Tests for ``BlockDeviceDeployer.calculate_changes`` in the cases relating
     to unmounting of filesystems.
     """
-
     def test_unmount_manifestation(self):
         """
         If the filesystem for a dataset is mounted on the node and the
@@ -2512,7 +2500,6 @@ class BlockDeviceDeployerCreationCalculateChangesTests(
     Tests for ``BlockDeviceDeployer.calculate_changes`` in the cases relating
     to dataset creation.
     """
-
     def test_no_devices_no_local_datasets(self):
         """
         If no devices exist and no datasets are part of the configuration for
@@ -2862,7 +2849,6 @@ class BlockDeviceDeployerCreationCalculateChangesTests(
 class BlockDeviceDeployerDetachCalculateChangesTests(
         SynchronousTestCase, ScenarioMixin
 ):
-
     def test_detach_manifestation(self):
         """
         ``BlockDeviceDeployer.calculate_changes`` recognizes a volume that is
@@ -2939,7 +2925,6 @@ class BlockDeviceInterfaceTests(SynchronousTestCase):
     """
     Tests for ``IBlockDeviceAPI`` and ``IBlockDeviceAsyncAPI``.
     """
-
     def test_names(self):
         """
         The two interfaces have all of the same names defined.
@@ -3638,7 +3623,6 @@ def make_iblockdeviceapi_tests(
        supplied ``IBlockDeviceAPI`` provider.
     """
     class Tests(IBlockDeviceAPITestsMixin, SynchronousTestCase):
-
         def setUp(self):
             self.api = blockdevice_api_factory(test_case=self)
             self.unknown_blockdevice_id = unknown_blockdevice_id_factory(self)
@@ -3657,7 +3641,6 @@ class IProfiledBlockDeviceAPITestsMixin(object):
     """
     Tests to perform on ``IProfiledBlockDeviceAPI`` providers.
     """
-
     def test_interface(self):
         """
         The API object provides ``IProfiledBlockDeviceAPI``.
@@ -3694,7 +3677,6 @@ def make_iprofiledblockdeviceapi_tests(profiled_blockdevice_api_factory,
        supplied ``IProfiledBlockDeviceAPI`` provider.
     """
     class Tests(IProfiledBlockDeviceAPITestsMixin, SynchronousTestCase):
-
         def setUp(self):
             self.api = profiled_blockdevice_api_factory(self)
             self.dataset_size = dataset_size
@@ -3706,7 +3688,6 @@ class IBlockDeviceAsyncAPITestsMixin(object):
     """
     Tests to perform on ``IBlockDeviceAsyncAPI`` providers.
     """
-
     def test_interface(self):
         """
         The API object provides ``IBlockDeviceAsyncAPI``.
@@ -3724,7 +3705,6 @@ def make_iblockdeviceasyncapi_tests(blockdeviceasync_api_factory):
         on the wrapped object.
     """
     class Tests(IBlockDeviceAsyncAPITestsMixin, SynchronousTestCase):
-
         def setUp(self):
             self.api = blockdeviceasync_api_factory(test_case=self)
 
@@ -3818,7 +3798,6 @@ class LoopbackBlockDeviceAPIConstructorTests(SynchronousTestCase):
     """
     Implementation specific constructor tests.
     """
-
     def test_from_path_creates_instance_id_if_not_provided(self):
         """
         Calling ``from_path`` with empty instance id creates an id.
@@ -3847,7 +3826,6 @@ class LoopbackBlockDeviceAPIImplementationTests(SynchronousTestCase):
     """
     Implementation specific tests for ``LoopbackBlockDeviceAPI``.
     """
-
     def assertDirectoryStructure(self, directory):
         """
         Assert that the supplied ``directory`` has all the sub-directories
@@ -4020,7 +3998,6 @@ class LosetupListTests(SynchronousTestCase):
     """
     Tests for ``_losetup_list_parse``.
     """
-
     def test_parse_empty(self):
         """
         An empty list is returned if there are no devices listed.
@@ -4096,7 +4073,6 @@ class FakeProfiledLoopbackBlockDeviceAPI(
     :ivar pmap dataset_profiles: A pmap from blockdevice_id to desired profile
         at creation time.
     """
-
     def __init__(self, loopback_blockdevice_api):
         self._loopback_blockdevice_api = loopback_blockdevice_api
         self.dataset_profiles = pmap({})
@@ -4206,7 +4182,6 @@ def multistep_change_log(parent, children):
     :return: A two-argument callable suitable for use with
         ``validate_logging``.
     """
-
     def verify(self, logger):
         [parent_action] = LoggedAction.of_type(logger.messages, parent)
         children_actions = [
@@ -4358,7 +4333,6 @@ class MountBlockDeviceTests(
     Tests for ``MountBlockDevice``\ 's ``IStateChange`` implementation, as
     well as ``CreateFilesystem`` testing.
     """
-
     def _run_test(self, mountpoint):
         """
         Verify that ``MountBlockDevice.run`` mounts the filesystem from the
@@ -4657,7 +4631,6 @@ class DetachVolumeTests(
     """
     Tests for ``DetachVolume``.
     """
-
     def test_run(self):
         """
         ``DetachVolume.run`` uses the deployer's ``IBlockDeviceAPI`` to detach
@@ -4704,7 +4677,6 @@ class DestroyVolumeTests(
     """
     Tests for ``DestroyVolume``.
     """
-
     def test_run(self):
         """
         ``DestroyVolume.run`` uses the deployer's ``IBlockDeviceAPI`` to
@@ -4808,7 +4780,6 @@ def make_createblockdevicedataset_mixin(profiled_api):
     """
     class Mixin(CreateBlockDeviceDatasetImplementationMixin,
                 SynchronousTestCase):
-
         def setUp(self):
             if profiled_api:
                 self.api = fakeprofiledloopbackblockdeviceapi_for_test(
@@ -5064,7 +5035,6 @@ class AllocatedSizeTypeTests(SynchronousTestCase):
     Tests for type coercion of parameters supplied to
     ``allocated_size``.
     """
-
     def test_allocation_unit_float(self):
         """
         ``allocated_size`` returns ``int`` if the supplied
@@ -5096,7 +5066,6 @@ class AllocatedSizeTestsMixin(object):
     """
     Tests for ``allocated_size``.
     """
-
     def test_size_is_allocation_unit(self):
         """
         ``allocated_size`` returns the ``requested_size`` when it
@@ -5143,7 +5112,6 @@ def make_allocated_size_tests(allocation_unit):
         contains the classname of ``allocation_unit``.
     """
     class Tests(AllocatedSizeTestsMixin, SynchronousTestCase):
-
         def setUp(self):
             self.allocation_unit = int(allocation_unit.to_Byte().value)
 
@@ -5190,7 +5158,6 @@ class CountingProxy(object):
     :ivar call_count: Mapping of (method name, args, kwargs) to number of
         calls.
     """
-
     def __init__(self, wrapped):
         self._wrapped = wrapped
         self.call_count = pmap()
@@ -5224,7 +5191,6 @@ class ProcessLifetimeCacheTests(SynchronousTestCase):
     """
     Tests for the caching logic in ``ProcessLifetimeCache``.
     """
-
     def setUp(self):
         self.api = loopbackblockdeviceapi_for_test(self)
         self.counting_proxy = CountingProxy(self.api)
@@ -5295,12 +5261,26 @@ class ProcessLifetimeCacheTests(SynchronousTestCase):
 
 @attributes(["_proxy_object", "_callback"], apply_with_init=False)
 class CallbackProxy(object):
+    """
+    A proxy to another object that calls a callback before and after each call
+    to the underlying object. This enables tests where you want to inject code
+    before or after any calls to an underlying API.
+
+    Note that this proxy assumes that the underlying object only has public
+    methods and not public attributes.
+
+    :ivar _proxy_object: The object that is being proxied to.
+    :ivar _callback: The callback to be called before and after every call to a
+        method of _proxy_object.
+    """
 
     def __init__(self, proxy_object, callback):
         self._proxy_object = proxy_object
         self._callback = callback
 
     def __getattr__(self, name):
+        """
+        """
         method = getattr(self._proxy_object, name)
 
         def proxied_function(*args, **kwargs):
@@ -5313,11 +5293,18 @@ class CallbackProxy(object):
 
 
 class EndToEndBlockdeviceDeployerTests(AsyncTestCase, ScenarioMixin):
+    """
+    Tests that only interact with the BlockDeviceDeployer by changing the
+    desired configuration of the cluster, and by interfacing with the datasets
+    that are created locally.
+    """
 
     def _change_node_state(self, deployer, desired_configuration,
                            cluster_state_callback):
         """
-        Change the local state to match the given desired configuration.
+        Change the local state to match the given desired configuration. Will
+        run the covergence loop until it determines that there is nothing left
+        to do.
 
         :param IDeployer deployer: Deployer to discover local state and
             calculate changes.
@@ -5329,6 +5316,10 @@ class EndToEndBlockdeviceDeployerTests(AsyncTestCase, ScenarioMixin):
 
         :return: ``Deferred`` that fires when the necessary changes are done.
         """
+        # XXX: Note to the reviewer - I wish I could use something closer to
+        # the actaul production code here, but I didn't see how to do that. Do
+        # you? The one exception is that I want there to be no state persisted
+        # from one run of converge to the next.
         base_node_state = NodeState(
             hostname=deployer.hostname, uuid=deployer.node_uuid,
             applications=[], manifestations={}, paths={}, devices={}
@@ -5438,7 +5429,7 @@ class EndToEndBlockdeviceDeployerTests(AsyncTestCase, ScenarioMixin):
                 filename = str(uuid4())
                 try:
                     path.child(filename).touch()
-                except OSError as e:
+                except OSError:
                     # If we failed to write, that is okay in many scenarios. At
                     # least the failing write won't lead to the end user
                     # thinking that they have an actually persisted data. Note
