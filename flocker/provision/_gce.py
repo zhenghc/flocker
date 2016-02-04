@@ -314,7 +314,7 @@ class GCEInstance(PClass):
                 zone=self.zone,
                 instance=self.name
             ).execute()
-            wait_for_operation(self.compute, operation, timeout_steps=[1]*60)
+            wait_for_operation(self.compute, operation, timeout_steps=[5]*60)
 
 
 @implementer(INode)
@@ -435,6 +435,9 @@ class GCEProvisioner(PClass):
         :returns GCEInstance: The :class:`GCEInstance` that corresponds to the
             given instance resource dict.
         """
+        if instance_resource.get('status') == 'TERMINATED':
+            return None
+
         network_interface = instance_resource["networkInterfaces"][0]
         return GCEInstance(
             address=bytes(network_interface["accessConfigs"][0]["natIP"]),
@@ -451,6 +454,11 @@ class GCEProvisioner(PClass):
         Constructs a :class:`GCENode` from an instance_resource.
         """
         instance = self._gce_instance_from_instance_resource(instance_resource)
+        if not instance:
+            return None
+
+        if _GCE_PROVISIONER_TAG not in instance.tags:
+            return None
 
         if _JSON_DESCRIPTION_TAG not in instance.tags:
             raise ValueError(
@@ -522,7 +530,7 @@ class GCEProvisioner(PClass):
         ).execute()
 
         operation_result = wait_for_operation(
-            self.compute, operation, timeout_steps=[1]*60)
+            self.compute, operation, timeout_steps=[5]*60)
 
         if not operation_result:
             raise ValueError(
@@ -547,16 +555,17 @@ class GCEProvisioner(PClass):
         unfiltered_results = []
         next_page = None
         while True:
-            response = self.compute.instances.list(
-                zone=self.zone, project=self.project, page_token=next_page)
+            response = self.compute.instances().list(
+                zone=self.zone, project=self.project, pageToken=next_page
+            ).execute()
             unfiltered_results += list(
                 self._gce_node_from_instance_resource(resource)
-                for resource in response.items)
+                for resource in response['items'])
             next_page = response.get('nextPageToken')
             if not next_page:
                 break
         return list(instance for instance in unfiltered_results
-                    if _GCE_PROVISIONER_TAG in instance.tags)
+                    if instance)
 
     def get_nodes(self, filters):
         # XXX: Only returns nodes if filters contains an array of ip_addresses.
