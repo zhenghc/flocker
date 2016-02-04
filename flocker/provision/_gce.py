@@ -60,6 +60,9 @@ _GCE_FIREWALL_TAG = u"allow-incoming-traffic"
 # Tag for all instances created by the GCEProvisioner.
 _GCE_PROVISIONER_TAG = "flocker-gce-provisioner"
 
+# Tag to indicate that the description is intended to be JSON formatted.
+_JSON_DESCRIPTION_TAG = u"json-description"
+
 
 def _clean_to_gce_name(identifier):
     """
@@ -295,7 +298,7 @@ class GCEInstance(PClass):
     project = field(type=unicode, mandatory=True)
     zone = field(type=unicode, mandatory=True)
     name = field(type=unicode, mandatory=True)
-    tags = pset_field(item_type=unicode, mandatory=True)
+    tags = pset_field(item_type=unicode)
     compute = field(mandatory=True)
 
     def destroy(self):
@@ -423,8 +426,8 @@ class GCEProvisioner(PClass):
 
     def _gce_instance_from_instance_resource(self, instance_resource):
         """
-        Constructs a :class:`GCENode` from the instance_resource dict returned
-        from the API.
+        Constructs a :class:`GCEInstance` from the instance_resource dict
+        returned from the API.
 
         :param dict instance_resource: The instance resource dict returned from
             the GCE API.
@@ -441,6 +444,30 @@ class GCEProvisioner(PClass):
             name=instance_resource['name'],
             tags=instance_resource['tags'].get('items', []),
             compute=self.compute
+        )
+
+    def _gce_node_from_instance_resource(self, instance_resource):
+        """
+        Constructs a :class:`GCENode` from an instance_resource.
+        """
+        instance = self._gce_instance_from_instance_resource(instance_resource)
+
+        if _JSON_DESCRIPTION_TAG not in instance.tags:
+            raise ValueError(
+                "Could not create a ``GCENode`` from instance resource"
+                "{instance} because the {tag} tag was not present.".format(
+                    instance=str(instance_resource), tag=_JSON_DESCRIPTION_TAG)
+            )
+
+        # XXX: If you get KeyErrors or JSON parsing errors from this code, it
+        # probably means you are trying to create a :class:``GCENode`` object
+        # from a GCE instance that was not created by this version of this
+        # software.
+        description_blob = json.loads(instance_resource["description"])
+        return GCENode(
+            instance=instance,
+            username=bytes(description_blob["username"]),
+            distribution=bytes(description_blob["distribution"])
         )
 
     def create_node(self, name, distribution, metadata={}):
@@ -471,13 +498,15 @@ class GCEProvisioner(PClass):
             ],
             disk_size=_GCE_DISK_SIZE_GIB,
             description=json.dumps({
-                u"description-format": u"v1",
+                u"description-format": u"v2",
                 u"created-by-python": u"flocker.provision._gce.GCEProvisioner",
                 u"name": name,
+                u"distribution": distribution,
+                u"username": username,
                 u"metadata": metadata
             }),
             tags=set([_GCE_PROVISIONER_TAG,
-                      u"json-description",
+                      _JSON_DESCRIPTION_TAG,
                       _GCE_FIREWALL_TAG]),
             delete_disk_on_terminate=True,
             startup_script=dedent("""\
@@ -506,14 +535,9 @@ class GCEProvisioner(PClass):
             project=self.project, zone=self.zone, instance=instance_name
         ).execute()
 
-        return GCENode(
-            instance=self._gce_instance_from_instance_resource(
-                instance_resource),
-            distribution=bytes(distribution),
-            username=bytes(username),
-        )
+        return self._gce_node_from_instance_resource(instance_resource)
 
-    def _list_all_instances(self):
+    def _list_all_nodes(self):
         """
         Returns all nodes in the given project and zone that were created by
         this script.
@@ -526,13 +550,21 @@ class GCEProvisioner(PClass):
             response = self.compute.instances.list(
                 zone=self.zone, project=self.project, page_token=next_page)
             unfiltered_results += list(
-                self._gce_instance_from_instance_resource(resource)
+                self._gce_node_from_instance_resource(resource)
                 for resource in response.items)
             next_page = response.get('nextPageToken')
             if not next_page:
                 break
         return list(instance for instance in unfiltered_results
                     if _GCE_PROVISIONER_TAG in instance.tags)
+
+    def get_nodes(self, filters):
+        # XXX: Only returns nodes if filters contains an array of ip_addresses.
+        ip_addresses = filters.get('ip_address', [])
+        if not ip_addresses:
+            return []
+        return list(gce_node for gce_node in self._list_all_nodes()
+                    if gce_node.address in ip_addresses)
 
 
 def gce_provisioner(
