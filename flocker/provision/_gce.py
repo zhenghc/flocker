@@ -272,31 +272,71 @@ def _create_gce_instance_config(instance_name, project, zone, machine_type,
     return gce_slave_instance_config
 
 
-@implementer(INode)
-class GCENode(PClass):
+class GCEInstance(PClass):
     """
-    ``INode`` implementation for GCE.
+    Representation of a GCE instance, with all of the information to do
+    cloud-level interactions.
 
     :ivar unicode address: The public IP address of the instance.
     :ivar unicode private_address: The network internal IP address of the
         instance.
-    :ivar bytes distribution: The OS distribution of the instance.
     :ivar unicode project: The project the instance a member of.
     :ivar unicode zone: The zone the instance is in.
     :ivar unicode name: The GCE name of the instance used to identify the
         instance.
-    :ivar bytes username: The preferred username to access the instance as.
     :ivar compute: A Google Compute Engine Service that can be used to make
         calls to the GCE API.
     """
-    address = field(type=bytes)
-    private_address = field(type=bytes)
-    distribution = field(type=bytes)
-    project = field(type=unicode)
-    zone = field(type=unicode)
-    name = field(type=unicode)
-    username = field(type=bytes)
-    compute = field()
+    address = field(type=bytes, mandatory=True)
+    private_address = field(type=bytes, mandatory=True)
+    project = field(type=unicode, mandatory=True)
+    zone = field(type=unicode, mandatory=True)
+    name = field(type=unicode, mandatory=True)
+    compute = field(mandatory=True)
+
+    def destroy(self):
+        """
+        Destroy this instance, and block until it has completed.
+        """
+        with start_action(
+            action_type=u"flocker:provision:gce:destroy",
+            instance_id=self.name,
+        ):
+            operation = self.compute.instances().delete(
+                project=self.project,
+                zone=self.zone,
+                instance=self.name
+            ).execute()
+            wait_for_operation(self.compute, operation, timeout_steps=[1]*60)
+
+
+@implementer(INode)
+class GCENode(PClass):
+    """
+    ``INode`` implementation for GCE. This encompasses cloud-level interactions
+    as well as the ability to SSH into the node, and execute
+    distribution-specific commands.
+
+    :ivar GCEInstance instance: The GCE instance to use for underlying
+        cloud operations.
+    :ivar bytes distribution: The OS distribution of the instance.
+    :ivar bytes username: The preferred username to access the instance as.
+    """
+    instance = field(type=GCEInstance, mandatory=True)
+    username = field(type=bytes, mandatory=True)
+    distribution = field(type=bytes, mandatory=True)
+
+    @property
+    def address(self):
+        return self.instance.address
+
+    @property
+    def private_address(self):
+        return self.instance.private_address
+
+    @property
+    def name(self):
+        return self.instance.name
 
     def get_default_username(self):
         return self.username
@@ -334,16 +374,7 @@ class GCENode(PClass):
         return sequence(commands)
 
     def destroy(self):
-        with start_action(
-            action_type=u"flocker:provision:gce:destroy",
-            instance_id=self.name,
-        ):
-            operation = self.compute.instances().delete(
-                project=self.project,
-                zone=self.zone,
-                instance=self.name
-            ).execute()
-            wait_for_operation(self.compute, operation, timeout_steps=[1]*60)
+        return self.instance.destroy()
 
     def reboot(self):
         """
@@ -385,6 +416,27 @@ class GCEProvisioner(PClass):
 
     def get_ssh_key(self):
         return self.ssh_public_key
+
+    def _gce_instance_from_instance_resource(self, instance_resource):
+        """
+        Constructs a :class:`GCENode` from the instance_resource dict returned
+        from the API.
+
+        :param dict instance_resource: The instance resource dict returned from
+            the GCE API.
+
+        :returns GCEInstance: The :class:`GCEInstance` that corresponds to the
+            given instance resource dict.
+        """
+        network_interface = instance_resource["networkInterfaces"][0]
+        return GCEInstance(
+            address=bytes(network_interface["accessConfigs"][0]["natIP"]),
+            private_address=bytes(network_interface["networkIP"]),
+            project=self.project,
+            zone=self.zone,
+            name=instance_resource['name'],
+            compute=self.compute
+        )
 
     def create_node(self, name, distribution, metadata={}):
         instance_name = _clean_to_gce_name(name)
@@ -449,17 +501,29 @@ class GCEProvisioner(PClass):
             project=self.project, zone=self.zone, instance=instance_name
         ).execute()
 
-        network_interface = instance_resource["networkInterfaces"][0]
         return GCENode(
-            address=bytes(network_interface["accessConfigs"][0]["natIP"]),
-            private_address=bytes(network_interface["networkIP"]),
+            instance=self._gce_instance_from_instance_resource(
+                instance_resource),
             distribution=bytes(distribution),
-            project=self.project,
-            zone=self.zone,
-            name=instance_name,
             username=bytes(username),
-            compute=self.compute
         )
+
+    def list_all_instances(self):
+        results = []
+        next_page = None
+        while True:
+            response = self.compute.instances.list(
+                zone=self.zone, project=self.project, page_token=next_page)
+            results += list(
+                self._gce_instance_from_instance_resource(resource)
+                for resource in response.items)
+            next_page = response.get('nextPageToken')
+            if not next_page:
+                break
+        # XXX: It would be better to extend GCEInstance to also extract the
+        # tags, and only  return the instances that have the
+        # ``flocker-gce-provisioner`` tag that we apply on creation.
+        return results
 
 
 def gce_provisioner(
