@@ -22,7 +22,7 @@ provisioner, and unwinding the encoded description is:
 import json
 
 from eliot import start_action
-from pyrsistent import PClass, field
+from pyrsistent import PClass, field, pset_field
 from textwrap import dedent
 from twisted.conch.ssh.keys import Key
 from zope.interface import implementer
@@ -56,6 +56,9 @@ _GCE_ACCEPTANCE_USERNAME = u"flocker-acceptance"
 # The "default" network in the clusterhq-acceptance project on GCE has this set
 # up for instances tagged flocker-acceptance.
 _GCE_FIREWALL_TAG = u"allow-incoming-traffic"
+
+# Tag for all instances created by the GCEProvisioner.
+_GCE_PROVISIONER_TAG = "flocker-gce-provisioner"
 
 
 def _clean_to_gce_name(identifier):
@@ -292,6 +295,7 @@ class GCEInstance(PClass):
     project = field(type=unicode, mandatory=True)
     zone = field(type=unicode, mandatory=True)
     name = field(type=unicode, mandatory=True)
+    tags = pset_field(item_type=unicode, mandatory=True)
     compute = field(mandatory=True)
 
     def destroy(self):
@@ -435,6 +439,7 @@ class GCEProvisioner(PClass):
             project=self.project,
             zone=self.zone,
             name=instance_resource['name'],
+            tags=instance_resource['tags'].get('items', []),
             compute=self.compute
         )
 
@@ -471,7 +476,7 @@ class GCEProvisioner(PClass):
                 u"name": name,
                 u"metadata": metadata
             }),
-            tags=set([u"flocker-gce-provisioner",
+            tags=set([_GCE_PROVISIONER_TAG,
                       u"json-description",
                       _GCE_FIREWALL_TAG]),
             delete_disk_on_terminate=True,
@@ -508,22 +513,26 @@ class GCEProvisioner(PClass):
             username=bytes(username),
         )
 
-    def list_all_instances(self):
-        results = []
+    def _list_all_instances(self):
+        """
+        Returns all nodes in the given project and zone that were created by
+        this script.
+
+        :returns: An iterable of :class:`GCEInstance` instances.
+        """
+        unfiltered_results = []
         next_page = None
         while True:
             response = self.compute.instances.list(
                 zone=self.zone, project=self.project, page_token=next_page)
-            results += list(
+            unfiltered_results += list(
                 self._gce_instance_from_instance_resource(resource)
                 for resource in response.items)
             next_page = response.get('nextPageToken')
             if not next_page:
                 break
-        # XXX: It would be better to extend GCEInstance to also extract the
-        # tags, and only  return the instances that have the
-        # ``flocker-gce-provisioner`` tag that we apply on creation.
-        return results
+        return list(instance for instance in unfiltered_results
+                    if _GCE_PROVISIONER_TAG in instance.tags)
 
 
 def gce_provisioner(
