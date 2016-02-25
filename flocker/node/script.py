@@ -14,7 +14,7 @@ import yaml
 
 from jsonschema import FormatChecker, Draft4Validator
 
-from pyrsistent import PClass, field, PMap, pmap, pvector, pset_field
+from pyrsistent import PClass, field, PMap, pmap, pvector
 
 from eliot import ActionType, fields
 
@@ -426,9 +426,8 @@ class BackendDescription(PClass):
     :ivar api_factory: An object which can be called with some simple
         configuration data and which returns the API object implementing this
         storage backend.
-    :ivar required_config: A set of the dataset configuration keys
+    :ivar required_config: A ``set`` of the dataset configuration keys
         required to initialize this backend.
-    :type required_config: ``PSet`` of ``unicode``
     :ivar deployer_type: A constant from ``DeployerType`` indicating which kind
         of ``IDeployer`` the API object returned by ``api_factory`` is usable
         with.
@@ -439,7 +438,7 @@ class BackendDescription(PClass):
     # out.
     needs_cluster_id = field(type=bool, mandatory=True)
     # Config "dataset" keys required to initialize this backend.
-    required_config = pset_field(unicode)
+    required_config = field(type=set, mandatory=True, initial=set())
     api_factory = field(mandatory=True)
     deployer_type = field(
         mandatory=True,
