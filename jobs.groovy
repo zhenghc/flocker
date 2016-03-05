@@ -136,7 +136,9 @@ set +x
 """ + new File('/etc/slave_config/github_status.sh').text + """
 # Send a request to Github to update the commit with the build status
 REMOTE_GIT_COMMIT=`git rev-list --max-count=1 upstream/${branch}`
+set -x
 PAYLOAD="{\\"state\\": \\"${status}\\", \\"target_url\\": \\"${buildURL}\\", \\"description\\": \\"${description}\\", \\"context\\": \\"jenkins-${jobName}\\" }"
+set +x
 curl \\
   -H "Content-Type: application/json" \\
   -H "Authorization: token \$GITHUB_STATUS_API_TOKEN" \\
